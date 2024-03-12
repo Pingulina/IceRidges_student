@@ -7,7 +7,7 @@ To set up the python environment using conda run `initialize_python.py`. It will
 
 ## Running the code
 ### Data preparation
-The data used is available on [Woods Hole Oceanographic Institution](https://www2.whoi.edu/site/beaufortgyre/data/mooring-data/) (Accessed on March 07, 2024). Please download the .dat files for all time slots you want to simulate. If you want to use your own data files, please make sure that they are in `.dat` format with columns `date` (int), `time` (int) and `draft` (float or double).
+The data used is available on [Woods Hole Oceanographic Institution](https://www2.whoi.edu/site/beaufortgyre/data/mooring-data/) (Accessed on March 07, 2024). Please download the .dat files for all time slots you want to simulate. If you want to use your own data files, please make sure that they are in `.dat` format with columns `date` (int), `time` (int) and `draft` (float or double). Otherwise, you could use `.csv` files, but have to change the separation character as described in the README of `initialization_preparation`.
 By running `S001_LoadData.py` the data files are loaded and stored as `.json` files to enable further use in the following code.
 
 ### Rayleigh Criteria to define where the ridges are located

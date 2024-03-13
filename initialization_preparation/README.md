@@ -13,6 +13,7 @@ The packages used are
     json
     datetime
     sys
+    scipy
 ```
 
 ## Preparation of the simulation

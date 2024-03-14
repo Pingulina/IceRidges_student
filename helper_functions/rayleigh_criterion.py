@@ -121,19 +121,19 @@ def rayleigh_criterion(data_x, data_h, threshold_draft=2.5, min_draft=5.0):
 
         I1 = beta < 0.5 * alpha
         delta = AA * (2 * (alpha - beta) + threshold_draft)
-        I2 = AA * min(h_pot, np.concatenate(([0], h_pot[:-1]))) < delta
+        I2 = AA * np.min((h_pot, np.concatenate(([0], h_pot[:-1]))), axis=0) < delta
 
-        I3 = I1 or I2
+        I3 = np.logical_or(I1, I2)
 
         x_start = x_start[np.where(I3 == 0)]
         h_start = h_start[np.where(I3 == 0)]
-        x_stop = x_stop[np.where(np.concatenate((I2[1:], [0])) == 0)]      
-        h_stop = h_stop[np.where(np.concatenate((I2[1:], [0])) == 0)]  
+        x_stop = np.delete(x_stop, np.where(np.concatenate((I3[1:], [False]))))  
+        h_stop = np.delete(h_stop, np.where(np.concatenate((I3[1:], [False]))))
 
-        current = I3 and np.sign(h_pot - max(h_pot, np.concatenate(([0], h_pot[:-1])))) == 1
-        last = bool(I3 - current)
+        current = np.logical_and(I3, np.sign(h_pot - np.max((h_pot, np.concatenate(([0], h_pot[:-1]))), axis=0))) # combine I3 with all signs unequal to 0
+        last = np.logical_xor(I3, current)
 
-        not_curr_or_last = np.where(current == 0 and np.concatenate((last[1:], [0])) == 0)
+        not_curr_or_last = np.where(np.logical_and(current == 0, np.concatenate((last[1:], [0])) == 0))
         h_pot = h_pot[not_curr_or_last]
         x_pot = x_pot[not_curr_or_last]
 

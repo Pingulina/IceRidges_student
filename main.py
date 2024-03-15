@@ -7,8 +7,8 @@ import initialization_preparation.extract_weekly_data as ewd
 
 def main():
     # init_py.initialize_python()
-    # d2j.example()
-    ewd.extract_weekly_data()
+    # d2j.example() # store the .dat files as .json files for the mooring data
+    ewd.extract_weekly_data(years=[2005])
     return None
 
 if __name__ == "__main__":

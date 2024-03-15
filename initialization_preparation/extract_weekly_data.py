@@ -18,14 +18,17 @@ from import_module import import_module
 rc = import_module('rayleigh_criterion', 'helper_functions')
 
 
-def extract_weekly_data(estimate_hourly=True):
+def extract_weekly_data(estimate_hourly=True, years=[2006], mooring_locations=['a', 'b', 'c', 'd'], overwrite=False):
     """sort the data from the json file into weekly data and store it back to json file
+    :param estimate_hourly: bool, optional, if True, the hourly data is estimated from the available data
+    :param years: list, optional, list of years to be processed
+    :param mooring_locations: list, optional, list of mooring locations to be processed
+    :param overwrite: bool, optional, if True, the existing files are overwritten, if False, the existing files are skipped
     :return: None
     """
 
     # choose, which locations from which years should be processed 
     # TODO: choosing locations and years should be done via the GUI (table with tickboxes)
-    mooring_locations = ['a', 'b', 'c', 'd']
     level_ice_time = 1 # duration of sample for level ice estimate (in hours)
     level_ice_statistics_days = 7 # duration of sample of estimated level ice for level ice statistics (in days)
 
@@ -33,7 +36,6 @@ def extract_weekly_data(estimate_hourly=True):
     loc_yrs_dict = {} # dicitonary with the locations as keys and the years as values
 
     # years to be processed
-    years = [2004, 2005, 2006]
     for year in years:
         yrs_loc_dict[year] = mooring_locations
 
@@ -49,6 +51,11 @@ def extract_weekly_data(estimate_hourly=True):
     # transpose the dictionary, so that the locations are the keys and the years are the values
     for year, locs in yrs_loc_dict.items():
         for loc in locs:
+            if not overwrite:
+                fileName = f"rc_{loc}_{year}-{year+1}.json"
+                if os.path.exists(os.path.join('Data', 'RC_data', fileName)):
+                    print(f"The file {fileName} already exists. It is skipped now. If you want to overwrite it, set the overwrite parameter to True.")
+                    continue
             if loc in loc_yrs_dict:
                 loc_yrs_dict[loc].append(year)
             else:
@@ -74,13 +81,13 @@ def extract_weekly_data(estimate_hourly=True):
             # mean time interval between two measurements
             dt_days = np.mean(np.diff(dateNum)) # time step in dateNum format (days)            
             # if there is a missmatch in the data time, fix it
-            if not min(np.diff(dateNum)) == dt_days:
+            if not np.isclose(min(np.diff(dateNum)), dt_days, atol=1e-8):
                 print("There is a missmatch in the time data. Fixing it automatically.")
                 dateNum = np.arange(dateNum[0], dateNum[-1], dt_days)
             # transform dt_days in seconds
             hours_day = 24
             seconds_hour = 3600
-            dt = dt_days * hours_day * seconds_hour
+            dt = np.round(dt_days * hours_day * seconds_hour) # FIXME: this is a restriction that only natural numbers are allowed for dt
 
             # if the data is not measured hourly, estimate the hourly data, if estimate_hourly is True
             if estimate_hourly:
@@ -99,10 +106,14 @@ def extract_weekly_data(estimate_hourly=True):
                 draft_LI = np.mean(draft_reshape, axis=0)
                 draft_mode = np.zeros(len(draft_LI))
                 # making a karnel PDF from the data
-                for column, i in enumerate(draft_reshape):
-                    kde = scipy.stats.gaussian_kde(column)
-                    x = np.linspace(min(column), max(column), 1000)
-                    p = kde(x)
+                for i, column in enumerate(draft_reshape):
+                    if np.isclose(max(np.diff(column)), 0, atol = 1e-12):
+                        x = np.linspace(min(column), max(column), 1000)
+                        p = np.zeros(1000)
+                    else:
+                        kde = scipy.stats.gaussian_kde(column)
+                        x = np.linspace(min(column), max(column), 1000)
+                        p = kde(x)
                     pmax = max(p)
                     imax = np.argmax(p)
                     draft_mode[i] = x[imax]
@@ -126,21 +137,21 @@ def extract_weekly_data(estimate_hourly=True):
                 if not os.path.exists(storage_path):
                     os.makedirs(storage_path)
                 with open(file_storage, 'w') as file:
-                    json.dump({'dateNum': dateNum_rc, 'draft': draft_rc}, file)
+                    json.dump({'dateNum': dateNum_rc.tolist(), 'draft': draft_rc.tolist()}, file)
             
 
             # Ridge statistics
             # transferring the time vector in a matrix dateTime_reshape_rc with N columns (weeks)
-            mean_dateNum_rc = 3600 * 24 * level_ice_statistics_days
-            mean_points_rc = mean_dateNum_rc / dt
-            no_e_rc = np.floor(len(dateNum_rc)/mean_points_rc) * mean_points_rc # number of elements to take in, so ti is dicidable with number of 'mean_points' per specified 'lecel_ice_time'
-            dateNum_reshape_rc = dateNum_rc[:no_e_rc] # take only the first 'no_e' elements (meaning ignore a few last ones, such that it is reshapable)
-            dateNum_reshape_rc = dateNum_reshape_rc.reshape(int(mean_points_rc), int(len(dateNum_reshape_rc)/mean_points_rc))
-            draft_reshape_rc = draft_rc[:no_e_rc]
-            draft_reshape_rc = draft_reshape_rc.reshape(int(mean_points_rc), int(len(draft_reshape_rc)/mean_points_rc))
+            mean_dateNum_rc = 3600 * 24 * level_ice_statistics_days # seconds per level_ice_statistics_days unit (meaning 7 days in seconds)
+            mean_points_rc = mean_dateNum_rc / dt # data points per level_ice_statistics_days unit
+            no_e_rc = int(np.floor(len(dateNum)/mean_points_rc) * mean_points_rc) # number of elements to take in, so ti is dicidable with number of 'mean_points' per specified 'lecel_ice_time'
+            dateNum_reshape_rc = dateNum[:no_e_rc] # take only the first 'no_e' elements (meaning ignore a few last ones, such that it is reshapable)
+            dateNum_reshape_rc = dateNum_reshape_rc.reshape(int(mean_points_rc), int(len(dateNum)/mean_points_rc))
+            draft_reshape_rc = draft[:no_e_rc]
+            draft_reshape_rc = draft_reshape_rc.reshape(int(mean_points_rc), int(len(draft)/mean_points_rc))
 
             # store dateNum_reshape_rc in dict_weekly_data with key loc_mooring and yr
-            dict_weekly_data[f"{loc_mooring}_{yr}"] = {'date_num_reshape': dateNum_reshape, 'date_num_reshape_rc': dateNum_reshape_rc, 'draft_reshape': draft_reshape, 'draft_reshape_rc': draft_reshape_rc}
+            dict_weekly_data[f"{loc_mooring}_{yr}"] = {'date_num_reshape': dateNum_reshape.tolist(), 'date_num_reshape_rc': dateNum_reshape_rc.tolist(), 'draft_reshape': draft_reshape.tolist(), 'draft_reshape_rc': draft_reshape_rc.tolist()}
 
 
     # store the weekly data in a json file

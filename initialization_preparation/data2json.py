@@ -35,7 +35,7 @@ def data2json(file_path, file_name, storage_path):
     data_dict['time'] = []
     data_dict['dateNum'] = []
     data_dict['draft'] = []
-    for line in data[2:]:
+    for i, line in enumerate(data[2:]):
         date, time, draft = line.split() # write split(',') to enable csv reading
         data_dict['date'].append(int(date))
         data_dict['time'].append(int(time))
@@ -128,7 +128,7 @@ def example():
     # storage_path = os.path.join(this_file_path, 'Data', 'mooring_data')
     # data2json(file_path, file_name, storage_path)
     path_name = r"C:\Users\cls8575\Documents\NTNU\IceRidges-main\Data_Beaufort_Gyre_Exploration_Project\SEASON\dat_files"
-    file_path_list = [file_path_helper(path_name, thisSeason) for thisSeason in ['2005-2006']] # ['2004-2005', '2005-2006', '2006-2007']]
+    file_path_list = [file_path_helper(path_name, thisSeason) for thisSeason in ['2004-2005', '2005-2006', '2006-2007']] # ['2004-2005', '2005-2006', '2006-2007']]
     storage_path_folder = os.path.join(this_file_path, 'Data', 'mooring_data')
-    data2json_interactive(file_path_list, storage_path_folder)
+    data2json_interactive(file_path_list, storage_path_folder, overwrite=True)
     return None

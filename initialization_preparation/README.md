@@ -17,6 +17,7 @@ The packages used are
 ```
 
 ## Preparation of the simulation
+### Transformation of measured data sets to json files
 To enable the simulation, the data must be transformed to a readable format. Therefore, the `.dat` files containing the data are loaded into a Python dictionary and then stored as `.json` files. 
 The module `data2json.py` contains different functions. `data2json(file_path, file_name, storage_path)` loads a whitespace seperated data file and stores it as `.json` file. The name of the file stays the same. The path of the new `.json` file as well as of the exsiting `.dat` file are used as input parameters.
 To enable reading `.csv` data instead, the separation symbol needs to be changed from `''` to `','`.
@@ -24,3 +25,6 @@ To enable reading `.csv` data instead, the separation symbol needs to be changed
 The function `data2json_multi(file_path_list, storage_path_folder)` transforms all files named in `file_path_list` and stores them as `.json` files in the folder named in `storage_path_folder`. Existing files with the same name are overwritten without asking.
 
 To decide if the exisiting files should be overwritten, the function `data2json_interactive(file_path_list, storage_path_folder, overwrite=None)` should be used. If the optional parameter `overwrite` is not set, the user will be asked for every existing file, if it should be overwritten or skipped. If `overwrite=True`, all exsiting files will be overwritten without asking (same behaviour as `data2json_multi`, but less efficient due to additional if statements). If `overwrite=False`, all exisiting files will be skipped. The latter one is the most efficient way to transform all new data files to `.json` files.
+
+### Preprocessing of measured data
+The file `extract_weekly_data.py` determines the time steps, where ridges occur and prepares the data set for a weekly-based evaluation. 

@@ -34,7 +34,7 @@ def rayleigh_criterion(data_x, data_h, threshold_draft=2.5, min_draft=5.0):
     ## find the locations of the ridges in the data_x and data_h
     # make a binary signal for draft above the threshold
     xat = np.ones(len(data_x))
-    xat[data_h < threshold_draft] = 0
+    xat[np.where(data_h < threshold_draft)] = 0
     # find jumps in the binary signal (where the draft is above the threshold) and eliminate where there are no jumps
     corners = np.abs(np.diff(xat))
     corners_index = np.where(corners != 0)[0] # zero means, no jump, same side of the threshold for both values

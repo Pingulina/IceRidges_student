@@ -15,7 +15,7 @@ def initialize_python():
     print("""Welcome to the python environment initialization. 
         I will guide you through the setup process for the conda environment and the necessary packages.""")
 
-    package_list = ['numpy', 'matplotlib', 'conda-forge::pynput', 'json', 'datetime', 'sys', 'scipy']
+    package_list = ['numpy', 'matplotlib', 'conda-forge::pynput', 'json', 'datetime', 'sys', 'scipy', 'conda-forge::netCDF4']
 
     while True:
         env_exist = input("Do you have an anaconda environment initiated? - Y, N:")
@@ -72,3 +72,12 @@ def initialize_python():
             number_success += 1
 
     print(f"Environment initialization completed, installed {number_success} out of {number_packages} packages successfully.")
+
+
+if __name__ == "__main__":
+    initialize_python()
+    print("Environment initialization completed")
+    print("You can now start the ridge computations by running the ridge_statistics.py file.")
+    print("Have fun!")
+    print("Goodbye")
+    exit(0)

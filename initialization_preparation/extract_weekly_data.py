@@ -4,6 +4,7 @@ import json
 import scipy.stats
 import os
 import sys
+from netCDF4 import Dataset
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 # Get the current working directory
@@ -130,6 +131,16 @@ def extract_weekly_data(estimate_hourly=True, years=[2006], mooring_locations=['
             storage_path = os.path.join('Data', 'RC_data')            
             file_storage = os.path.join(storage_path, storage_name)
             # if file_storage esists, load it. Else compute rayleigh criterion and store it
+            #
+            rayleigh_nc = Dataset(file_storage, 'w', format='NETCDF4')
+
+            # time
+
+            rayleigh_nc.close()
+
+
+
+
             if os.path.exists(file_storage):
                 with open(file_storage, 'r') as file:
                     rc_data = json.load(file)
@@ -154,16 +165,26 @@ def extract_weekly_data(estimate_hourly=True, years=[2006], mooring_locations=['
             draft_reshape_rc = draft_reshape_rc.reshape(int(mean_points_rc), int(len(draft)/mean_points_rc))
 
             # store dateNum_reshape_rc in dict_weekly_data with key loc_mooring and yr
-            dict_weekly_data[f"{loc_mooring}_{yr}"] = {'dateNum_reshape': dateNum_reshape.tolist(), 'dateNum_reshape_rc': dateNum_reshape_rc.tolist(), 'draft_reshape': draft_reshape.tolist(), 'draft_reshape_rc': draft_reshape_rc.tolist(), 'dateNum_LI': dateNum_LI.tolist(), 'draft_LI': draft_LI.tolist(), 'draft_mode': draft_mode.tolist()}
-
+            # dict_weekly_data[f"{loc_mooring}_{yr}"] = {'dateNum_reshape': dateNum_reshape.tolist(), 'dateNum_reshape_rc': dateNum_reshape_rc.tolist(), 'draft_reshape': draft_reshape.tolist(), 'draft_reshape_rc': draft_reshape_rc.tolist(), 'dateNum_LI': dateNum_LI.tolist(), 'draft_LI': draft_LI.tolist(), 'draft_mode': draft_mode.tolist()}
+            
+            # store with numpy to dump in netCDF
+            dict_weekly_data[f"{loc_mooring}_{yr}"] = {'dateNum_reshape': dateNum_reshape, 'dateNum_reshape_rc': dateNum_reshape_rc, 'draft_reshape': draft_reshape, 'draft_reshape_rc': draft_reshape_rc, 'dateNum_LI': dateNum_LI, 'draft_LI': draft_LI, 'draft_mode': draft_mode}
 
     # store the weekly data in a json file
-    storage_name = f"mooring_{years[0]}-{years[-1]}.json"
+    # storage_name = f"mooring_{years[0]}-{years[-1]}.json"
+    storage_name = f"mooring_{years[0]}-{years[-1]}.nc"
     storage_path = os.path.join('Data', 'weekly_data')
     file_storage = os.path.join(storage_path, storage_name)
     # if the storage path does not exist, create it
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
+
+    weekly_data_nc = Dataset(file_storage, 'w', format='NETCDF4')
+
+    # for every location, the data should be stored in a separate group
+    # store the data from dict_weekly_data in the netCDF file
+    
+
     with open(file_storage, 'w') as file:
         json.dump(dict_weekly_data, file)
 

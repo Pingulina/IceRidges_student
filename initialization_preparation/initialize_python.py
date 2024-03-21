@@ -15,7 +15,7 @@ def initialize_python():
     print("""Welcome to the python environment initialization. 
         I will guide you through the setup process for the conda environment and the necessary packages.""")
 
-    package_list = ['numpy', 'matplotlib', 'conda-forge::pynput', 'json', 'datetime', 'sys', 'scipy', 'conda-forge::netCDF4']
+    package_list = ['numpy', 'matplotlib', 'conda-forge::pynput', 'json', 'datetime', 'sys', 'scipy', 'conda-forge::netCDF4', 'pandas']
 
     while True:
         env_exist = input("Do you have an anaconda environment initiated? - Y, N:")

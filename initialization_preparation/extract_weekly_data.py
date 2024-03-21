@@ -4,7 +4,8 @@ import json
 import scipy.stats
 import os
 import sys
-from netCDF4 import Dataset
+from netCDF4 import Dataset, stringtochar
+import pandas as pd
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 # Get the current working directory
@@ -21,12 +22,13 @@ mooring_locs = import_module('mooring_locations', 'helper_functions')
 d2d = import_module('data2dict', 'initialization_preparation')
 
 
-def extract_weekly_data(estimate_hourly=True, years=[2006], mooring_locations=['a', 'b', 'c', 'd'], overwrite=False):
+def extract_weekly_data(estimate_hourly=True, years=[2006], mooring_locations=['a', 'b', 'c', 'd'], overwrite=False, sample_rate = 0.5):
     """sort the data from the json file into weekly data and store it back to json file
     :param estimate_hourly: bool, optional, if True, the hourly data is estimated from the available data
     :param years: list, optional, list of years to be processed
     :param mooring_locations: list, optional, list of mooring locations to be processed
     :param overwrite: bool, optional, if True, the existing files are overwritten, if False, the existing files are skipped
+    :param sample_rate: float, optional, sample rate of the data in Hz
     :return: None
     """
 
@@ -72,27 +74,32 @@ def extract_weekly_data(estimate_hourly=True, years=[2006], mooring_locations=['
     time = rootgrp.createDimension('time', None)
     time_ridge = rootgrp.createDimension('time_ridge', None)
     time_LI = rootgrp.createDimension('time_LI', None)
-    latitude = rootgrp.createDimension('lat', None)
-    longitude = rootgrp.createDimension('lon', None)
+    # latitude = rootgrp.createDimension('lat', None)
+    # longitude = rootgrp.createDimension('lon', None)
+    position = rootgrp.createDimension('pos', None)
 
     # create the coordinate variables
     times = rootgrp.createVariable('time', 'f8', ('time',)) # f8 is a float of 8 bytes (float64)
     times_ridges = rootgrp.createVariable('time_ridges', 'f8', ('time_ridge',))
     times_LI = rootgrp.createVariable('time_LI', 'f8', ('time_LI',))
-    latitudes = rootgrp.createVariable('lat', 'f4', ('lat',)) # f4 is a float of 4 bytes (float32)
-    longitudes = rootgrp.createVariable('lon', 'f4', ('lon',))
+    # latitudes = rootgrp.createVariable('lat', 'f4', ('lat',)) # f4 is a float of 4 bytes (float32)
+    # longitudes = rootgrp.createVariable('lon', 'f4', ('lon',))
+    positions = rootgrp.createVariable('pos', 'S1', ('pos',))
     times.units = 'days since 0001-01-01 00:00:00'
     times.calendar = 'gregorian'
     times_ridges.units = 'days since 0001-01-01 00:00:00'
     times_ridges.calendar = 'gregorian'
-    latitudes.units = 'degrees north'
-    longitudes.units = 'degrees east'
+    # latitudes.units = 'degrees north'
+    # longitudes.units = 'degrees east'
+    positions.units = 'position key'
 
 
     # iterate over the mooring locations and years and process the data
 
     for mooring_period in dict_mooring_locations:
         yr = int(mooring_period.split('-')[0])
+        # initialize a pandas dataframe to store the data for all mooring locations. This is done, since the time of the measured ridges and level ice differs for all moorings, but a commont time vector is needed for the netCDF file
+        draft_df = pd.DataFrame()
         for loc_mooring in dict_mooring_locations[mooring_period]:
 
     
@@ -105,6 +112,8 @@ def extract_weekly_data(estimate_hourly=True, years=[2006], mooring_locations=['
             # meaning only keep position_info, dateNum and draft
             dateNum = np.array(data_dict['dateNum'])
             draft = np.array(data_dict['draft'])
+            # fit dateNum to sample rate (full seconds)
+            dateNum = np.round(dateNum * 1/sample_rate * (3600 * 24)) / (1/sample_rate * (3600 * 24))
 
             lon = dict_mooring_locations[mooring_period][loc_mooring]['lon']
             lat = dict_mooring_locations[mooring_period][loc_mooring]['lat']
@@ -141,6 +150,8 @@ def extract_weekly_data(estimate_hourly=True, years=[2006], mooring_locations=['
                 # hourly mean level ice draft
                 draft_LI = np.mean(draft_reshape, axis=0)
                 dateNum_LI = np.mean(dateNum_reshape, axis=0)
+                # adapt dateNum_LI to the sampling rate of 0.5Hz (it must be a multiple of 2/(3600 * 24)) (there are 3600*24 seconds per day and the unit of dateNum is days)
+                dateNum_LI = np.round(dateNum_LI * 1/sample_rate * (3600 * 24)) / (1/sample_rate * (3600 * 24))
                 draft_mode = np.zeros(len(draft_LI))
                 # making a karnel PDF from the data
                 for i, column in enumerate(draft_reshape.T):
@@ -178,34 +189,95 @@ def extract_weekly_data(estimate_hourly=True, years=[2006], mooring_locations=['
             # dict_weekly_data[f"{loc_mooring}_{yr}"] = {'dateNum_reshape': dateNum_reshape.tolist(), 'dateNum_reshape_rc': dateNum_reshape_rc.tolist(), 'draft_reshape': draft_reshape.tolist(), 'draft_reshape_rc': draft_reshape_rc.tolist(), 'dateNum_LI': dateNum_LI.tolist(), 'draft_LI': draft_LI.tolist(), 'draft_mode': draft_mode.tolist()}
             
             
+            # add dateNum in the first column of the draft_df
+            if draft_df.empty:
+                draft_df['dateNum'] = dateNum
+            else:
+                # add all values of dateNum to the draft_df, if they are not already in the draft_df
+                tempDateNum = []
+                for date in dateNum:
+                    if date not in draft_df['dateNum']:
+                        tempDateNum.append(date)
+                tempDf = pd.DataFrame(tempDateNum, columns=['dateNum'])
+                draft_df = pd.concat([draft_df, tempDf])
+                # sort the draft_df by dateNum
+                draft_df = draft_df.sort_values(by='dateNum')
+                # reset the index of the draft_df
+                draft_df = draft_df.reset_index(drop=True)
+            # add the draft values to the draft_df
+            ############################# THE SAMPLE RATE OF ALL NATIVE DATA MUST BE THE SAME ##############################################
+            idx_draft_start = np.where(draft_df['dateNum'] == dateNum[0])[0][0]
+            idx_draft_end = np.where(draft_df['dateNum'] == dateNum[-1])[0][0]
+            # add the draft values to the draft_df in column f"draft_{loc_mooring}" between idx_draft_start and idx_draft_end
+            draft_df[f"draft_{loc_mooring}"] = np.nan
+            draft_df.loc[idx_draft_start:idx_draft_end+1, f"draft_{loc_mooring}"] = draft
 
-            # add values to the coordinate variables (append, if the variable already exists)
-            times[:] = dateNum
-            times_ridges[:] = dateNum_rc
-            times_LI[:] = dateNum_LI
+            # add the draft_rc values to the draft_df (the sample rate is unknown, so every value needs to get its index)
+            draft_df[f"draft_rc_{loc_mooring}"] = np.nan
+            for i, date in enumerate(dateNum_rc):
+                idx = np.where(draft_df['dateNum'] == date)[0]
+                draft_df.loc[idx, f"draft_rc_{loc_mooring}"] = draft_rc[i]
+
+            # add the draft_LI values to the draft_df (the sample rate is unknown, so every value needs to get its index)
+            draft_df[f"draft_LI_{loc_mooring}"] = np.nan
+            for i, date in enumerate(dateNum_LI):
+                # find where the nearest date is in the draft_df (distance is half the reciprocal of the sample rate mltiplied by the ratio of seconds per day)
+                idx = np.where(np.abs(draft_df['dateNum'] - date) < 1/(3600*24*sample_rate*2))[0]
+                draft_df.loc[idx, f"draft_LI_{loc_mooring}"] = draft_LI[i]
+
+
+
+            # add values to the coordinate variables (append, if the variable already exists and the current value is not in the list)
+            # if times[:] == []: # if the variable is empty, add the first value
+            #     times[:] = dateNum
+            #     times_ridges[:] = dateNum_rc
+            #     times_LI[:] = dateNum_LI
+            if not (dateNum[0] in times[:] and dateNum[-1] in times[:]): # if the first and last value are not in the list, add the values
+                times[:] = np.append(times[:], dateNum)
+                times_ridges[:] = np.append(times_ridges[:], dateNum_rc)
+                times_LI[:] = np.append(times_LI[:], dateNum_LI)
+            else:
+                pass # if the value is already in the list, do nothing
+
+            # if positions == []:
+            #     positions[:] = loc_mooring
+            if loc_mooring not in positions[:]:
+                positions[:] = np.append(positions[:], loc_mooring)
+            else:
+                pass # if the value is already in the list, do nothing
+
+            # get the indices of the values in the coordinate variables
+            idx_time_start = np.where(times[:] == dateNum[0])[0][0]
+            idx_time_end = np.where(times[:] == dateNum[-1])[0][0]
+            idx_time_ridge_start = np.where(times_ridges[:] == dateNum_rc[0])[0][0]
+            idx_time_ridge_end = np.where(times_ridges[:] == dateNum_rc[-1])[0][0]
+            idx_time_LI_start = np.where(times_LI[:] == dateNum_LI[0])[0][0]
+            idx_time_LI_end = np.where(times_LI[:] == dateNum_LI[-1])[0][0]
+            idx_pos = np.where(positions[:] == stringtochar(np.array([loc_mooring],'S1')))[0][0]
+
 
             # create variable for the native data
-            draft_native = rootgrp.createVariable('draft', 'f4', ('time','lat','lon',))
+            draft_native = rootgrp.createVariable('draft', 'f4', ('time', 'pos')) # 'lat','lon',))
             # add values to the variable
-            draft_native[:] = draft
+            draft_native[idx_time_start:idx_time_end+1, idx_pos] = draft
 
 
             # create variable for ridge data (rayleigh criterion)
-            draft_ridge = rootgrp.createVariable('draft', 'f4', ('time_ridge','lat','lon',))
+            draft_ridge = rootgrp.createVariable('draft_rc', 'f4', ('time_ridge','pos')) # 'lat','lon',))
             # add values to the variable
-            draft_ridge[:] = draft_rc
+            draft_ridge[idx_time_ridge_start:idx_time_ridge_end+1, idx_pos] = draft_rc
 
             # create variable for level ice data
-            draft_LI = rootgrp.createVariable('draft', 'f4', ('time_LI','lat','lon',))
+            draft_levelIce = rootgrp.createVariable('draft_LI', 'f4', ('time_LI','pos')) #'lat','lon',))
             # add values to the variable
-            draft_LI[:] = draft_LI
+            draft_levelIce[idx_time_LI_start:idx_time_LI_end+1, idx_pos] = draft_LI
 
 
 
             # TODO: what about the draft mode? It is not clear, where it should be stored
 
             
-
+        # store the draft_df in the netCDF file
 
     rootgrp.close()
 

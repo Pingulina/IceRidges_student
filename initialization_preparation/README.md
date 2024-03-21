@@ -17,8 +17,14 @@ The packages used are
 ```
 
 ## Preparation of the simulation
-### Transformation of measured data sets to json files
-To enable the simulation, the data must be transformed to a readable format. Therefore, the `.dat` files containing the data are loaded into a Python dictionary and then stored as `.json` files. 
+### Storing of data
+To enable the simulation, the data must be transformed to a readable format. The `.dat` files are already readable.
+
+### Getting all mooring locations
+Based an all `.dat` files found in the `mooring_data` folder, the abreviations (`'a'`, `'b'`, etc.) as well as the corresponding positions in latitude and longitude are written to a dict, which is then stored as `.json`. If there is already such a `.json` file, the user is asked if this file should be used or if a new one should be generated (which will overwrite the existing one).
+
+### Old version of transformation to json files
+Therefore, the `.dat` files containing the data are loaded into a Python dictionary and then stored as `.json` files. 
 The module `data2json.py` contains different functions. `data2json(file_path, file_name, storage_path)` loads a whitespace seperated data file and stores it as `.json` file. The name of the file stays the same. The path of the new `.json` file as well as of the exsiting `.dat` file are used as input parameters.
 To enable reading `.csv` data instead, the separation symbol needs to be changed from `''` to `','`.
 

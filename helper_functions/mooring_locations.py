@@ -22,7 +22,7 @@ def mooring_locations(storage_path = None):
     path_name = r"C:\Users\cls8575\Documents\NTNU\IceRidges-main\Data_Beaufort_Gyre_Exploration_Project"
     mooring_dict = {}
     for folder in os.listdir(path_name):
-        file_path = os.path.join(path_name, folder, 'dat_files')
+        file_path = os.path.join(path_name, folder)
         # for all files in file_path ending with .dat
         for file in os.listdir(file_path):
             if file.endswith('.dat'):

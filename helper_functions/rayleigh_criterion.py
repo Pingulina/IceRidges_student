@@ -3,7 +3,17 @@
 import numpy as np
 import scipy.signal
 
-def rayleigh_criterion(data_x, data_h, threshold_draft=2.5, min_draft=5.0):
+### import_module.py is a helper function to import modules from different directories, it is located in the base directory
+# Get the current working directory
+cwd = os.getcwd()
+# Construct the path to the base directory
+base_dir = os.path.join(cwd, '..')
+# Add the base directory to sys.path
+sys.path.insert(0, base_dir)
+from import_module import import_module
+constants = import_module('constants', 'helper_functions')
+
+def rayleigh_criterion(data_x, data_h):
     """
     Find independent points (e.g. keels) in a set of data points using the rayleigh criterion
     :param data_x: list or numpy array, list of data 
@@ -20,7 +30,7 @@ def rayleigh_criterion(data_x, data_h, threshold_draft=2.5, min_draft=5.0):
     if type(data_x) != np.ndarray or type(data_h) != np.ndarray:
         raise ValueError("The input data is not a list or numpy array")
 
-    peak_indices, _ = scipy.signal.find_peaks(data_h, height=min_draft)
+    peak_indices, _ = scipy.signal.find_peaks(data_h, height=constants.min_draft)
     x_pot = np.array(data_x[peak_indices])
     h_pot = np.array(data_h[peak_indices])
 
@@ -28,13 +38,13 @@ def rayleigh_criterion(data_x, data_h, threshold_draft=2.5, min_draft=5.0):
     x_min = np.array(data_x[peak_indices])
     h_min = np.array(data_h[peak_indices]) 
     # remove all values from x_min and h_min with a draft (h) smaller than the threshhold
-    x_min = x_min[h_min >= threshold_draft]
-    h_min = h_min[h_min >= threshold_draft]
+    x_min = x_min[h_min >= constants.threshold_draft]
+    h_min = h_min[h_min >= constants.threshold_draft]
 
     ## find the locations of the ridges in the data_x and data_h
     # make a binary signal for draft above the threshold
     xat = np.ones(len(data_x))
-    xat[np.where(data_h < threshold_draft)] = 0
+    xat[np.where(data_h < constants.threshold_draft)] = 0
     # find jumps in the binary signal (where the draft is above the threshold) and eliminate where there are no jumps
     corners = np.abs(np.diff(xat))
     corners_index = np.where(corners != 0)[0] # zero means, no jump, same side of the threshold for both values
@@ -116,11 +126,11 @@ def rayleigh_criterion(data_x, data_h, threshold_draft=2.5, min_draft=5.0):
         h_stop = h_start_stop[1::2]
 
         AA = np.isin(x_start, x_min_temp)
-        alpha = AA * (np.max((h_pot, np.concatenate(([0], h_pot[:-1]))), axis=0) - threshold_draft) # pairwise maximum of h_pot and h_pot shifted by one
-        beta = AA * (alpha - (h_start - threshold_draft))
+        alpha = AA * (np.max((h_pot, np.concatenate(([0], h_pot[:-1]))), axis=0) - constants.threshold_draft) # pairwise maximum of h_pot and h_pot shifted by one
+        beta = AA * (alpha - (h_start - constants.threshold_draft))
 
         I1 = beta < 0.5 * alpha
-        delta = AA * (2 * (alpha - beta) + threshold_draft)
+        delta = AA * (2 * (alpha - beta) + constants.threshold_draft)
         I2 = AA * np.min((h_pot, np.concatenate(([0], h_pot[:-1]))), axis=0) < delta
 
         I3 = np.logical_or(I1, I2)

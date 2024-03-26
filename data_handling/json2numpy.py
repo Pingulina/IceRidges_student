@@ -27,5 +27,6 @@ def json2numpy(file_path:str, loc_mooring:str):
         draft_mode = np.array(data['draft_mode'])
     else:
         draft_mode = None
+    sucess = True
 
     return sucess, dateNum, draft, draft_mode

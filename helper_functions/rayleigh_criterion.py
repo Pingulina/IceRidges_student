@@ -1,5 +1,6 @@
 # the functions provided in this module are used to find independent points (e.g. keels) in a set of data points using the rayleigh criterion
-
+import os
+import sys
 import numpy as np
 import scipy.signal
 

@@ -14,6 +14,7 @@ from import_module import import_module
 ### imports using the helper function import_module
 # import the date_time_stuff module from the helper_functions directory
 dts = import_module('date_time_stuff', 'helper_functions')
+constants = import_module('constants', 'helper_functions')
 
 
 def data2json(file_path, file_name, storage_path):
@@ -88,7 +89,7 @@ def data2json_interactive(file_path_list, storage_path_folder, overwrite=None):
     for file_path in file_path_list:
         # create the storeage path for the current file_path
         # get the current season from the file_path (e.g. 2004-2005)
-        current_season = file_path.split(os.sep)[-2]
+        current_season = file_path.split(os.sep)[-1]
         print(f"Converting .dat files from {current_season}")
         # add the current seasen (e.g. 2004-2005) to the storage_path_folder
         storage_path = os.path.join(storage_path_folder, current_season)
@@ -127,7 +128,7 @@ def example():
     this_file_path = os.path.abspath(os.getcwd())
     # storage_path = os.path.join(this_file_path, 'Data', 'mooring_data')
     # data2json(file_path, file_name, storage_path)
-    path_name = r"C:\Users\cls8575\Documents\NTNU\IceRidges-main\Data_Beaufort_Gyre_Exploration_Project\SEASON\dat_files"
+    path_name = constants.pathName_mooring_data
     file_path_list = [file_path_helper(path_name, thisSeason) for thisSeason in ['2004-2005', '2005-2006', '2006-2007']] # ['2004-2005', '2005-2006', '2006-2007']]
     storage_path_folder = os.path.join(this_file_path, 'Data', 'mooring_data')
     data2json_interactive(file_path_list, storage_path_folder, overwrite=True)

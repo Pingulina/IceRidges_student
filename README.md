@@ -5,6 +5,8 @@ This simulation is based on the work by [Ilija Samardzija](https://github.com/il
 ## Setting up the environment
 To set up the python environment using conda run `initialize_python.py`. It will guide you through all necessary steps. Alternatively, set up your environment manually by using Anaconda Navigator as GUI or via the terminal. Then you have to install all necessary packages manually. A list of all packages can be found in `initialize_python.py`.
 
+More information about setting up the environment including installation of python can be found in the [initliazation & preparation README](initialization_preparation/README.md) in the `initialization_preparation` folder.
+
 ## Running the code
 ### Data preparation
 The data used is available on [Woods Hole Oceanographic Institution](https://www2.whoi.edu/site/beaufortgyre/data/mooring-data/) (Accessed on March 07, 2024). Please download the .dat files for all time slots you want to simulate. If you want to use your own data files, please make sure that they are in `.dat` format with columns `date` (int), `time` (int) and `draft` (float or double). Otherwise, you could use `.csv` files, but have to change the separation character as described in the README of `initialization_preparation`.

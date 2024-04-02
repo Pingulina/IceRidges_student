@@ -1,6 +1,6 @@
 # globally set constants
 
-
+pathName_mooring_data = r"C:\Users\linasap\Documents\Ice_ridges\IceRidges_python\Data_Beaufort_Gyre_Exploration\SEASON"
 level_ice_statistic_days = 7 # duration of sample of estimated level ice for level ice statistics (in days)
 level_ice_time = 1 # duration of sample for level ice estimate (in hours)
 seconds_hour = 3600 # seconds per hour

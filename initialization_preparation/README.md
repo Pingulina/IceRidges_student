@@ -1,3 +1,5 @@
+This documentation is only about the needed initialization and preparation. The general documentation can be found in the [main README](../README.md).
+
 # Initialization and preparation of the simulation
 The files in this package are used to set up the Python environment and prepare the needed data (e.g. storing into json files, etc.)
 This package is no stand-alone package. Therefore, it needs to be run from the currend working directory (`IceRidges_python`), otherwise some general files are not found.
@@ -16,7 +18,7 @@ The packages used are
     scipy
 ```
 
-To set up the `conda` environment, it is recommended to use [Anaconda](https://www.anaconda.com/download). Download and install Anaconda, then launch it and create an environment with (one of the newest) Python 3 versions. No additional modules have to be installed, this is all done by running the initialization file.
+To set up the `conda` environment, it is recommended to use [Anaconda](https://www.anaconda.com/download). Download and install Anaconda, all other steps are covered by `initialize_python.py`.
 
 ## Preparation of the simulation
 ### Storing of data

@@ -16,6 +16,8 @@ The packages used are
     scipy
 ```
 
+To set up the `conda` environment, it is recommended to use [Anaconda](https://www.anaconda.com/download). Download and install Anaconda, then launch it and create an environment with (one of the newest) Python 3 versions. No additional modules have to be installed, this is all done by running the initialization file.
+
 ## Preparation of the simulation
 ### Storing of data
 To enable the simulation, the data must be transformed to a readable format. The `.dat` files are already readable.

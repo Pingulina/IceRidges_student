@@ -67,8 +67,17 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
 
         # the data should be stored as json files
         dict_draft = {}
-        dict_draft_ridge = {}
-        dict_draft_LI = {}
+        # if there is already a json file for ridge and level ice, load it; else initialize an empty dict
+        try:
+            with open(os.path.join(storage_path, f"mooring_{yr}-{yr+1}_ridge.json"), 'r') as file:
+                dict_draft_ridge = json.load(file)
+        except FileNotFoundError:
+            dict_draft_ridge = {}
+        try:
+            with open(os.path.join(storage_path, f"mooring_{yr}-{yr+1}_LI.json"), 'r') as file:
+                dict_draft_LI = json.load(file)
+        except FileNotFoundError:
+            dict_draft_LI = {}
         
 
         for loc_mooring in dict_mooring_locations[mooring_period]:
@@ -77,7 +86,8 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
             dict_draft = {}
 
             # load the data from the dat file and store it in a dict
-            data_dict = d2d.data2dict(os.path.join(os.getcwd(), 'Data_Beaufort_Gyre_Exploration_Project', mooring_period), f"uls{mooring_period[2:4]}{loc_mooring}_draft.dat")
+            # data_dict = d2d.data2dict(os.path.join(os.getcwd(), 'Data_Beaufort_Gyre_Exploration', mooring_period), f"uls{mooring_period[2:4]}{loc_mooring}_draft.dat")
+            data_dict = d2d.json2dict(os.path.join(os.getcwd(), 'Data', 'mooring_data', mooring_period), f"uls{mooring_period[2:4]}{loc_mooring}_draft.json")
             # remove date and time from the dict
             data_dict.pop('date')
             data_dict.pop('time')
@@ -132,7 +142,7 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
                     draft_mode[i] = x[imax]
 
             # rayleigh criterion
-            dateNum_rc, draft_rc = rc.rayleigh_criterion(dateNum, draft, threshold_draft=2.5, min_draft=5.0)
+            dateNum_rc, draft_rc = rc.rayleigh_criterion(dateNum, draft)
                 
 
 

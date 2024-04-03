@@ -12,7 +12,7 @@ def main():
     import initialization_preparation.extract_ridge_LI_data as ewd
     import initialization_preparation.data2dict as d2d
     import ridge_computations.ridge_statistics as rs
-    d2j.example() # store the .dat files as .json files for the mooring data
+    # d2j.example() # store the .dat files as .json files for the mooring data
 
     # rs.ridge_statistics()
     # d2d.example()
@@ -21,7 +21,7 @@ def main():
     # ewd.extract_ridge_LI_data(overwrite=True)
 
     ### uncomment the following line to run the ridge_statistics.py file
-    # rs.ridge_statistics()
+    rs.ridge_statistics()
     return None
 
 if __name__ == "__main__":

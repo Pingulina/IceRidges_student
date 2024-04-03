@@ -45,6 +45,20 @@ def data2dict(file_path, file_name):
 
     return data_dict
 
+def json2dict(file_path, file_name):
+    """
+    Load the .json data to a dictionary
+    :param file_path: str, path to the .json file
+    :param file_name: str, name of the .json file
+    :return: dict, dictionary with the data
+    """
+    print(f"Converting data from {file_name} to dict")
+    file_path_name = os.path.join(file_path, file_name)
+    with open(file_path_name, 'r') as file:
+        data_dict = json.load(file)
+    return data_dict
+    
+
 
 def file_path_helper(path_name, season):
     """Create the file path for the given season and path_name
@@ -59,8 +73,9 @@ def example():
     this_file_path = os.path.abspath(os.getcwd())
     # storage_path = os.path.join(this_file_path, 'Data', 'mooring_data')
     # data2json(file_path, file_name, storage_path)
-    path_name = r"C:\Users\cls8575\Documents\NTNU\IceRidges-main\Data_Beaufort_Gyre_Exploration_Project\SEASON\dat_files"
-    file_path_list = [file_path_helper(path_name, thisSeason) for thisSeason in ['2004-2005', '2005-2006', '2006-2007']] # ['2004-2005', '2005-2006', '2006-2007']]
+    path_name = os.path.join(os.getcwd(), 'Data_Beaufort_Gyre_Exploration')
+    file_path_list = [os.path.join(path_name, thisSeason) for thisSeason in ['2004-2005', '2005-2006', '2006-2007']]
+    # file_path_list = [file_path_helper(path_name, thisSeason) for thisSeason in ['2004-2005', '2005-2006', '2006-2007']] # ['2004-2005', '2005-2006', '2006-2007']]
     return data2dict(file_path_list[0], 'uls04a_draft.dat')
 
 

@@ -156,7 +156,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(20
                     continue
                 # find the expected deepest keel depth
                 if np.sum(Mcdf[f"week_{week_num}"]) > 0 and not len(draft_rc_reshape[week_num]) == 0:
-                    loc, _ = intersections.find_intersection(xxx, (1-1/R_no[week_num]) * np.ones(len(xxx)), xxx, Mcdf[f"week_{week_num}"])
+                    loc, _ = intersections.find_intersections(xxx, (1-1/R_no[week_num]) * np.ones(len(xxx)), xxx, Mcdf[f"week_{week_num}"])
                     draft_deepest_ridge[week_num] = loc + constants.min_draft
 
 

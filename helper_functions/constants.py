@@ -8,3 +8,5 @@ hours_day = 24 # hours per day
 
 threshold_draft=2.5 # threshold for the rayleigh criterion
 min_draft=5.0 # minimum draft for the rayleigh criterion
+
+make_plots = True

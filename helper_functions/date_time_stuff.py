@@ -18,3 +18,11 @@ def datenum(date, time):
     d = dt.strptime(date + ' ' + time, '%Y%m%d %H%M%S')
     return d.toordinal() + d.hour/24 + d.minute/(24*60) + d.second/(24*60*60)
     # return 366 + d.toordinal() + (d - dt.fromordinal(d.toordinal())).total_seconds()/(24*60*60)
+
+
+def datestr(date_num):
+    """Convert a date number to a string, equivalent to the datestr function in matlab
+    date_num: float, date number (1 is 1.1.0001 00:00:00, 1.5 is 1.1.0001 12:00:00, ...)
+    return: str, date in the format YYYYMMDD"""
+    d = dt.fromordinal(int(date_num))
+    return d.strftime('%Y%m%d')

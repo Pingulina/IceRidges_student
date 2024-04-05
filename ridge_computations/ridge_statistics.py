@@ -8,6 +8,7 @@ import scipy.signal
 import scipy.stats
 from copy import deepcopy
 import matplotlib.pyplot as plt
+from datetime import datetime as dt
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 # Get the current working directory
@@ -25,7 +26,7 @@ intersections = import_module('intersections', 'helper_functions')
 constants = import_module('constants', 'helper_functions')
 cdf = import_module('cdf', 'helper_functions')
 
-def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(2004, 2006+1))):
+def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(2004, 2004+1))):
     """Do some statistics; need to be more description
     
     """
@@ -217,15 +218,22 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(20
         figure_ridge_statistics = plt.figure()
         ###### draft, level ice estimate, all ridges, ridge means
         # 
-        axis_draft_LI_ridges = figure_ridge_statistics.add_subplot(2,2,1)
-        axis_draft_LI_ridges.plot(dateNum, draft)
-        axis_draft_LI_ridges.plot(dateNum_LI, draft_mode, 'r')
-        axis_draft_LI_ridges.scatter(dateNum_rc, draft_rc, s=0.5, c='g')
-        axis_draft_LI_ridges.stairs(draft_deepest_ridge[week_to_keep], dateNum_rc_pd[week_to_keep])
-        axis_draft_LI_ridges.plot(dateNum_rc_pd[week_to_keep], deepest_mode_weekly[week_to_keep])
+        axis_draft_LI_ridges = figure_ridge_statistics.add_subplot(1,1,1)
+        axis_draft_LI_ridges.set_xlim(dateNum[0], dateNum[-1])
+        newDayIndex = np.where(dateNum.astype(int)-np.roll(dateNum.astype(int), 1)!=0)
+        axis_draft_LI_ridges.set_xticks(dateNum[newDayIndex[0][::30]])
+        dateTicks = [str(dt.fromordinal(thisDate))[0:7] for thisDate in dateNum[newDayIndex[0][::30]].astype(int)]
+        axis_draft_LI_ridges.set_xticklabels(dateTicks)
+
+
+        axis_draft_LI_ridges.plot(dateNum, draft, linewidth=0.1, c='tab:blue', zorder=0)
+        axis_draft_LI_ridges.plot(dateNum_LI, draft_mode, 'tab:red', zorder=1)
+        axis_draft_LI_ridges.scatter(dateNum_rc, draft_rc, s=0.5, c='tab:red', zorder=2)
+        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], draft_deepest_ridge[week_to_keep], c='k', zorder=3)
+        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], deepest_mode_weekly[week_to_keep], c='k', zorder=4)
         
         
-        someplot = figure_ridge_statistics.add_subplot(2,2,2)
-        someplot = figure_ridge_statistics.add_subplot(2,2,3)
-        someplot = figure_ridge_statistics.add_subplot(2,2,4)
+        # someplot = figure_ridge_statistics.add_subplot(2,2,2)
+        # someplot = figure_ridge_statistics.add_subplot(2,2,3)
+        # someplot = figure_ridge_statistics.add_subplot(2,2,4)
 

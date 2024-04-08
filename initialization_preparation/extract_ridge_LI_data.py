@@ -43,6 +43,9 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
             if season not in dict_mooring_locations:
                 print(f"Season {season} not found in the data.")
                 change_seasons.remove(season)
+                if len(change_seasons)==0:
+                    print("No season to evaluate. This need to be catched!!!")
+
             print(f"For the season {season}, the following locations will be processed by default: {dict_mooring_locations[season].keys()}")
             change_default_locations = input("Do you want to change the default locations? - Y/y, N/n:")
             if change_default_locations == 'Y' or change_default_locations == 'y':
@@ -116,20 +119,20 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
                 no_e = int(np.floor(len(dateNum)/mean_points)) * mean_points
 
                 dateNum_reshape = dateNum[:no_e] # take only the first 'no_e' elements (meaning ignore a few last ones, such that it is reshapable)
-                dateNum_reshape = dateNum_reshape.reshape(int(mean_points), int(len(dateNum_reshape)/mean_points))
+                dateNum_reshape = dateNum_reshape.reshape(int(len(dateNum_reshape)/mean_points), int(mean_points))
                 draft_reshape = draft[:no_e]
-                draft_reshape = draft_reshape.reshape(int(mean_points), int(len(draft_reshape)/mean_points))
+                draft_reshape = draft_reshape.reshape(int(len(draft_reshape)/mean_points), int(mean_points))
 
                 # estimating the level ice draft
                 # this is only for plotting/hourly level ice estimation; not stored yet
                 # hourly mean level ice draft
-                draft_LI = np.mean(draft_reshape, axis=0)
-                dateNum_LI = np.mean(dateNum_reshape, axis=0)
+                draft_LI = np.mean(draft_reshape, axis=1)
+                dateNum_LI = np.mean(dateNum_reshape, axis=1)
                 # adapt dateNum_LI to the sampling rate of 0.5Hz (it must be a multiple of 2/(3600 * 24)) (there are 3600*24 seconds per day and the unit of dateNum is days)
                 dateNum_LI = np.round(dateNum_LI * 1/sample_rate * (3600 * 24)) / (1/sample_rate * (3600 * 24))
-                draft_mode = np.zeros(len(draft_LI))
+                draft_mode = np.zeros(len(draft_LI.T))
                 # making a karnel PDF from the data
-                for i, column in enumerate(draft_reshape.T):
+                for i, column in enumerate(draft_reshape):
                     if np.isclose(max(np.diff(column)), 0, atol = 1e-12):
                         x = np.linspace(min(column), max(column), 1000)
                         p = np.zeros(1000)

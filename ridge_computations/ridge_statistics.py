@@ -227,7 +227,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(20
 
 
         axis_draft_LI_ridges.plot(dateNum, draft, linewidth=0.1, c='tab:blue', zorder=0)
-        axis_draft_LI_ridges.plot(dateNum_LI, draft_mode, 'tab:red', zorder=1)
+        axis_draft_LI_ridges.plot(dateNum_LI, draft_mode, linewidth=0.6, c='tab:red', zorder=1)
         axis_draft_LI_ridges.scatter(dateNum_rc, draft_rc, s=0.5, c='tab:red', zorder=2)
         axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], draft_deepest_ridge[week_to_keep], c='k', zorder=3)
         axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], deepest_mode_weekly[week_to_keep], c='k', zorder=4)

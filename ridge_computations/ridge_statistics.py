@@ -8,6 +8,7 @@ import scipy.signal
 import scipy.stats
 from copy import deepcopy
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from datetime import datetime as dt
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
@@ -186,7 +187,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(20
             dict_yearly['level_ice_expect_deepest_mode'].extend(absolute_mode_weekly)
             dict_yearly['expect_deepest_ridge'].extend(draft_deepest_ridge)
             dict_yearly['number_ridges'].extend(R_no)
-            dict_yearly['mean_keel_depth'].extend(mean_keel_depth)
+            dict_yearly['mean_keel_depth'].extend(mean_keel_depth+5)
             dict_yearly['mean_dateNum'].extend(dateNum_rc_pd)
             dict_yearly['week_start'].extend(week_start)
             dict_yearly['week_end'].extend(week_end)
@@ -217,25 +218,66 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(20
                     
     # plot the data in different plots
     if constants.make_plots:
-        figure_ridge_statistics = plt.figure()
+        figure_ridge_statistics = plt.figure(layout='constrained', figsize=(12,9))
+        gridspec_ridge_statistics = figure_ridge_statistics.add_gridspec(2,6)
+        # grid_ridge_statistics = gridspec.GridSpec(2,6)
         ###### draft, level ice estimate, all ridges, ridge means
         # 
-        axis_draft_LI_ridges = figure_ridge_statistics.add_subplot(1,1,1)
+        axis_draft_LI_ridges = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[0, 0:3]) # plt.subplot2grid((2,6), (0,0), colspan=3) # figure_ridge_statistics.add_subplot(2,2,1)
+        axis_draft_LI_ridges.set_title('weekly ice thickness')
         axis_draft_LI_ridges.set_xlim(dateNum[0], dateNum[-1])
         newDayIndex = np.where(dateNum.astype(int)-np.roll(dateNum.astype(int), 1)!=0)
-        axis_draft_LI_ridges.set_xticks(dateNum[newDayIndex[0][::30]])
-        dateTicks = [str(dt.fromordinal(thisDate))[0:7] for thisDate in dateNum[newDayIndex[0][::30]].astype(int)]
+        axis_draft_LI_ridges.set_xticks(dateNum[newDayIndex[0][::60]])
+        dateTicks = [str(dt.fromordinal(thisDate))[0:7] for thisDate in dateNum[newDayIndex[0][::60]].astype(int)]
         axis_draft_LI_ridges.set_xticklabels(dateTicks)
+        axis_draft_LI_ridges.set_ylabel('draft [m]')
 
 
-        axis_draft_LI_ridges.plot(dateNum, draft, linewidth=0.1, c='tab:blue', zorder=0)
-        axis_draft_LI_ridges.plot(dateNum_LI, draft_mode, linewidth=0.6, c='tab:red', zorder=1)
-        axis_draft_LI_ridges.scatter(dateNum_rc, draft_rc, s=0.5, c='tab:red', zorder=2)
-        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], draft_deepest_ridge[week_to_keep], where='mid', c='k', zorder=3)
-        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], deepest_mode_weekly[week_to_keep], where='mid', c='k', zorder=4)
+        axis_draft_LI_ridges.plot(dateNum, draft, linewidth=0.1, c='tab:blue', zorder=0, label='draft')
+        axis_draft_LI_ridges.plot(dateNum_LI, draft_mode, linewidth=0.6, c='tab:red', zorder=1, label='level ice draft')
+        axis_draft_LI_ridges.scatter(dateNum_rc, draft_rc, s=0.5, c='tab:red', zorder=2, label='ridge draft')
+        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], draft_deepest_ridge[week_to_keep], where='mid', c='k', zorder=3, label='draft weekly deepest ridge')
+        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], deepest_mode_weekly[week_to_keep], where='mid', c='k', zorder=4, label='level ice weekly deepest mode')
+        axis_draft_LI_ridges.legend(prop={'size': 6})
         
         
-        # someplot = figure_ridge_statistics.add_subplot(2,2,2)
-        # someplot = figure_ridge_statistics.add_subplot(2,2,3)
-        # someplot = figure_ridge_statistics.add_subplot(2,2,4)
+        # weekly number of ridges
+        axis_weekly_ridges_number = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[0,3:6]) # plt.subplot2grid((2,6), (0,3), colspan=3) # figure_ridge_statistics.add_subplot(2,2,2)
+        axis_weekly_ridges_number.set_title('weekly number of ridges')
+        axis_weekly_ridges_number.set_xticks(dateNum[newDayIndex[0][::60]])
+        axis_weekly_ridges_number.set_xticklabels(dateTicks)
+        axis_weekly_ridges_number.set_ylim(0, 400)
+        axis_weekly_ridges_number.set_ylabel('number of ridges')
+
+        axis_weekly_ridges_number.step(dateNum_rc_pd[week_to_keep], R_no[week_to_keep], c='k', linewidth=1)
+
+        # ice thickness relation to deepest ridge during one week
+        axis_deepestRidge_over_iceThickness = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[1,0:2]) # plt.subplot2grid((2,6), (1,0), colspan=2) # figure_ridge_statistics.add_subplot(2,2,3)
+        axis_deepestRidge_over_iceThickness.set_title('deepest weekly ridge')
+        axis_deepestRidge_over_iceThickness.set_xlim(0, 3)
+        axis_deepestRidge_over_iceThickness.set_xlabel('Level ice thickness [m]')
+        axis_deepestRidge_over_iceThickness.set_ylim(0, 30)
+        axis_deepestRidge_over_iceThickness.set_ylabel('ridge thickness [m]')
+        axis_deepestRidge_over_iceThickness.scatter(dict_yearly['level_ice_deepest_mode'], dict_yearly['expect_deepest_ridge'], s=1, c='tab:red', zorder=0, label='expected deepest weekly ridge')
+        axis_deepestRidge_over_iceThickness.scatter(dict_yearly['level_ice_deepest_mode'], dict_yearly['mean_keel_depth'], s=1, c='tab:blue', zorder=1, label='expected mean weekly keel depth')
+        axis_deepestRidge_over_iceThickness.scatter(dict_yearly['level_ice_deepest_mode'], dict_yearly['draft_weekly_deepest_ridge'], s=1, c='tab:green', zorder=2, label='weekly deepest ridge')
+        axis_deepestRidge_over_iceThickness.legend(prop={'size': 6})
+
+
+        # number of ridges over mean keel depth
+        axis_numberRidges_over_deepestRidge = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[1, 2:4])
+        axis_numberRidges_over_deepestRidge.set_title('number of ridges')
+        axis_numberRidges_over_deepestRidge.set_xlim(5, 10)
+        axis_numberRidges_over_deepestRidge.set_xlabel('Mean keel depth [m]')
+        axis_numberRidges_over_deepestRidge.set_ylabel('Number of ridges')
+        axis_numberRidges_over_deepestRidge.scatter(dict_yearly['mean_keel_depth'], dict_yearly['number_ridges'], s=1, c='tab:blue', zorder=0, label='keel depth')
+
+
+        # number of ridges over level ice thickness
+        axis_numberRidges_over_levelIceThickness = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[1, 4:6])
+        axis_numberRidges_over_levelIceThickness.set_title('number of ridges')
+        axis_numberRidges_over_levelIceThickness.set_xlim(0, 3)
+        axis_numberRidges_over_levelIceThickness.set_xlabel('Level ice thickness [m]')
+        axis_numberRidges_over_levelIceThickness.set_ylabel('Number of ridges')
+        axis_numberRidges_over_levelIceThickness.scatter(dict_yearly['level_ice_deepest_mode'], dict_yearly['number_ridges'], s=1, c='tab:blue', zorder=0, label='deepest mode level ice')
 

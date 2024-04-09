@@ -113,7 +113,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(20
                 
                 # find a subset of the raw ULS draft measurement
                 draft_subset = draft[np.intersect1d(
-                    np.intersect1d(np.where(draft < 3), np.where(draft > 0)), 
+                    np.intersect1d(np.where(draft < 3), np.where(draft >= 0)), 
                     np.intersect1d(np.where(dateNum > week_start[week_num]), np.where(dateNum < week_end[week_num]))
                     )]
                 # if there are too few ridge data points, skip the week
@@ -134,14 +134,16 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(20
                 f = kde(xi)
 
                 # indices of all modes
-                locs_idx, _ = scipy.signal.find_peaks(f, xi)
+                locs_idx, _ = scipy.signal.find_peaks(f)
                 # locations and intensities of all peaks
                 locs = xi[locs_idx]
                 intensities = f[locs_idx]
 
-                # find the mode with the highest intensity (deepest draft)
+                # find the mode with the deepest draft
                 if not len(locs) == 0:
-                    mode_idx = np.argmax(intensities)
+                    mode_loc_idx = np.argmax(locs)
+                    mode_idx = np.max(np.where(intensities > 0.25))
+                    # mode_idx = np.argmax(intensities)
                     mode = locs[mode_idx]
                     deepest_mode_weekly[week_num] = mode
                 else:
@@ -229,8 +231,8 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(20
         axis_draft_LI_ridges.plot(dateNum, draft, linewidth=0.1, c='tab:blue', zorder=0)
         axis_draft_LI_ridges.plot(dateNum_LI, draft_mode, linewidth=0.6, c='tab:red', zorder=1)
         axis_draft_LI_ridges.scatter(dateNum_rc, draft_rc, s=0.5, c='tab:red', zorder=2)
-        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], draft_deepest_ridge[week_to_keep], c='k', zorder=3)
-        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], deepest_mode_weekly[week_to_keep], c='k', zorder=4)
+        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], draft_deepest_ridge[week_to_keep], where='mid', c='k', zorder=3)
+        axis_draft_LI_ridges.step(dateNum_rc_pd[week_to_keep], deepest_mode_weekly[week_to_keep], where='mid', c='k', zorder=4)
         
         
         # someplot = figure_ridge_statistics.add_subplot(2,2,2)

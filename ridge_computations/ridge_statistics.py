@@ -265,19 +265,24 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=list(range(20
 
 
         # number of ridges over mean keel depth
-        axis_numberRidges_over_deepestRidge = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[1, 2:4])
-        axis_numberRidges_over_deepestRidge.set_title('number of ridges')
-        axis_numberRidges_over_deepestRidge.set_xlim(5, 10)
-        axis_numberRidges_over_deepestRidge.set_xlabel('Mean keel depth [m]')
-        axis_numberRidges_over_deepestRidge.set_ylabel('Number of ridges')
-        axis_numberRidges_over_deepestRidge.scatter(dict_yearly['mean_keel_depth'], dict_yearly['number_ridges'], s=1, c='tab:blue', zorder=0, label='keel depth')
+        axis_numberRidges_over_draft = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[1, 2:4])
+        axis_numberRidges_over_draft.set_title('number of ridges')
+        axis_numberRidges_over_draft.set_xlim(0, 10)
+        axis_numberRidges_over_draft.set_xlabel('Draft [m]')
+        axis_numberRidges_over_draft.set_ylabel('Number of ridges')
+        axis_numberRidges_over_draft.scatter(dict_yearly['mean_keel_depth'], dict_yearly['number_ridges'], s=1, c='tab:blue', zorder=0, label='Mean keel depth')
+        axis_numberRidges_over_draft.scatter(dict_yearly['level_ice_deepest_mode'], dict_yearly['number_ridges'], s=1, c='tab:red', zorder=0, label='deepest mode level ice')
+        axis_numberRidges_over_draft.legend(prop={'size': 6})
 
+        # expected deepest keel vs measured deepest keel
+        axis_expectedDeepestKeel_over_deepestKeel = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[1, 4:6])
+        axis_expectedDeepestKeel_over_deepestKeel.set_title('accuracy of preditciotn')
+        axis_expectedDeepestKeel_over_deepestKeel.set_xlim(0, 30)
+        axis_expectedDeepestKeel_over_deepestKeel.set_xlabel('Expected deepest keel [m]')
+        axis_expectedDeepestKeel_over_deepestKeel.set_ylim(0, 30)
+        axis_expectedDeepestKeel_over_deepestKeel.set_ylabel('Measured deepest keel [m]')
+        axis_expectedDeepestKeel_over_deepestKeel.plot(np.arange(0, 30, 1), np.arange(0, 30, 1), c='k', linewidth=0.5, zorder=0)
+        axis_expectedDeepestKeel_over_deepestKeel.scatter(dict_yearly['expect_deepest_ridge'], dict_yearly['draft_weekly_deepest_ridge'], s=1, c='tab:blue', zorder=1)
+        
 
-        # number of ridges over level ice thickness
-        axis_numberRidges_over_levelIceThickness = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[1, 4:6])
-        axis_numberRidges_over_levelIceThickness.set_title('number of ridges')
-        axis_numberRidges_over_levelIceThickness.set_xlim(0, 3)
-        axis_numberRidges_over_levelIceThickness.set_xlabel('Level ice thickness [m]')
-        axis_numberRidges_over_levelIceThickness.set_ylabel('Number of ridges')
-        axis_numberRidges_over_levelIceThickness.scatter(dict_yearly['level_ice_deepest_mode'], dict_yearly['number_ridges'], s=1, c='tab:blue', zorder=0, label='deepest mode level ice')
-
+        input('press anything to continue')

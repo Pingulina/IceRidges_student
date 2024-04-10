@@ -20,7 +20,14 @@ def json2numpy(file_path:str, loc_mooring:str):
         draft = None
         draft_mode = None
         return sucess, dateNum, draft, draft_mode
-    data = data[loc_mooring] # get the data for the location
+    try:
+        data = data[loc_mooring] # get the data for the location
+    except KeyError:
+        sucess = False
+        dateNum = None
+        draft = None
+        draft_mode = None
+        return sucess, dateNum, draft, draft_mode
     dateNum = np.array(data['dateNum'])
     draft = np.array(data['draft'])
     if 'draft_mode' in data:

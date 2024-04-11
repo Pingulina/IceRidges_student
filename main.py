@@ -21,7 +21,7 @@ def main():
     # ewd.extract_ridge_LI_data(overwrite=True)
 
     ### uncomment the following line to run the ridge_statistics.py file
-    rs.ridge_statistics()
+    rs.ridge_statistics(years=[2005, 2006])
     return None
 
 if __name__ == "__main__":

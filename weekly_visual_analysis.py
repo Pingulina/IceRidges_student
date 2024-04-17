@@ -145,3 +145,6 @@ def weekly_visual_analysis(dict_ridge_statistics:dict):
             continue
         elif user_input == 'x':
             break
+
+    print("Program exited. Goodbye.")
+    return None

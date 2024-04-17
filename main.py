@@ -15,6 +15,7 @@ def main():
     import initialization_preparation.data2dict as d2d
     import ridge_computations.ridge_statistics as rs
     import weekly_visual_analysis as wva
+    import data_handling.dict2json as dict2json
     # d2j.example() # store the .dat files as .json files for the mooring data
 
     # rs.ridge_statistics()
@@ -24,8 +25,9 @@ def main():
     # ewd.extract_ridge_LI_data(overwrite=True)
 
     ### uncomment the following line to run the ridge_statistics.py file
-    # dict_ridge_statistics = rs.ridge_statistics(years=[2005, 2006])
+    dict_ridge_statistics = rs.ridge_statistics(years=[2004, 2005, 2006], saveAsJson=True)
     # store the ridge statistics in a json file
+    # dict2json.dict2json(dict_ridge_statistics, 'ridge_statistics.json')
     # with open('ridge_statistics.json', 'w') as file:
     #     json.dump(dict_ridge_statistics, file)
 

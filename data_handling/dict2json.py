@@ -4,7 +4,7 @@ import numpy as np
 
 
 
-def handle_dict(d):
+def dict2jsonable(d):
     """Recursively convert numpy arrays and numpy data types in a dictionary to lists and native python data types.
     :param d: dictionary to convert
     :type d: dict
@@ -17,7 +17,7 @@ def handle_dict(d):
         if k not in out:
             out[k] = {}
         if isinstance(v, dict):
-            out[k] = handle_dict(v)
+            out[k] = dict2jsonable(v)
         elif isinstance(v, np.ndarray):
             out[k]['data'] = v.tolist()
             out[k]['type'] = type(v).__name__ # get the type of the variable as string # 'numpy.ndarray'
@@ -42,7 +42,7 @@ def dict2json(dict_data:dict, file_path:str):
     :param file_path: path to the json file
     :type file_path: str
     """
-    dict_withoutNpArray = handle_dict(dict_data)
+    dict_withoutNpArray = dict2jsonable(dict_data)
     with open(file_path, 'w') as file:
         json.dump(dict_withoutNpArray, file)
     return None

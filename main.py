@@ -28,13 +28,9 @@ def main():
     # dict_ridge_statistics = rs.ridge_statistics(years=[2004, 2005], poss_mooring_locs=['a'], saveAsJson=True)
     # store the ridge statistics in a json file
     # dict2json.dict2json(dict_ridge_statistics, 'ridge_statistics.json')
-    # with open('ridge_statistics.json', 'w') as file:
-    #     json.dump(dict_ridge_statistics, file)
 
 
-    # load the ridge statistics from the json file
-    with open('ridge_statistics.json', 'r') as file:
-        dict_ridge_statistics = json.load(file)
+    ### uncomment the following line to run the weekly_visual_analysis.py file
     wva.weekly_visual_analysis()
     return None
 

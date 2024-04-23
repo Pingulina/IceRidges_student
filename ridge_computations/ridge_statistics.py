@@ -31,7 +31,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
     """Do some statistics; need to be more description
     
     """
-    years = list(range(years[0], years[1]+1))
+    # years = list(range(years[0], years[1]+1))
     # load the preprocessed data from the weekly_data.json file from the folder weekly_data in Data
     pathName = os.getcwd()
     path_to_json = os.path.join(pathName, 'Data', 'uls_data')
@@ -59,12 +59,14 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             dict_yearly[loc]['level_ice_expect_deepest_mode'] = [] # LI_AM # level ice estimate deepest mode
             dict_yearly[loc]['expect_deepest_ridge'] = [] # D - deepest keel estimate
             dict_yearly[loc]['number_ridges'] = [] # N - number of ridges
-            dict_yearly[loc]['mean_keel_depth'] = [] # M - mean keel depth
+            dict_yearly[loc]['mean_keel_draft'] = [] # M - mean keel depth
             dict_yearly[loc]['mean_dateNum'] = [] # T - mean date number in the week's subsample
             dict_yearly[loc]['week_start'] = [] # WS - start of the week
             dict_yearly[loc]['week_end'] = [] # WE - end of the week
-            dict_yearly[loc]['keel_draft'] = [] # D_all colleciton of all of the keels
-            dict_yearly[loc]['keel_dateNum'] = [] # T_all collection of all of the times
+            dict_yearly[loc]['keel_draft'] = [] #  colleciton of all of the keels
+            dict_yearly[loc]['keel_dateNum'] = [] #  collection of all of the times
+            dict_yearly[loc]['keel_draft_ridge'] = [] # D_all - keel depth of the ridges
+            dict_yearly[loc]['keel_dateNum_ridge'] = [] # T_all - time of the ridges
             dict_yearly[loc]['draft_weekly_deepest_ridge'] = [] # Dmax - maximum keel depth in the week
             dict_yearly[loc]['year'] = [] # Year of the data
             dict_yearly[loc]['location'] = [] # Location of the data
@@ -79,7 +81,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             draft_rc_reshape = dict()
             dateNum_rc_reshape = dict()
             week_to_keep = np.zeros((len(dateNum_reshape)), dtype=bool)
-            mean_keel_depth = np.zeros((len(dateNum_reshape)))
+            mean_keel_draft = np.zeros((len(dateNum_reshape)))
             dateNum_rc_pd = np.zeros((len(dateNum_reshape)))
             draft_max_weekly = np.zeros((len(dateNum_reshape)))
             deepest_mode_weekly = np.zeros((len(dateNum_reshape)))
@@ -117,7 +119,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
 
                 # pd_ridges = exponential_fit() # fit exponential distribution to the ridges
                 dateNum_rc_pd[week_num] = np.mean(dateNum_rc_reshape[week_num])
-                mean_keel_depth[week_num] = np.mean(draft_rc_reshape[week_num] - constants.min_draft)
+                mean_keel_draft[week_num] = np.mean(draft_rc_reshape[week_num] - constants.min_draft)
                 draft_max_weekly[week_num] = np.max(draft_rc_reshape[week_num]) # deepest weekly draft
 
 
@@ -158,7 +160,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
                 absolute_mode_weekly[week_num] = locs
 
                 # cdf of the estimated exponential distribution, used later fo estimating the expected deepest keel
-                Mcdf[f"week_{week_num}"] = cdf.cdf(xxx, mean_keel_depth[week_num]) # np.cumsum(f) / np.sum(f)
+                Mcdf[f"week_{week_num}"] = cdf.cdf(xxx, mean_keel_draft[week_num]) # np.cumsum(f) / np.sum(f)
 
 
                 
@@ -179,12 +181,14 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             dict_yearly[loc]['level_ice_expect_deepest_mode'].extend(absolute_mode_weekly)
             dict_yearly[loc]['expect_deepest_ridge'].extend(draft_deepest_ridge)
             dict_yearly[loc]['number_ridges'].extend(R_no)
-            dict_yearly[loc]['mean_keel_depth'].extend(mean_keel_depth+5)
+            dict_yearly[loc]['mean_keel_draft'].extend(mean_keel_draft+5)
             dict_yearly[loc]['mean_dateNum'].extend(dateNum_rc_pd)
             dict_yearly[loc]['week_start'].extend(week_start)
             dict_yearly[loc]['week_end'].extend(week_end)
             dict_yearly[loc]['keel_draft'].extend(draft_reshape)
             dict_yearly[loc]['keel_dateNum'].extend(dateNum_reshape)
+            dict_yearly[loc]['keel_draft_ridge'].extend([value for key, value in draft_rc_reshape.items()]) # this is a dict with entries for every week, make a list instead
+            dict_yearly[loc]['keel_dateNum_ridge'].extend([value for key, value in dateNum_rc_reshape.items()])
             dict_yearly[loc]['draft_weekly_deepest_ridge'].extend(draft_max_weekly)
             dict_yearly[loc]['year'].extend([year]*len(dateNum_reshape))
             dict_yearly[loc]['location'].extend([loc]*len(dateNum_reshape))
@@ -194,7 +198,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             # plot the data in different plots (one figure) (one figure per location and year)
             if constants.make_plots:
                 figure_ridge_statistics = ridge_statistics_plot.plot_per_location(dateNum, draft, dateNum_LI, draft_mode, dateNum_rc, draft_rc, dateNum_rc_pd, 
-                                                                                  draft_deepest_ridge, deepest_mode_weekly, R_no, mean_keel_depth, draft_max_weekly, 
+                                                                                  draft_deepest_ridge, deepest_mode_weekly, R_no, mean_keel_draft, draft_max_weekly, 
                                                                                   week_to_keep)
                 
                 # save the plot

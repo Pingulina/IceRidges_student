@@ -6,7 +6,7 @@ from datetime import datetime as dt
 
 
 
-def plot_per_location(dateNum, draft, dateNum_LI, draft_mode, dateNum_rc, draft_rc, dateNum_rc_pd, draft_deepest_ridge, deepest_mode_weekly, R_no, mean_keel_depth, draft_max_weekly, week_to_keep):
+def plot_per_location(dateNum, draft, dateNum_LI, draft_mode, dateNum_rc, draft_rc, dateNum_rc_pd, draft_deepest_ridge, deepest_mode_weekly, R_no, mean_keel_draft, draft_max_weekly, week_to_keep):
     """ Plot the evaluated ridges for one location for one year.
     :param dateNum: numpy array, date number of the ice draft
     :param draft: numpy array, ice draft
@@ -18,7 +18,7 @@ def plot_per_location(dateNum, draft, dateNum_LI, draft_mode, dateNum_rc, draft_
     :param draft_deepest_ridge: numpy array, deepest ridge draft
     :param deepest_mode_weekly: numpy array, deepest mode weekly
     :param R_no: numpy array, number of ridges
-    :param mean_keel_depth: numpy array, mean keel depth
+    :param mean_keel_draft: numpy array, mean keel depth
     :param draft_max_weekly: numpy array, weekly deepest ridge draft
     :param week_to_keep: numpy array, week to keep
     :return: figure_ridge_statistics: matplotlib figure, figure with the ridge statistics
@@ -65,7 +65,7 @@ def plot_per_location(dateNum, draft, dateNum_LI, draft_mode, dateNum_rc, draft_
     axis_deepestRidge_over_iceThickness.set_ylim(0, 30)
     axis_deepestRidge_over_iceThickness.set_ylabel('ridge thickness [m]')
     axis_deepestRidge_over_iceThickness.scatter(deepest_mode_weekly, draft_deepest_ridge, s=1, c='tab:red', zorder=0, label='expected deepest weekly ridge')
-    axis_deepestRidge_over_iceThickness.scatter(deepest_mode_weekly, mean_keel_depth+5, s=1, c='tab:blue', zorder=1, label='expected mean weekly keel depth')
+    axis_deepestRidge_over_iceThickness.scatter(deepest_mode_weekly, mean_keel_draft+5, s=1, c='tab:blue', zorder=1, label='expected mean weekly keel depth')
     axis_deepestRidge_over_iceThickness.scatter(deepest_mode_weekly, draft_max_weekly, s=1, c='tab:green', zorder=2, label='weekly deepest ridge')
     axis_deepestRidge_over_iceThickness.legend(prop={'size': 6})
 
@@ -76,7 +76,7 @@ def plot_per_location(dateNum, draft, dateNum_LI, draft_mode, dateNum_rc, draft_
     axis_numberRidges_over_draft.set_xlim(0, 10)
     axis_numberRidges_over_draft.set_xlabel('Draft [m]')
     axis_numberRidges_over_draft.set_ylabel('Number of ridges')
-    axis_numberRidges_over_draft.scatter(mean_keel_depth+5, R_no, s=1, c='tab:blue', zorder=0, label='Mean keel depth')
+    axis_numberRidges_over_draft.scatter(mean_keel_draft+5, R_no, s=1, c='tab:blue', zorder=0, label='Mean keel depth')
     axis_numberRidges_over_draft.scatter(deepest_mode_weekly, R_no, s=1, c='tab:red', zorder=0, label='deepest mode level ice')
     axis_numberRidges_over_draft.legend(prop={'size': 6})
 
@@ -123,7 +123,7 @@ def plot_per_year(dict_yearly):
     axis_meanRidge_over_iceThickness.set_ylim(5, 9)
     axis_meanRidge_over_iceThickness.set_ylabel('ridge thickness [m]')
     for i, loc in enumerate(dict_yearly.keys()):
-        axis_meanRidge_over_iceThickness.scatter(dict_yearly[loc]['level_ice_deepest_mode'], dict_yearly[loc]['mean_keel_depth'], s=1, c=colourlist[i], zorder=0, label=loc)
+        axis_meanRidge_over_iceThickness.scatter(dict_yearly[loc]['level_ice_deepest_mode'], dict_yearly[loc]['mean_keel_draft'], s=1, c=colourlist[i], zorder=0, label=loc)
     axis_meanRidge_over_iceThickness.legend(prop={'size': 6})
     
     axis_weeklyDeepestRidge_over_iceThickness = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[0,2]) # plt.subplot2grid((2,6), (1,0), colspan=2) # figure_ridge_statistics.add_subplot(2,2,3)
@@ -144,7 +144,7 @@ def plot_per_year(dict_yearly):
     axis_numberRidges_over_draft.set_xlabel('Draft [m]')
     axis_numberRidges_over_draft.set_ylabel('Number of ridges')
     for i, loc in enumerate(dict_yearly.keys()):
-        axis_numberRidges_over_draft.scatter(dict_yearly[loc]['mean_keel_depth'], dict_yearly[loc]['number_ridges'], s=1, c=colourlist[i], zorder=0, label=loc)
+        axis_numberRidges_over_draft.scatter(dict_yearly[loc]['mean_keel_draft'], dict_yearly[loc]['number_ridges'], s=1, c=colourlist[i], zorder=0, label=loc)
     axis_numberRidges_over_draft.legend(prop={'size': 6})
 
     axis_numberRidges_over_mode = figure_ridge_statistics.add_subplot(gridspec_ridge_statistics[1, 1])

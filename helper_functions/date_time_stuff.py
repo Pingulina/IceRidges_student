@@ -1,5 +1,5 @@
 # this module contains helper functions for date and time handling
-
+import numpy as np
 from datetime import datetime as dt
 
 def datenum(date, time):
@@ -20,9 +20,48 @@ def datenum(date, time):
     # return 366 + d.toordinal() + (d - dt.fromordinal(d.toordinal())).total_seconds()/(24*60*60)
 
 
-def datestr(date_num):
+def datestr(date_num, format='YYYYMMDD'):
     """Convert a date number to a string, equivalent to the datestr function in matlab
     date_num: float, date number (1 is 1.1.0001 00:00:00, 1.5 is 1.1.0001 12:00:00, ...)
     return: str, date in the format YYYYMMDD"""
+    # if date_num is an array, convert each element
+    if type(date_num) == list:
+        return [datestr(d, format) for d in date_num]
+    elif type(date_num) == np.ndarray:
+        return np.array([datestr(d, format) for d in date_num])
     d = dt.fromordinal(int(date_num))
-    return d.strftime('%Y%m%d')
+    if format == 'YYYYMMDD':
+        return format_YYYYMMDD(d)
+    elif format == 'YYYY.MM.DD':
+        return format_dot_date_reverse(d)
+    elif format == 'DD.MM.YYYY':
+        return format_dot_date(d)
+    elif format == 'DD.MM.YY':
+        return format_dot_date_short(d)
+    else:
+        raise ValueError('The format ' + format + ' is not supported.')
+   
+
+def format_YYYYMMDD(dateNum:int):
+    """Convert a date string to the format YYYYMMDD
+    dateNum: int, dateNum
+    return: str, date in the format YYYYMMDD"""
+    return dateNum.strftime('%Y%m%d')
+
+def format_dot_date_reverse(dateNum:int):
+    """Convert a date string to the format YYYY.MM.DD
+    dateNum: int, dateNum
+    return: str, date in the format YYYY.MM.DD"""
+    return dateNum.strftime('%Y.%m.%d')
+
+def format_dot_date(dateNum:int):
+    """Convert a date string to the format DD.MM.YYYY
+    dateNum: int, dateNum
+    return: str, date in the format DD.MM.YYYY"""
+    return dateNum.strftime('%d.%m.%Y')
+
+def format_dot_date_short(dateNum:int):
+    """Convert a date string to the format DD.MM.YY
+    dateNum: int, dateNum
+    return: str, date in the format DD.MM.YY"""
+    return dateNum.strftime('%d.%m.%y')

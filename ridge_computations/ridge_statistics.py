@@ -192,8 +192,8 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             dict_yearly[loc]['draft_weekly_deepest_ridge'].extend(draft_max_weekly)
             dict_yearly[loc]['year'].extend([year]*len(dateNum_reshape))
             dict_yearly[loc]['location'].extend([loc]*len(dateNum_reshape))
-            dict_yearly[loc]['peaks_intensity'].extend(intensities_all)
-            dict_yearly[loc]['peaks_location'].extend(locs_all)
+            dict_yearly[loc]['peaks_intensity'].extend([value for key, value in intensities_all.items()])
+            dict_yearly[loc]['peaks_location'].extend([value for key, value in locs_all.items()])
                     
             # plot the data in different plots (one figure) (one figure per location and year)
             if constants.make_plots:

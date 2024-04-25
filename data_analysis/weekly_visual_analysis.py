@@ -94,8 +94,8 @@ def weekly_visual_analysis():
     # plot the data
     week = 0
     plt.ion()
-    figure_weekly_analysis = plt.figure(layout='constrained', figsize=(10,8)) # 4/5 aspect ratio
-    gridspec_weekly_analysis = figure_weekly_analysis.add_gridspec(4,5)
+    figure_weekly_analysis = plt.figure(layout='constrained', figsize=(12,8)) # 4/5 aspect ratio
+    gridspec_weekly_analysis = figure_weekly_analysis.add_gridspec(4,6)
 
     # figure ice data
     ax_ice_data = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[0:2,0:4])
@@ -134,8 +134,7 @@ def weekly_visual_analysis():
 
     # plot the results of this year and location and the results of all years and locations, to compare it
     # figure mean ridge keel depth
-    ax_mean_ridge_keel_depth = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[0,4])
-    ax_mean_ridge_keel_depth.axis('equal')
+    ax_mean_ridge_keel_depth = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[0,4:6])
     ax_mean_ridge_keel_depth.set_xlabel('Level ice deepest mode [m]')
     ax_mean_ridge_keel_depth.set_ylabel('Mean keel draft [m]')
     lrs1x = (max(all_LIDM)-min(all_LIDM))/20
@@ -153,8 +152,7 @@ def weekly_visual_analysis():
 
 
     # figure I don't know yet
-    ax_kernel_estimate = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[1,4])
-    ax_kernel_estimate.axis('equal')
+    ax_kernel_estimate = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[1,4:6])
     draft_subset = draft[np.intersect1d(np.where(draft > 0), np.intersect1d(np.where(dateNum > dict_ridge_statistics[loc]['week_start'][week]), np.where(dateNum < dict_ridge_statistics[loc]['week_end'][week])))]
     # bw_sigma = np.std(draft_subset)
     # bw_n = len(draft_subset)
@@ -168,8 +166,10 @@ def weekly_visual_analysis():
     AM_line = ax_kernel_estimate.plot([0, 0], [0, 6], color='red', label='average mode LI', ls='--', zorder=2)
     kernel_estimate_line = ax_kernel_estimate.plot(xi, f, color='tab:red', label='Kernel estimate', zorder=3)
     PS_line = ax_kernel_estimate.scatter(0, 0, color='k', zorder=3, label='peak signal', s=4)
-    histogram_line = ax_kernel_estimate.hist(draft_subset, bins=20, color='tab:blue', alpha=0.5, zorder=0, density=True)
-    ax_kernel_estimate.legend()
+    # histogram_line = ax_kernel_estimate.hist(draft_subset, bins=20, color='k', alpha=0.5, zorder=0, density=True)
+    histogram_numpy = np.histogram(draft_subset, bins=20, density=True)
+    histogram_line = ax_kernel_estimate.bar(histogram_numpy[1][:-1], histogram_numpy[0], align='edge', color='k', alpha=0.5, zorder=0, width=(max(draft_subset)-min(draft_subset))/20)
+    # ax_kernel_estimate.legend()
 
     DM_line[0].set_xdata(dict_ridge_statistics[loc]['level_ice_expect_deepest_mode'][week])
     AM_line[0].set_xdata(dict_ridge_statistics[loc]['level_ice_deepest_mode'][week])
@@ -179,8 +179,7 @@ def weekly_visual_analysis():
     
 
     # figure weekly deepest ridge
-    ax_weekly_deepest_ridge = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[2,4])
-    # ax_weekly_deepest_ridge.axis('equal')
+    ax_weekly_deepest_ridge = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[2,4:6])
     ax_weekly_deepest_ridge.set_xlabel('Level ice deepest mode [m]')
     ax_weekly_deepest_ridge.set_ylabel('Max weekly draft [m]')
     lrs3x = (max(all_LIDM)-min(all_LIDM))/20
@@ -196,7 +195,7 @@ def weekly_visual_analysis():
     # T3 = ax_weekly_deepest_ridge.text(0.5, 0.5, f"LI DM = {0} || Dmax = {0}", fontsize=12, transform=ax_weekly_deepest_ridge.transAxes)
 
     # figure number of ridges
-    ax_number_of_ridges = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[3,4])
+    ax_number_of_ridges = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[3,4:6])
     lrs4x = (max(all_LIDM)-min(all_LIDM))/20
     lrs4y = (max(all_number_of_ridges)-min(all_number_of_ridges))/20
     ax_number_of_ridges.set_xlabel('Level ice deepest mode [m]')
@@ -269,8 +268,10 @@ def weekly_visual_analysis():
         kde = scipy.stats.gaussian_kde(draft_subset)
         xi = np.linspace(draft_subset.min(), draft_subset.max(), 100)
         f = kde(xi)
-        histogram_line[0].remove()
-        histogram_line = ax_kernel_estimate.hist(draft_subset, bins=20, color='tab:blue', alpha=0.5, zorder=0, density=True)
+        histogram_line.remove()
+        histogram_numpy = np.histogram(draft_subset, bins=20, density=True)
+        histogram_line = ax_kernel_estimate.bar(histogram_numpy[1][:-1], histogram_numpy[0], align='edge', color='k', alpha=0.5, zorder=0, width=(max(draft_subset)-min(draft_subset))/20)
+        # histogram_line = ax_kernel_estimate.hist(draft_subset, bins=20, color='k', alpha=0.5, zorder=0, density=True)
 
         DM_line[0].set_xdata(dict_ridge_statistics[loc]['level_ice_expect_deepest_mode'][week])
         AM_line[0].set_xdata(dict_ridge_statistics[loc]['level_ice_deepest_mode'][week])

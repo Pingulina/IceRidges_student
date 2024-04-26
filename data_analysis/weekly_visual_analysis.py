@@ -22,6 +22,7 @@ j2np = import_module('json2numpy', 'data_handling')
 constants = import_module('constants', 'helper_functions')
 j2d = import_module('jsonified2dict', 'initialization_preparation')
 date_time_stuff = import_module('date_time_stuff', 'helper_functions')
+load_data = import_module('load_data', 'data_handling')
 
 
 def weekly_visual_analysis():
@@ -29,40 +30,10 @@ def weekly_visual_analysis():
     """
     pathName = os.getcwd()
     path_to_json_mooring = os.path.join(pathName, 'Data', 'uls_data')
-    while True:
-        year = input("Enter the year you want to analyse: ")
-        try:
-            year = int(year)
-        except ValueError:
-            print("Wrong format. Please enter a valid year")
-            continue
-        
-        
-        path_to_json_processed = os.path.join(constants.pathName_data, 'ridge_statistics')
-        json_file_name_processed = f"ridge_statistics_{year}.json"
-        # check if the json file exists
-        if not os.path.exists(os.path.join(path_to_json_processed, json_file_name_processed)):
-            print(f"The json file {json_file_name_processed} does not exist. Please enter a valid year.")
-            continue
-        # load the ridge statistics from the json file
-        with open(os.path.join(path_to_json_processed, json_file_name_processed), 'r') as file:
-            dict_ridge_statistics = json.load(file)
-            # make all entries in data to the data format named in type (e.g. list, dict, str, np.ndarray, np.float, ...)
-            for loc in dict_ridge_statistics.keys():
-                dict_ridge_statistics[loc] = j2d.jsonified2dict(dict_ridge_statistics[loc])
 
-            
-        
-        locations_this_year = dict_ridge_statistics.keys() 
-        loc = input("Enter the location you want to analyse: ")
-        if loc in locations_this_year:
-            break
-        else:
-            print(f"The location you entered is not in the data. Please enter a valid location. The locations for this year are: {locations_this_year}")
-            continue
-        
-    # get the raw data for the year and location
-    _, dateNum, draft, _ = j2np.json2numpy(os.path.join(path_to_json_mooring, f"mooring_{year}-{year+1}_{loc}_draft.json"), loc)
+    path_to_json_processed = os.path.join(constants.pathName_data, 'ridge_statistics')
+    dateNum, draft, dict_ridge_statistics, year, loc = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, path_to_json_mooring=path_to_json_mooring
+                                                                        )
     
     
     # get the data for all years and locations each in an array
@@ -78,17 +49,15 @@ def weekly_visual_analysis():
     all_Dmax = []
     all_number_of_ridges = []
 
-    for file in files:
-        if file.split('_')[1] == 'statistics':
-            with open(os.path.join(path_to_json_processed, file), 'r') as file:
-                dict_ridge_statistics_year = json.load(file)
+    dict_ridge_statistics_year_all = load_data.load_data_all_years(path_to_json_processed=path_to_json_processed)
                 # make all entries in data to the data format named in type (e.g. list, dict, str, np.ndarray, np.float, ...)
-                for loc_year in dict_ridge_statistics_year.keys():
-                    dict_ridge_statistics_year[loc_year] = j2d.jsonified2dict(dict_ridge_statistics_year[loc_year])
-                    all_LIDM.extend(dict_ridge_statistics_year[loc_year]['level_ice_deepest_mode'])
-                    all_MKD.extend(dict_ridge_statistics_year[loc_year]['mean_keel_draft']) 
-                    all_Dmax.extend(dict_ridge_statistics_year[loc_year]['draft_weekly_deepest_ridge'])
-                    all_number_of_ridges.extend(dict_ridge_statistics_year[loc_year]['number_ridges'])
+    for year in dict_ridge_statistics_year_all.keys():
+        dict_ridge_statistics_year = dict_ridge_statistics_year_all[year]
+        for loc_year in dict_ridge_statistics_year.keys():
+            all_LIDM.extend(dict_ridge_statistics_year[loc_year]['level_ice_deepest_mode'])
+            all_MKD.extend(dict_ridge_statistics_year[loc_year]['mean_keel_draft']) 
+            all_Dmax.extend(dict_ridge_statistics_year[loc_year]['draft_weekly_deepest_ridge'])
+            all_number_of_ridges.extend(dict_ridge_statistics_year[loc_year]['number_ridges'])
 
 
     # plot the data

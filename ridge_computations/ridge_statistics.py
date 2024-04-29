@@ -215,7 +215,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
 
         if saveAsJson:
             # save the data in a json file
-            pathName_thisData = os.path.join(constants.pathName_data, 'ridge_statistics')
+            pathName_thisData = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
             if not os.path.exists(pathName_thisData):
                 os.makedirs(pathName_thisData)
             dict2json.dict2json(dict_yearly, os.path.join(pathName_thisData, f"ridge_statistics_{year}.json"))

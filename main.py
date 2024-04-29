@@ -16,6 +16,7 @@ def main():
     import ridge_computations.ridge_statistics as rs
     import data_analysis.weekly_visual_analysis as wva
     import data_handling.dict2json as dict2json
+    import data_analysis.weekly_manual_correction as wmc
     # d2j.example() # store the .dat files as .json files for the mooring data
 
     # rs.ridge_statistics()
@@ -31,7 +32,10 @@ def main():
 
 
     ### uncomment the following line to run the weekly_visual_analysis.py file
-    wva.weekly_visual_analysis()
+    # wva.weekly_visual_analysis()
+
+    ### uncomment the following line to run the weekly_manual_correction.py file
+    wmc.weekly_manual_correction()
     return None
 
 if __name__ == "__main__":

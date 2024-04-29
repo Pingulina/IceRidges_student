@@ -2,7 +2,8 @@
 import os
 
 pathName_mooring_data = r"C:\Users\linasap\Documents\Ice_ridges\IceRidges_python\Data_Beaufort_Gyre_Exploration\SEASON"
-pathName_data = os.path.join(os.getcwd(), "Data_results")
+pathName_dataResults = os.path.join(os.getcwd(), "Data_results")
+pathName_dataRaw = os.path.join(os.getcwd(), "Data")
 pathName_plots = os.path.join(os.getcwd(), "Plots")
 level_ice_statistic_days = 7 # duration of sample of estimated level ice for level ice statistics (in days)
 level_ice_time = 1 # duration of sample for level ice estimate (in hours)

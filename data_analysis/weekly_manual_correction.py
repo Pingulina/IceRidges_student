@@ -33,6 +33,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import sys
+import json
+from copy import deepcopy
+import scipy.stats
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 # Get the current working directory
@@ -46,7 +49,7 @@ from import_module import import_module
 constants = import_module('constants', 'helper_functions')
 load_data = import_module('load_data', 'data_handling')
 
-def weekly_visual_analysis(number_ridges_threshold=15):
+def weekly_manual_correction(number_ridges_threshold=15):
     """correct the data manually
     :input: number_ridges_threshold: int: minimal number of ridges per dataset
     """
@@ -55,8 +58,8 @@ def weekly_visual_analysis(number_ridges_threshold=15):
     pathName = os.getcwd()
     path_to_json_mooring = os.path.join(pathName, 'Data', 'uls_data')
 
-    path_to_json_processed = os.path.join(constants.pathName_data, 'ridge_statistics')
-    dateNum, draft, dict_ridge_statistics = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, path_to_json_mooring=path_to_json_mooring
+    path_to_json_processed = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
+    dateNum, draft, dict_ridge_statistics, year_user, loc_user = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, path_to_json_mooring=path_to_json_mooring
                                                                         )
     
     
@@ -71,6 +74,14 @@ def weekly_visual_analysis(number_ridges_threshold=15):
 
     dict_ridge_statistics_year_all = {}
 
+    # load the data from mooring_locations.json to get the locations for all years
+    with open(os.path.join(constants.pathName_dataRaw, 'mooring_locations.json'), 'r') as file:
+        dict_mooring_locations = json.load(file)
+    # get the years from the files   
+    mooring_years = [thisFile.split('.')[0].split('_')[-1] for thisFile in files]
+    # kick out all the years from dict_mooring_locations, that are not stored in the ridge_statistics folder
+    dict_mooring_locations = {key: dict_mooring_locations[key] for key in dict_mooring_locations.keys() if key[0:4] in mooring_years}
+
     # dict_ridge_statistics_year_all = load_data.load_data_all_years(path_to_json_processed=path_to_json_processed)
 
     # # for every year and location, get the number of ridges. If there are less than number_ridges_threshold ridges, delete the data
@@ -81,38 +92,59 @@ def weekly_visual_analysis(number_ridges_threshold=15):
 
 
     # iterate over all years and locations
-    for year in dict_ridge_statistics_year_all.keys():
-        for loc in dict_ridge_statistics_year_all[year].keys():
+    for season in dict_mooring_locations.keys():
+        dict_ridge_statistics_year_all[season] = {}
+
+        
+        for loc in dict_mooring_locations[season].keys():
+            if len(season.split('-')) > 1:
+                year = season.split('-')[0]
             # get the data for the year and location
-            dateNum, draft, dict_ridge_statistics, _, _ = load_data.load_data_oneYear(year, loc, path_to_json_mooring, path_to_json_processed)
+            dateNum, draft, dict_ridge_statistics, _, _ = load_data.load_data_oneYear(year, loc, path_to_json_processed, path_to_json_mooring)
+            
             # get the number of ridges
-            number_ridges = dict_ridge_statistics['number_ridges']
-            # get the number of ridges that are not nan
-            number_ridges_not_nan = np.sum(~np.isnan(number_ridges))
+            number_ridges = dict_ridge_statistics[loc]['number_ridges']
+            # get the indices of ridges that have less than number_ridges_threshold ridges	
+            number_ridges_delete = np.where([ridgeNum < number_ridges_threshold for ridgeNum in dict_ridge_statistics[loc]['number_ridges']])
             # if the number of ridges is less than the threshold, delete the data
-            if number_ridges_not_nan < number_ridges_threshold:
-                del dict_ridge_statistics_year_all[year][loc]
+            for key in dict_ridge_statistics[loc].keys():
+                dict_ridge_statistics[loc][key] = remove_indices(dict_ridge_statistics[loc][key], number_ridges_delete)
+
+            dict_ridge_statistics_year_all[season][loc] = deepcopy(dict_ridge_statistics[loc])
 
             # make weekly histogram data that are later used for creating the distogram plot
-            period = (24/constants.level_ice_time)*constants.level_ice_statistic_days
+            period = (24//constants.level_ice_time)*constants.level_ice_statistic_days # hours per sampling unit (week)
             histBins = np.arange(-0.1, 8, 0.1)
 
             # instantaneaous LI draft estimated by finding the mode of the distribution. 
             # Multiplication with 1000, finding the mode and subsequent division by 1000 s done because the mode function bins the data in integers. 
             # dateNum_LI is the time of the instantaneous estimates
 
-            hi = max(dict_ridge_statistics['keel_draft'], key=dict_ridge_statistics['keel_draft'].count)
-            dateNum_LI = dict_ridge_statistics['keel_dateNum'][dict_ridge_statistics['keel_draft'].index(hi)]
+            dt = np.round(np.mean(np.diff(dateNum))*3600*24)
+            mean_time = 3600 * constants.level_ice_time
+            mean_points = mean_time / dt
+            numberElements = int(np.floor(len(dateNum)/mean_points) * mean_points)
+            dateNum_reshape = dateNum[:numberElements]
+            dateNum_reshape = dateNum_reshape.reshape(int(len(dateNum)/mean_points), int(mean_points))
+            draft_reshape = draft[:numberElements]
+            draft_reshape = draft_reshape.reshape(int(len(draft)/mean_points), int(mean_points))
 
-            numberElements = len(hi)//period
-            HHi = [[]]*numberElements
-            dateNum_hist = [[]]*numberElements
 
-            for i in range(numberElements):
+            hi = scipy.stats.mode(np.round(np.array(draft_reshape)*1000, 0), axis=1).mode / 1000
+            # max(dict_ridge_statistics[loc]['keel_draft'], key=dict_ridge_statistics[loc]['keel_draft'].count)
+            # dateNum_LI = dict_ridge_statistics[loc]['keel_dateNum'][dict_ridge_statistics[loc]['keel_draft'].index(hi)]
+            dateNum_LI = np.mean(dateNum_reshape, axis=1)
+
+            # numberElements = len(hi)//period
+            # number_weeks = int(np.floor(numberElements * (1/(3600/dt)) / 168))
+            HHi = [[]] * (len(hi)//period )
+            dateNum_hist = [[]] * (len(hi)//period )
+
+            for i, n in enumerate(range(0,len(hi)-period,period)):
                 # interpolate hi[i*period:(i+1)*period] to get the values for the points histBins
-                HHi[i] = np.digitize(hi[i*period:(i+1)*period], histBins) # equivalent to histcounts in matlab, returns the indices of the bins to which each value in input array belongs.
-                dateNum_hist[i] = np.mean(dateNum_LI[i*period:(i+1)*period])
-
+                HHi[i] = np.digitize(hi[n:n+period], histBins) # equivalent to histcounts in matlab, returns the indices of the bins to which each value in input array belongs.
+                dateNum_hist[i] = np.mean(dateNum_LI[n:n+period])
+            HHi = np.array(HHi)
             hh = histBins[0:-1]+np.diff(histBins)/2
             [X, Y] = np.meshgrid(dateNum_hist, hh)
             # plot the data
@@ -128,8 +160,8 @@ def weekly_visual_analysis(number_ridges_threshold=15):
 
             specto_ax.set_xlim([dateNum_LI[0]+3.5, dateNum_LI[-1]-10.5])
 
-            scatter_DM = specto_ax.scatter(dateNum_LI, dict_ridge_statistics['level_ice_deepest_mode'], 10*np.ones(len(dateNum_LI)), c='r', s=10, marker='o') # scatter shape: circles
-            scatter_AM = specto_ax.scatter(dateNum_LI, dict_ridge_statistics['level_ice_expect_deepest_mode'], 10*np.ones(len(dateNum_LI)), c='b', s=10, marker='^') # scatter shape: triangles
+            scatter_DM = specto_ax.scatter(dateNum_LI, dict_ridge_statistics[loc]['level_ice_deepest_mode'], 10*np.ones(len(dateNum_LI)), c='r', s=10, marker='o') # scatter shape: circles
+            scatter_AM = specto_ax.scatter(dateNum_LI, dict_ridge_statistics[loc]['level_ice_expect_deepest_mode'], 10*np.ones(len(dateNum_LI)), c='b', s=10, marker='^') # scatter shape: triangles
 
             CP44 = specto_ax.scatter(0, 0, 10, c='r', s=10, marker='s')
 
@@ -138,3 +170,24 @@ def weekly_visual_analysis(number_ridges_threshold=15):
 
             
 
+
+
+def remove_indices(d_at_key, indices):
+    """Remove elements at specific indices from all lists or numpy arrays in a dictionary entry.
+    :param d: dictionary to modify
+    :type d_at_key: dict entry
+    :param indices: indices of elements to remove
+    :type indices: list
+    :return: dictionary with elements removed
+    :rtype: dict
+    """
+    if isinstance(indices, tuple):
+        indices = indices[0] # get the indices from the tuple
+
+    if isinstance(d_at_key, list):
+        d_at_key = [x for j, x in enumerate(d_at_key) if j not in indices]
+    elif isinstance(d_at_key, np.ndarray):
+        d_at_key = np.delete(d_at_key, indices)
+    else:
+        raise ValueError("The input data type is not supported. Please use a list or a numpy array.")
+    return d_at_key

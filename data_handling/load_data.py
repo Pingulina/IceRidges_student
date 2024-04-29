@@ -25,7 +25,7 @@ def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_
         path_to_json_mooring = os.path.join(pathName, 'Data', 'uls_data')
 
     if path_to_json_processed is None:
-        path_to_json_processed = os.path.join(constants.pathName_data, 'ridge_statistics')
+        path_to_json_processed = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
 
     while True:
         if year is None:

@@ -31,7 +31,7 @@ def weekly_visual_analysis():
     pathName = os.getcwd()
     path_to_json_mooring = os.path.join(pathName, 'Data', 'uls_data')
 
-    path_to_json_processed = os.path.join(constants.pathName_data, 'ridge_statistics')
+    path_to_json_processed = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
     dateNum, draft, dict_ridge_statistics, year, loc = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, path_to_json_mooring=path_to_json_mooring
                                                                         )
     

@@ -114,7 +114,7 @@ def weekly_manual_correction(number_ridges_threshold=15):
 
             # make weekly histogram data that are later used for creating the distogram plot
             period = (24//constants.level_ice_time)*constants.level_ice_statistic_days # hours per sampling unit (week)
-            histBins = np.arange(-0.1, 8, 0.1)
+            histBins = np.arange(-0.1, 8+0.1, 0.1)
 
             # instantaneaous LI draft estimated by finding the mode of the distribution. 
             # Multiplication with 1000, finding the mode and subsequent division by 1000 s done because the mode function bins the data in integers. 
@@ -129,8 +129,8 @@ def weekly_manual_correction(number_ridges_threshold=15):
             draft_reshape = draft[:numberElements]
             draft_reshape = draft_reshape.reshape(int(len(draft)/mean_points), int(mean_points))
 
-
-            hi = scipy.stats.mode(np.round(np.array(draft_reshape)*1000, 0), axis=1).mode / 1000
+            hi = compute_mode(np.array(np.round(np.array(draft_reshape)*1000, 0))) / 1000
+            hi_1 = scipy.stats.mode(np.round(np.array(draft_reshape)*1000, 0), axis=1).mode / 1000
             # max(dict_ridge_statistics[loc]['keel_draft'], key=dict_ridge_statistics[loc]['keel_draft'].count)
             # dateNum_LI = dict_ridge_statistics[loc]['keel_dateNum'][dict_ridge_statistics[loc]['keel_draft'].index(hi)]
             dateNum_LI = np.mean(dateNum_reshape, axis=1)
@@ -142,7 +142,7 @@ def weekly_manual_correction(number_ridges_threshold=15):
 
             for i, n in enumerate(range(0,len(hi)-period,period)):
                 # interpolate hi[i*period:(i+1)*period] to get the values for the points histBins
-                HHi[i] = np.digitize(hi[n:n+period], histBins) # equivalent to histcounts in matlab, returns the indices of the bins to which each value in input array belongs.
+                HHi[i], _ = np.histogram(hi[n:n+period], bins=histBins) #  HHi[i] = np.digitize(hi[n:n+period], histBins) # equivalent to histcounts in matlab, returns the indices of the bins to which each value in input array belongs.
                 dateNum_hist[i] = np.mean(dateNum_LI[n:n+period])
             HHi = np.array(HHi)
             hh = histBins[0:-1]+np.diff(histBins)/2
@@ -153,8 +153,8 @@ def weekly_manual_correction(number_ridges_threshold=15):
             # plot the data
             specto_figure = plt.figure()
             specto_ax = specto_figure.add_subplot(111)
-            specto_ax.pcolormesh(X, Y, HHi_plot, shading='auto')
-            
+            specto_ax.pcolormesh(X, Y, HHi_plot.transpose(), shading='nearest')
+            specto_ax.set_ylim([0, 4])
             specto_ax.set_xlabel('Time')
             specto_ax.set_ylabel('Draft')
 
@@ -191,3 +191,22 @@ def remove_indices(d_at_key, indices):
     else:
         raise ValueError("The input data type is not supported. Please use a list or a numpy array.")
     return d_at_key
+
+
+def compute_mode(data):
+    """Compute the mode of the data
+    :param data: list or numpy array
+    :return: mode of the data
+    """
+    # if data is 2d, make it for every row
+    if len(data.shape) > 1:
+        mode = np.zeros(data.shape[0])
+        for i in range(data.shape[0]):
+            mode[i] =  compute_mode(data[i])
+    else:
+        X = np.sort(data)                               # x is a column vector dataset
+        indices = np.where(np.diff(np.concatenate((X, [np.inf])))  > 0)[0] # indices where repeated values change
+        i = np.argmax(np.diff(np.concatenate(([0], indices))))     # longest persistence length of repeated values
+        mode = X[indices[i]]
+
+    return mode

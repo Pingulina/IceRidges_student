@@ -40,7 +40,7 @@ def data2json(file_path, file_name, storage_path):
         date, time, draft = line.split() # write split(',') to enable csv reading
         data_dict['date'].append(int(date))
         data_dict['time'].append(int(time))
-        # convert date and time to a date number (0 is 1.1.0000 00:00:00, 0.5 is 1.1.0000 12:00:00, ...)
+        # convert date and time to a date number (1 is 1.1.0001 00:00:00, 0.5 is 1.1.0000 12:00:00, ...)
         data_dict['dateNum'].append(dts.datenum(date, time)) # use strings, otherwise there are not always enough digits
         data_dict['draft'].append(float(draft))
     # store the data in a .json file

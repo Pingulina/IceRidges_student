@@ -204,9 +204,28 @@ def compute_mode(data):
         for i in range(data.shape[0]):
             mode[i] =  compute_mode(data[i])
     else:
-        X = np.sort(data)                               # x is a column vector dataset
-        indices = np.where(np.diff(np.concatenate((X, [np.inf])))  > 0)[0] # indices where repeated values change
-        i = np.argmax(np.diff(np.concatenate(([0], indices))))     # longest persistence length of repeated values
-        mode = X[indices[i]]
+        # X = np.sort(data)   # sort the data
+        # indices = np.where(np.diff(np.concatenate((X, [np.inf])))  > 0)[0] # indices where repeated values change
+        # i = np.argmax(np.diff(np.concatenate(([0], indices))))     # longest persistence length of repeated values
+        # mode = X[indices[i]]
+        data_frequency_values, data_frequency = to_frequency(data)
+        mode = data_frequency_values[np.argmax(data_frequency)]
 
     return mode
+
+
+def to_frequency(data: np.ndarray):
+    """Convert data from time to frequency domain
+    :param data: numpy array, data in time domain
+    :return: numpy array, data values in frequency domain
+    :return: numpy array, data in frequency domain
+    """
+    # sort the data
+    X = np.sort(data)
+    # count how often values occur
+    indices = np.where(np.diff(np.concatenate((X, np.ones(np.shape(X)[0]) * np.inf)))  > 0)[0] # indices where repeated values change
+    data_frequency_values = data[indices] # all different values
+    # count how often each value occurs (difference between the indices)
+    data_frequency = np.diff(np.concatenate((indices, np.ones(1)*len(data)))) # number of occurences of each value
+
+    return data_frequency_values, data_frequency

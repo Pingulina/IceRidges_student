@@ -47,8 +47,8 @@ def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_
         with open(os.path.join(path_to_json_processed, json_file_name_processed), 'r') as file:
             dict_ridge_statistics = json.load(file)
             # make all entries in data to the data format named in type (e.g. list, dict, str, np.ndarray, np.float, ...)
-            for loc in dict_ridge_statistics.keys():
-                dict_ridge_statistics[loc] = j2d.jsonified2dict(dict_ridge_statistics[loc])
+            for loc_dict in dict_ridge_statistics.keys():
+                dict_ridge_statistics[loc_dict] = j2d.jsonified2dict(dict_ridge_statistics[loc_dict])
 
             
         

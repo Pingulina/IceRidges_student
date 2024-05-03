@@ -26,7 +26,7 @@ def main():
     # ewd.extract_ridge_LI_data(overwrite=True)
 
     ### uncomment the following line to run the ridge_statistics.py file
-    # dict_ridge_statistics = rs.ridge_statistics(years=[2004, 2005, 2006], saveAsJson=True)
+    # rs.ridge_statistics(years=[2004, 2005, 2006], saveAsJson=True) # dict_ridge_statistics = 
     # store the ridge statistics in a json file
     # dict2json.dict2json(dict_ridge_statistics, 'ridge_statistics.json')
 

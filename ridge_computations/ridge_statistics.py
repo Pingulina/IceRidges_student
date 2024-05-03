@@ -37,7 +37,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
     path_to_json = os.path.join(pathName, 'Data', 'uls_data')
 
     # preallocate the dict for all years
-    dict_ridge_statistics = dict()
+    # dict_ridge_statistics = dict()
 
 
     # loop over mooring locations and years, if they are existing in the data, do calculations
@@ -177,23 +177,23 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
 
 
             # store the data in the dictionarys (to store as json afterwards)
-            dict_yearly[loc]['level_ice_deepest_mode'].extend(deepest_mode_weekly)
-            dict_yearly[loc]['level_ice_expect_deepest_mode'].extend(absolute_mode_weekly)
-            dict_yearly[loc]['expect_deepest_ridge'].extend(draft_deepest_ridge)
-            dict_yearly[loc]['number_ridges'].extend(R_no)
-            dict_yearly[loc]['mean_keel_draft'].extend(mean_keel_draft+5)
-            dict_yearly[loc]['mean_dateNum'].extend(dateNum_rc_pd)
-            dict_yearly[loc]['week_start'].extend(week_start)
-            dict_yearly[loc]['week_end'].extend(week_end)
-            dict_yearly[loc]['keel_draft'].extend(draft_reshape)
-            dict_yearly[loc]['keel_dateNum'].extend(dateNum_reshape)
-            dict_yearly[loc]['keel_draft_ridge'].extend([value for key, value in draft_rc_reshape.items()]) # this is a dict with entries for every week, make a list instead
-            dict_yearly[loc]['keel_dateNum_ridge'].extend([value for key, value in dateNum_rc_reshape.items()])
-            dict_yearly[loc]['draft_weekly_deepest_ridge'].extend(draft_max_weekly)
-            dict_yearly[loc]['year'].extend([year]*len(dateNum_reshape))
-            dict_yearly[loc]['location'].extend([loc]*len(dateNum_reshape))
-            dict_yearly[loc]['peaks_intensity'].extend([value for key, value in intensities_all.items()])
-            dict_yearly[loc]['peaks_location'].extend([value for key, value in locs_all.items()])
+            dict_yearly[loc]['level_ice_deepest_mode'].extend(deepcopy(deepest_mode_weekly))
+            dict_yearly[loc]['level_ice_expect_deepest_mode'].extend(deepcopy(absolute_mode_weekly))
+            dict_yearly[loc]['expect_deepest_ridge'].extend(deepcopy(draft_deepest_ridge))
+            dict_yearly[loc]['number_ridges'].extend(deepcopy(R_no))
+            dict_yearly[loc]['mean_keel_draft'].extend(deepcopy(mean_keel_draft+5))
+            dict_yearly[loc]['mean_dateNum'].extend(deepcopy(dateNum_rc_pd))
+            dict_yearly[loc]['week_start'].extend(deepcopy(week_start))
+            dict_yearly[loc]['week_end'].extend(deepcopy(week_end))
+            dict_yearly[loc]['keel_draft'].extend(deepcopy(draft_reshape))
+            dict_yearly[loc]['keel_dateNum'].extend(deepcopy(dateNum_reshape))
+            dict_yearly[loc]['keel_draft_ridge'].extend(deepcopy([value for key, value in draft_rc_reshape.items()])) # this is a dict with entries for every week, make a list instead
+            dict_yearly[loc]['keel_dateNum_ridge'].extend(deepcopy([value for key, value in dateNum_rc_reshape.items()]))
+            dict_yearly[loc]['draft_weekly_deepest_ridge'].extend(deepcopy(draft_max_weekly))
+            dict_yearly[loc]['year'].extend(deepcopy([year]*len(dateNum_reshape)))
+            dict_yearly[loc]['location'].extend(deepcopy([loc]*len(dateNum_reshape)))
+            dict_yearly[loc]['peaks_intensity'].extend(deepcopy([value for key, value in intensities_all.items()]))
+            dict_yearly[loc]['peaks_location'].extend(deepcopy([value for key, value in locs_all.items()]))
                     
             # plot the data in different plots (one figure) (one figure per location and year)
             if constants.make_plots:
@@ -210,8 +210,8 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
                 plt.close(figure_ridge_statistics)
 
 
-        # store dict_yearly to dict_ridge_statistics
-        dict_ridge_statistics[f"{year}"] = deepcopy(dict_yearly) # deepcopy, because the dict_yearly is overwritten in the next iteration
+        # # store dict_yearly to dict_ridge_statistics
+        # dict_ridge_statistics[f"{year}"] = deepcopy(dict_yearly) # deepcopy, because the dict_yearly is overwritten in the next iteration
 
         if saveAsJson:
             # save the data in a json file
@@ -237,6 +237,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
         else:
             print(f"Data for year {year} extracted.")
 
-    return dict_ridge_statistics
+    return None
+    # return dict_ridge_statistics
 
     

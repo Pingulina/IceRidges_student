@@ -4,6 +4,7 @@ import json
 import scipy.stats
 import os
 import sys
+from copy import deepcopy
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 # Get the current working directory
@@ -150,9 +151,9 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
 
 
             # store the data in the dictionarys (to store as json afterwards) 
-            dict_draft[loc_mooring] = {'dateNum': dateNum.tolist(), 'draft': draft.tolist()}
-            dict_draft_ridge[loc_mooring] = {'dateNum': dateNum_rc.tolist(), 'draft': draft_rc.tolist()}
-            dict_draft_LI[loc_mooring] = {'dateNum': dateNum_LI.tolist(), 'draft': draft_LI.tolist(), 'draft_mode': draft_mode.tolist()}
+            dict_draft[loc_mooring] = {'dateNum': deepcopy(dateNum.tolist()), 'draft': deepcopy(draft.tolist())}
+            dict_draft_ridge[loc_mooring] = {'dateNum': deepcopy(dateNum_rc.tolist()), 'draft': deepcopy(draft_rc.tolist())}
+            dict_draft_LI[loc_mooring] = {'dateNum': deepcopy(dateNum_LI.tolist()), 'draft': deepcopy(draft_LI.tolist()), 'draft_mode': deepcopy(draft_mode.tolist())}
         
             # store the dict in the json files (store the raw data for every location separately)
             with open(os.path.join(storage_path, f"mooring_{yr}-{yr+1}_{loc_mooring}_draft.json"), 'w') as file:

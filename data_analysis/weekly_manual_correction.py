@@ -48,6 +48,7 @@ from import_module import import_module
 ### imports using the helper function import_module
 constants = import_module('constants', 'helper_functions')
 load_data = import_module('load_data', 'data_handling')
+date_time_stuff = import_module('date_time_stuff', 'helper_functions')
 
 def weekly_manual_correction(number_ridges_threshold=15):
     """correct the data manually
@@ -150,7 +151,13 @@ def weekly_manual_correction(number_ridges_threshold=15):
             # plot the data
             # the figure should contain a spectogram and some lines on top of it (all in one plot)
             HHi_plot = HHi / (period+1)
+            
+            
             # plot the data
+
+            week = 0
+            dateNum_every_day = dateNum[np.where(np.diff(dateNum.astype(int)))[0]+1]
+
             specto_figure = plt.figure()
             specto_ax = specto_figure.add_subplot(111)
             specto_ax.pcolormesh(X, Y, HHi_plot.transpose(), shading='nearest')
@@ -160,15 +167,40 @@ def weekly_manual_correction(number_ridges_threshold=15):
 
             specto_ax.set_xlim([dateNum_LI[0]+3.5, dateNum_LI[-1]-10.5])
 
-            scatter_DM = specto_ax.scatter(dateNum_LI, dict_ridge_statistics[loc]['level_ice_deepest_mode'], 10*np.ones(len(dateNum_LI)), c='r', s=10, marker='o') # scatter shape: circles
-            scatter_AM = specto_ax.scatter(dateNum_LI, dict_ridge_statistics[loc]['level_ice_expect_deepest_mode'], 10*np.ones(len(dateNum_LI)), c='b', s=10, marker='^') # scatter shape: triangles
+            patch_current_week_ice_data = specto_ax.fill_between([dict_ridge_statistics[loc]['week_start'][week], dict_ridge_statistics[loc]['week_end'][week]], 0, max(draft), color='lightblue', label='Current week ice data', zorder=0)
+            scatter_DM = specto_ax.scatter(dict_ridge_statistics[loc]['mean_dateNum'], dict_ridge_statistics[loc]['level_ice_deepest_mode'], c='r', s=10, marker='o') # scatter shape: circles
 
-            CP44 = specto_ax.scatter(0, 0, 10, c='r', s=10, marker='s')
+            scatter_AM = specto_ax.scatter(dict_ridge_statistics[loc]['mean_dateNum'], dict_ridge_statistics[loc]['level_ice_expect_deepest_mode'], c='b', s=10, marker='^') # scatter shape: triangles
+
+            CP44 = specto_ax.scatter(0, 0, c='r', s=10, marker='s')
 
 
             ### continue with fig(1,1) (line 167 in matlab code)
+            # all ice thicknesses from this year and location
+            keel_draft_flat = [x for xs in dict_ridge_statistics[loc]['keel_draft_ridge'] for x in xs]
+            keel_dateNum_flat = [x for xs in dict_ridge_statistics[loc]['keel_dateNum_ridge'] for x in xs]
+            draft_figure = plt.figure()
+            draft_ax = draft_figure.add_subplot(111)
+            draft_ax.set_ylim([0, 5])
+            ULS_draft_signal = draft_ax.plot(dateNum, draft, color='tab:blue', label='Raw ULS draft signal', zorder=1)
+            RidgePeaks = draft_ax.scatter(keel_dateNum_flat, keel_draft_flat, color='red', label='Individual ridge peaks', s=0.75, zorder=2)
+            keel_dateNum_weekStart = [date[0] for date in dict_ridge_statistics[loc]['keel_dateNum']]
+            LI_thickness = draft_ax.step(keel_dateNum_weekStart, dict_ridge_statistics[loc]['level_ice_deepest_mode'], where='post', color='black', label='Level ice draft estimate', zorder=3)
 
+
+            # current ice thickness (of this week)
+            draft_thisWeek_figure = plt.figure()
+            draft_thisWeek_ax = draft_thisWeek_figure.add_subplot(111)
+            draft_thisWeek_ax.set_ylim(0, 5)
+            draft_thisWeek_ax.set_ylabel('Draft [m]')
+            draft_thisWeek_ax.set_xticks(dateNum_every_day[week*7:(week+1)*7])
+            draft_thisWeek_ax.set_xticklabels(date_time_stuff.datestr(dateNum_every_day[week*7:(week+1)*7], format='DD.MM.YY'))
             
+            ULS_draft_signal_thisWeek = draft_thisWeek_ax.plot(dict_ridge_statistics[loc]['keel_dateNum'][week], dict_ridge_statistics[loc]['keel_draft'][week], color='tab:blue', label='Raw ULS draft signal', zorder=0)
+            RidgePeaks_thisWeek = draft_thisWeek_ax.scatter(dict_ridge_statistics[loc]['keel_dateNum_ridge'][week], dict_ridge_statistics[loc]['keel_draft_ridge'][week], color='red', label='Individual ridge peaks', zorder=1, s=2)
+            LI_thickness_thisWeek = draft_thisWeek_ax.step(keel_dateNum_weekStart[week], dict_ridge_statistics[loc]['level_ice_deepest_mode'][week], where='post', color='green', label='Level ice draft estimate', zorder=2)
+
+
 
 
 

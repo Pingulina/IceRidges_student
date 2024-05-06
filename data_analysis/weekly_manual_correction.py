@@ -200,7 +200,121 @@ def weekly_manual_correction(number_ridges_threshold=15):
             RidgePeaks_thisWeek = draft_thisWeek_ax.scatter(dict_ridge_statistics[loc]['keel_dateNum_ridge'][week], dict_ridge_statistics[loc]['keel_draft_ridge'][week], color='red', label='Individual ridge peaks', zorder=1, s=2)
             LI_thickness_thisWeek = draft_thisWeek_ax.step(keel_dateNum_weekStart[week], dict_ridge_statistics[loc]['level_ice_deepest_mode'][week], where='post', color='green', label='Level ice draft estimate', zorder=2)
 
+            # plot the data
+            week = 0
+            plt.ion()
+            figure_weekly_analysis = plt.figure(layout='constrained', figsize=(12,8)) # 4/5 aspect ratio
+            gridspec_weekly_analysis = figure_weekly_analysis.add_gridspec(4,6)
 
+            # figure ice data
+            ax_ice_data = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[0:2,0:4])
+            ax_ice_data.set_ylim(0, 30)
+            ax_ice_data.set_ylabel('Draft [m]')
+            # the x data is dateNum format, but the x labels should be the date in the format 'YYYY-MM-DD', every 50th day is labeled. DateNum has 24*3600 entries per day
+            every_nth = 50
+            dateNum_every_day = dateNum[np.where(np.diff(dateNum.astype(int)))[0]+1]
+            ax_ice_data.set_xticks(dateNum_every_day[::every_nth])
+            ax_ice_data.set_xticklabels(date_time_stuff.datestr(dateNum_every_day[::every_nth], format='DD.MM.YY'))
+
+
+            keel_draft_flat = [x for xs in dict_ridge_statistics[loc]['keel_draft_ridge'] for x in xs]
+            keel_dateNum_flat = [x for xs in dict_ridge_statistics[loc]['keel_dateNum_ridge'] for x in xs]
+            patch_current_week_ice_data = ax_ice_data.fill_between([dict_ridge_statistics[loc]['week_start'][week], dict_ridge_statistics[loc]['week_end'][week]], 0, max(draft), color='lightblue', label='Current week ice data', zorder=0)
+            ULS_draft_signal = ax_ice_data.plot(dateNum, draft, color='tab:blue', label='Raw ULS draft signal', zorder=1)
+            # RidgePeaks = ax_ice_data.scatter(dict_ridge_statistics[loc]['keel_dateNum'], dict_ridge_statistics[loc]['keel_draft'], color='red', label='Individual ridge peaks')
+            RidgePeaks = ax_ice_data.scatter(keel_dateNum_flat, keel_draft_flat, color='red', label='Individual ridge peaks', s=0.75, zorder=2)
+            # take the first element of each list in keel_dateNum and write it in keel_dateNum_weekStart
+            keel_dateNum_weekStart = [date[0] for date in dict_ridge_statistics[loc]['keel_dateNum']]
+            LI_thickness = ax_ice_data.step(keel_dateNum_weekStart, dict_ridge_statistics[loc]['level_ice_deepest_mode'], where='post', color='black', label='Level ice draft estimate', zorder=3)
+
+            ax_ice_data.legend()
+
+            # figure current week ice data
+            ax_current_week_ice_data = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[2:4,0:4])
+            ax_current_week_ice_data.set_ylim(0, 30)
+            ax_current_week_ice_data.set_ylabel('Draft [m]')
+            ax_current_week_ice_data.set_xticks(dateNum_every_day[week*7:(week+1)*7])
+            ax_current_week_ice_data.set_xticklabels(date_time_stuff.datestr(dateNum_every_day[week*7:(week+1)*7], format='DD.MM.YY'))
+            
+            ULS_draft_signal_thisWeek = ax_current_week_ice_data.plot(dict_ridge_statistics[loc]['keel_dateNum'][week], dict_ridge_statistics[loc]['keel_draft'][week], color='tab:blue', label='Raw ULS draft signal', zorder=0)
+            RidgePeaks_thisWeek = ax_current_week_ice_data.scatter(dict_ridge_statistics[loc]['keel_dateNum_ridge'][week], dict_ridge_statistics[loc]['keel_draft_ridge'][week], color='red', label='Individual ridge peaks', zorder=1, s=2)
+            LI_thickness_thisWeek = ax_current_week_ice_data.step(keel_dateNum_weekStart[week], dict_ridge_statistics[loc]['level_ice_deepest_mode'][week], where='post', color='green', label='Level ice draft estimate', zorder=2)
+
+            # plot the results of this year and location and the results of all years and locations, to compare it
+            # figure mean ridge keel depth
+            ax_mean_ridge_keel_depth = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[0,4:6])
+            ax_mean_ridge_keel_depth.set_xlabel('Level ice deepest mode [m]')
+            ax_mean_ridge_keel_depth.set_ylabel('Mean keel draft [m]')
+            lrs1x = (max(all_LIDM)-min(all_LIDM))/20
+            lrs1y = (max(all_MKD)-min(all_MKD))/20
+            # all_LIDM = [dict_ridge_statistics[this_year][this_loc]['level_ice_deepest_mode'] for this_year in dict_ridge_statistics.keys() for this_loc in dict_ridge_statistics[this_year].keys()]
+            # all_MKD = [dict_ridge_statistics[this_year][this_loc]['mean_keel_draft'] for this_year in dict_ridge_statistics.keys() for this_loc in dict_ridge_statistics[this_year].keys()]
+            LI_mode_all = ax_mean_ridge_keel_depth.scatter(all_LIDM, all_MKD, color='tab:blue', label='keel depth', zorder=0, alpha=0.5)
+            LI_mode_thisYear = ax_mean_ridge_keel_depth.scatter(dict_ridge_statistics[loc]['level_ice_deepest_mode'], dict_ridge_statistics[loc]['mean_keel_draft'], color='red', label='this year/location', zorder=1, s=4)
+            # initialize rectangle to mark the current data point (week)
+            CP1 = mpatches.Rectangle((dict_ridge_statistics[loc]['level_ice_deepest_mode'][week]-lrs1x/2, dict_ridge_statistics[loc]['mean_keel_draft'][week]-lrs1y/2), lrs1x, lrs1y, edgecolor='k', facecolor='none')
+            # add the patch to the axis
+            ax_mean_ridge_keel_depth.add_patch(CP1)
+            # initialize the text box to display level ice deepest mode and mean keel draft for the selected week
+            # T1 = ax_mean_ridge_keel_depth.text(0.5, 0.5, f"LI DM = {0} || MKD = {0}", fontsize=12, transform=ax_mean_ridge_keel_depth.transAxes)
+
+
+            # figure I don't know yet
+            ax_kernel_estimate = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[1,4:6])
+            draft_subset = draft[np.intersect1d(np.where(draft > 0), np.intersect1d(np.where(dateNum > dict_ridge_statistics[loc]['week_start'][week]), np.where(dateNum < dict_ridge_statistics[loc]['week_end'][week])))]
+            # bw_sigma = np.std(draft_subset)
+            # bw_n = len(draft_subset)
+            # bw_h = 1.06*bw_sigma*bw_n**(-1/5)
+            kde = scipy.stats.gaussian_kde(draft_subset)
+            xi = np.linspace(draft_subset.min(), draft_subset.max(), 100)
+            f = kde(xi)
+            # ax_kernel_estimate.plot(xi, f, color='tab:blue', label='Kernel estimate', zorder=1)
+            # plot level ice deepest mode
+            DM_line = ax_kernel_estimate.plot([0, 0], [0, 6], color='tab:blue', label='deepest mode LI', zorder=1)
+            AM_line = ax_kernel_estimate.plot([0, 0], [0, 6], color='red', label='average mode LI', ls='--', zorder=2)
+            kernel_estimate_line = ax_kernel_estimate.plot(xi, f, color='tab:red', label='Kernel estimate', zorder=3)
+            PS_line = ax_kernel_estimate.scatter(0, 0, color='k', zorder=3, label='peak signal', s=4)
+            # histogram_line = ax_kernel_estimate.hist(draft_subset, bins=20, color='k', alpha=0.5, zorder=0, density=True)
+            histogram_numpy = np.histogram(draft_subset, bins=20, density=True)
+            histogram_line = ax_kernel_estimate.bar(histogram_numpy[1][:-1], histogram_numpy[0], align='edge', color='k', alpha=0.5, zorder=0, width=(max(draft_subset)-min(draft_subset))/20)
+            # ax_kernel_estimate.legend()
+
+            DM_line[0].set_xdata(dict_ridge_statistics[loc]['level_ice_expect_deepest_mode'][week])
+            AM_line[0].set_xdata(dict_ridge_statistics[loc]['level_ice_deepest_mode'][week])
+            kernel_estimate_line[0].set_xdata(xi)
+            kernel_estimate_line[0].set_ydata(f)
+            PS_line.set_offsets([dict_ridge_statistics[loc]['peaks_location'][week], dict_ridge_statistics[loc]['peaks_intensity'][week]])
+            
+
+            # figure weekly deepest ridge
+            ax_weekly_deepest_ridge = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[2,4:6])
+            ax_weekly_deepest_ridge.set_xlabel('Level ice deepest mode [m]')
+            ax_weekly_deepest_ridge.set_ylabel('Max weekly draft [m]')
+            lrs3x = (max(all_LIDM)-min(all_LIDM))/20
+            lrs3y = (max(all_Dmax)-min(all_Dmax))/20
+            # all_Dmax = [dict_ridge_statistics[this_year][this_loc]['draft_weekly_deepest_ridge'] for this_year in dict_ridge_statistics.keys() for this_loc in dict_ridge_statistics[this_year].keys()]
+            maxDrift_all = ax_weekly_deepest_ridge.scatter(all_LIDM, all_Dmax, color='tab:blue', label='max weekly draft', zorder=0, alpha=0.5)
+            maxDrift_thisYear = ax_weekly_deepest_ridge.scatter(dict_ridge_statistics[loc]['level_ice_deepest_mode'], dict_ridge_statistics[loc]['draft_weekly_deepest_ridge'], color='red', label='this year/location', zorder=1, s=4)
+            # initialize rectangle to mark the current data point (week)
+            CP3 = mpatches.Rectangle((dict_ridge_statistics[loc]['level_ice_deepest_mode'][week]-lrs3x/2, dict_ridge_statistics[loc]['draft_weekly_deepest_ridge'][week]-lrs3y/2), lrs3x, lrs3y, edgecolor='k', facecolor='none')
+            # add the patch to the axis
+            ax_weekly_deepest_ridge.add_patch(CP3)
+            # initialize the text box to display level ice deepest mode and mean keel draft for the selected week
+            # T3 = ax_weekly_deepest_ridge.text(0.5, 0.5, f"LI DM = {0} || Dmax = {0}", fontsize=12, transform=ax_weekly_deepest_ridge.transAxes)
+
+            # figure number of ridges
+            ax_number_of_ridges = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[3,4:6])
+            lrs4x = (max(all_LIDM)-min(all_LIDM))/20
+            lrs4y = (max(all_number_of_ridges)-min(all_number_of_ridges))/20
+            ax_number_of_ridges.set_xlabel('Level ice deepest mode [m]')
+            ax_number_of_ridges.set_ylabel('Number of ridges')
+            # all_number_of_ridges = [dict_ridge_statistics[this_year][this_loc]['number_ridges'] for this_year in dict_ridge_statistics.keys() for this_loc in dict_ridge_statistics[this_year].keys()]
+            number_of_ridges_all = ax_number_of_ridges.scatter(all_LIDM, all_number_of_ridges, color='tab:blue', label='number of ridges', zorder=0, alpha=0.5)
+            number_of_ridges_thisYear = ax_number_of_ridges.scatter(dict_ridge_statistics[loc]['level_ice_deepest_mode'], dict_ridge_statistics[loc]['number_ridges'], color='red', label='this year/location', s=4, zorder=1)
+            # initialize rectangle to mark the current data point (week)
+            CP4 = mpatches.Rectangle((dict_ridge_statistics[loc]['level_ice_deepest_mode'][week]-lrs4x/2, dict_ridge_statistics[loc]['number_ridges'][week]-lrs4y/2), lrs4x, lrs4y, edgecolor='k', facecolor='none')
+            # add the patch to the axis
+            ax_number_of_ridges.add_patch(CP4)
 
 
 

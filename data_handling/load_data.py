@@ -81,8 +81,9 @@ def load_data_all_years(path_to_json_processed=None):
     files.sort()
     dict_ridge_statistics_year_all = {}
     for file in files:
-        if file.split('_')[1] == 'statistics':
-            year = int(file.split('_')[2])
+        file_name = file.split('.')[0]
+        if file_name.split('_')[1] == 'statistics':
+            year = int(file_name.split('_')[2])
             with open(os.path.join(path_to_json_processed, file), 'r') as file:
                 dict_ridge_statistics_year = json.load(file)
                 # make all entries in data to the data format named in type (e.g. list, dict, str, np.ndarray, np.float, ...)

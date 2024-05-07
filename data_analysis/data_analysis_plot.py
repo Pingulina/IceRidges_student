@@ -9,7 +9,7 @@ def plot_weekly_data_scatter(ax, xData_all, yData_all, xData_thisYear, yData_thi
     """
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    lrs1x = (max(xData_all)-min(xData_all))/20
+    lrs1x = (max(xData_all)-min(xData_all))/40
     lrs1y = (max(yData_all)-min(yData_all))/20
     # all_LIDM = [dict_ridge_statistics[this_year][this_loc]['level_ice_deepest_mode'] for this_year in dict_ridge_statistics.keys() for this_loc in dict_ridge_statistics[this_year].keys()]
     # all_MKD = [dict_ridge_statistics[this_year][this_loc]['mean_keel_draft'] for this_year in dict_ridge_statistics.keys() for this_loc in dict_ridge_statistics[this_year].keys()]
@@ -23,7 +23,7 @@ def plot_weekly_data_scatter(ax, xData_all, yData_all, xData_thisYear, yData_thi
     return ax, LI_mode_all, LI_mode_thisYear, CP
 
 def update_plot_weekly_data_scatter(ax, xData_all, yData_all, xData_thisYear, yData_thisYear, week, CP):
-    lrs1x = (max(xData_all)-min(xData_all))/20
+    lrs1x = (max(xData_all)-min(xData_all))/40
     lrs1y = (max(yData_all)-min(yData_all))/20
     CP.set_xy([xData_thisYear[week]-lrs1x/2, yData_thisYear[week]-lrs1y/2])
 
@@ -94,6 +94,9 @@ def update_plot_data_draft(ax, patch_current_week_ice_data, draft, week_starts, 
 
 
 def plot_needName(ax, time, draft, week_starts, week_ends, week, LI_deepestMode_expect, LI_deepestMode, peaks_location, peaks_intensity):
+    ax.set_xlim(0, 3)
+    ax.set_ylim(0, 6)
+    ax.set_xlabel('Draft [m]')
     draft_subset = draft[np.intersect1d(np.where(draft > 0), np.intersect1d(np.where(time > week_starts[week]), np.where(time < week_ends[week])))]
     # bw_sigma = np.std(draft_subset)
     # bw_n = len(draft_subset)
@@ -106,17 +109,18 @@ def plot_needName(ax, time, draft, week_starts, week_ends, week, LI_deepestMode_
     DM_line = ax.plot([0, 0], [0, 6], color='tab:blue', label='deepest mode LI', zorder=1)
     AM_line = ax.plot([0, 0], [0, 6], color='red', label='average mode LI', ls='--', zorder=2)
     kernel_estimate_line = ax.plot(xi, f, color='tab:red', label='Kernel estimate', zorder=3)
-    PS_line = ax.scatter(0, 0, color='k', zorder=3, label='peak signal', s=4)
+    PS_line = ax.scatter(0, 0, color='k', zorder=3, label='peak signal', s=12)
     # histogram_line = ax_kernel_estimate.hist(draft_subset, bins=20, color='k', alpha=0.5, zorder=0, density=True)
-    histogram_numpy = np.histogram(draft_subset, bins=20, density=True)
-    histogram_line = ax.bar(histogram_numpy[1][:-1], histogram_numpy[0], align='edge', color='k', alpha=0.5, zorder=0, width=(max(draft_subset)-min(draft_subset))/20)
+    number_of_bins = int((max(draft_subset) - min(draft_subset))/0.05)
+    histogram_numpy = np.histogram(draft_subset, bins=number_of_bins, density=True)
+    histogram_line = ax.bar(histogram_numpy[1][:-1], histogram_numpy[0], align='edge', color='k', alpha=0.5, zorder=0, width=(max(draft_subset)-min(draft_subset))/number_of_bins)
     # ax_kernel_estimate.legend()
 
     DM_line[0].set_xdata(LI_deepestMode_expect[week])
     AM_line[0].set_xdata(LI_deepestMode[week])
     kernel_estimate_line[0].set_xdata(xi)
     kernel_estimate_line[0].set_ydata(f)
-    PS_line.set_offsets([peaks_location[week], peaks_intensity[week]])
+    PS_line.set_offsets([[loc, pks] for loc, pks in zip(peaks_location[week], peaks_intensity[week])])
 
     return ax, DM_line, AM_line, kernel_estimate_line, PS_line, histogram_line
 
@@ -126,14 +130,15 @@ def update_plot_needName(ax, DM_line, AM_line, kernel_estimate_line, PS_line, hi
     kde = scipy.stats.gaussian_kde(draft_subset)
     xi = np.linspace(draft_subset.min(), draft_subset.max(), 100)
     f = kde(xi)
+    number_of_bins = int((max(draft_subset) - min(draft_subset))/0.05)
     histogram_line.remove()
-    histogram_numpy = np.histogram(draft_subset, bins=20, density=True)
-    histogram_line = ax.bar(histogram_numpy[1][:-1], histogram_numpy[0], align='edge', color='k', alpha=0.5, zorder=0, width=(max(draft_subset)-min(draft_subset))/20)
+    histogram_numpy = np.histogram(draft_subset, bins=number_of_bins, density=True)
+    histogram_line = ax.bar(histogram_numpy[1][:-1], histogram_numpy[0], align='edge', color='k', alpha=0.5, zorder=0, width=(max(draft_subset)-min(draft_subset))/number_of_bins)
     # histogram_line = ax_kernel_estimate.hist(draft_subset, bins=20, color='k', alpha=0.5, zorder=0, density=True)
 
     DM_line[0].set_xdata(LI_deepestMode_expect[week])
     AM_line[0].set_xdata(LI_deepestMode[week])
     kernel_estimate_line[0].set_xdata(xi)
     kernel_estimate_line[0].set_ydata(f)
-    PS_line.set_offsets([peaks_location[week], peaks_intensity[week]])
+    PS_line.set_offsets([[loc, pks] for loc, pks in zip(peaks_location[week], peaks_intensity[week])])
     return ax, DM_line, AM_line, kernel_estimate_line, PS_line, histogram_line

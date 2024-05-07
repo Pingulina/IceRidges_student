@@ -24,6 +24,7 @@ j2d = import_module('jsonified2dict', 'initialization_preparation')
 date_time_stuff = import_module('date_time_stuff', 'helper_functions')
 load_data = import_module('load_data', 'data_handling')
 data_analysis_plot = import_module('data_analysis_plot', 'data_analysis')
+user_input_interaction = import_module('user_input_iteration', 'user_interaction')
 
 
 def weekly_visual_analysis():
@@ -123,27 +124,38 @@ def weekly_visual_analysis():
     while True:
         # update the week
         # get user input
-        print("Press 'f' for forward and 'd' for backward and 'x' to exit the program. You can also enter the week number directly. In all cases, press enter afterwards.")
-        user_input = input()
-        if user_input == 'f':
-            week += 1
-        elif user_input == 'd':
-            week -= 1
-        elif user_input == 'x':
+        print("Press 'f' for forward and 's' for backward and 'x' to exit the program. You can also enter the week number directly. In all cases, press enter afterwards.")
+        success, week = user_input_interaction.get_user_input_iteration(week, len(dict_ridge_statistics[loc]['week_start']))
+        if success == -1:
             break
-        # if the week number is entered directly, set the week to the entered number
-        elif user_input.isdigit():
-            week = int(user_input)
-        else:
-            print("Invalid input.")
+        elif success == 0:
             continue
+        elif success == 1:
+            pass
+        else:
+            raise ValueError("Invalid success value.")
 
-        if week < 0:
-            # week is negative, set it to the last week
-            week = len(dict_ridge_statistics[loc]['week_start'])-1
-        elif week >= len(dict_ridge_statistics[loc]['week_start']):
-            # week is too large, set it to the first week
-            week = 0
+        
+        # user_input = input()
+        # if user_input == 'f':
+        #     week += 1
+        # elif user_input == 'd':
+        #     week -= 1
+        # elif user_input == 'x':
+        #     break
+        # # if the week number is entered directly, set the week to the entered number
+        # elif user_input.isdigit():
+        #     week = int(user_input)
+        # else:
+        #     print("Invalid input.")
+        #     continue
+
+        # if week < 0:
+        #     # week is negative, set it to the last week
+        #     week = len(dict_ridge_statistics[loc]['week_start'])-1
+        # elif week >= len(dict_ridge_statistics[loc]['week_start']):
+        #     # week is too large, set it to the first week
+        #     week = 0
 
         # update the plots
         # update the ice data plot

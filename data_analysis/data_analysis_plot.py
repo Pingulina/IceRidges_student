@@ -30,12 +30,12 @@ def update_plot_weekly_data_scatter(ax, xData_all, yData_all, xData_thisYear, yD
     return ax, CP
 
 
-def plot_weekly_data_draft(ax, time, draft, time_ridge, draft_ridge, time_LI, draft_LI, dateNum_every_day, week, xTickLabels, xlabel:str, ylabel:str, ylim):
+def plot_weekly_data_draft(ax, time, draft, time_ridge, draft_ridge, time_LI, draft_LI, dateNum_every_day, week, xTickLabels, xlabel:str, ylabel:str, ylim, dateTickDistance=1):
     ax.set_ylim(ylim[0], ylim[1])
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
-    ax.set_xticks(dateNum_every_day[week*7:(week+1)*7])
-    ax.set_xticklabels(xTickLabels[week*7:(week+1)*7])
+    ax.set_xticks(dateNum_every_day[week*7:(week+1)*7:dateTickDistance])
+    ax.set_xticklabels(xTickLabels[week*7:(week+1)*7:dateTickDistance])
     
     ULS_draft_signal_thisWeek = ax.plot(time[week], draft[week], color='tab:blue', label='Raw ULS draft signal', zorder=0)
     RidgePeaks_thisWeek = ax.scatter(time_ridge[week], draft_ridge[week], color='red', label='Individual ridge peaks', zorder=1, s=2)
@@ -142,3 +142,31 @@ def update_plot_needName(ax, DM_line, AM_line, kernel_estimate_line, PS_line, hi
     kernel_estimate_line[0].set_ydata(f)
     PS_line.set_offsets([[loc, pks] for loc, pks in zip(peaks_location[week], peaks_intensity[week])])
     return ax, DM_line, AM_line, kernel_estimate_line, PS_line, histogram_line
+
+
+def plot_spectrum(ax, X, Y, HHi_plot, draft, time_mean, time_LI, LI_deepestMode, LI_deepestMode_expect, week_starts, week_ends, week):
+    ax.pcolormesh(X, Y, HHi_plot.transpose(), shading='nearest')
+    ax.set_ylim([0, 4])
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Draft')
+    ax.set_xlim([time_LI[0]+3.5, time_LI[-1]-10.5])
+
+    patch_current_week_ice_data = ax.fill_between([week_starts[week], week_ends[week]], 0, max(draft), color='lightblue', label='Current week ice data', zorder=0)
+    scatter_DM = ax.scatter(time_mean, LI_deepestMode, c='r', s=10, marker='o') # scatter shape: circles
+    scatter_AM = ax.scatter(time_mean, LI_deepestMode_expect, c='b', s=10, marker='^') # scatter shape: triangles
+    # CP44 = ax.scatter(0, 0, c='r', s=10, marker='s')
+    lrs1x = (ax.get_xlim()[1]-ax.get_xlim()[0])/20
+    lrs1y = (ax.get_ylim()[1]-ax.get_ylim()[0])/20
+    CP = mpatches.Rectangle((time_mean[week]-lrs1x/2, LI_deepestMode[week]-lrs1y/2), lrs1x, lrs1y, edgecolor='k', facecolor='none')
+    # add the patch to the axis
+    ax.add_patch(CP)
+
+    return ax, patch_current_week_ice_data, scatter_DM, scatter_AM, CP
+
+def update_plot_spectrum(ax, CP, time_mean, LI_deepestMode, week):
+    lrs1x = (ax.get_xlim()[1]-ax.get_xlim()[0])/20
+    lrs1y = (ax.get_ylim()[1]-ax.get_ylim()[0])/20
+    CP.set_xy([time_mean[week]-lrs1x/2, LI_deepestMode[week]-lrs1y/2])
+    # CP44.set_offsets([[time_mean[week], LI_deepestMode[week]]]) # dict_ridge_statistics[loc]['mean_dateNum']
+
+    return ax, CP

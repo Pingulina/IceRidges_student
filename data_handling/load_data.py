@@ -18,7 +18,7 @@ constants = import_module('constants', 'helper_functions')
 j2d = import_module('jsonified2dict', 'initialization_preparation')
 
 
-def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_json_mooring=None):
+def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_json_mooring=None, load_dict_ridge_statistics=True):
     
     if path_to_json_processed is None:
         pathName = os.getcwd()
@@ -27,7 +27,7 @@ def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_
     if path_to_json_processed is None:
         path_to_json_processed = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
 
-    while True:
+    while True and load_dict_ridge_statistics:
         if year is None:
             year = input("Enter the year you want to analyse: ")
         try:

@@ -32,10 +32,10 @@ def main():
 
 
     ### uncomment the following line to run the weekly_visual_analysis.py file
-    wva.weekly_visual_analysis()
+    # wva.weekly_visual_analysis()
 
     ### uncomment the following line to run the weekly_manual_correction.py file
-    #wmc.weekly_manual_correction()
+    wmc.weekly_manual_correction()
     return None
 
 if __name__ == "__main__":

@@ -62,7 +62,8 @@ def weekly_manual_correction(number_ridges_threshold=15):
     path_to_json_mooring = os.path.join(pathName, 'Data', 'uls_data')
 
     path_to_json_processed = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
-    dateNum, draft, dict_ridge_statistics, year_user, loc_user = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, path_to_json_mooring=path_to_json_mooring
+    dateNum, draft, _, year_user, loc_user = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, 
+                                                                         path_to_json_mooring=path_to_json_mooring, load_dict_ridge_statistics=False
                                                                         )
     
     
@@ -104,10 +105,10 @@ def weekly_manual_correction(number_ridges_threshold=15):
     for year in dict_ridge_statistics_year_all.keys():
         dict_ridge_statistics_year = dict_ridge_statistics_year_all[year]
         for loc_year in dict_ridge_statistics_year.keys():
-            all_LIDM.extend(dict_ridge_statistics_year[loc_year]['level_ice_deepest_mode'])
-            all_MKD.extend(dict_ridge_statistics_year[loc_year]['mean_keel_draft']) 
-            all_Dmax.extend(dict_ridge_statistics_year[loc_year]['draft_weekly_deepest_ridge'])
-            all_number_of_ridges.extend(dict_ridge_statistics_year[loc_year]['number_ridges'])
+            all_LIDM.extend(deepcopy(dict_ridge_statistics_year[loc_year]['level_ice_deepest_mode']))
+            all_MKD.extend(deepcopy(dict_ridge_statistics_year[loc_year]['mean_keel_draft']))
+            all_Dmax.extend(deepcopy(dict_ridge_statistics_year[loc_year]['draft_weekly_deepest_ridge']))
+            all_number_of_ridges.extend(deepcopy(dict_ridge_statistics_year[loc_year]['number_ridges']))
 
     # iterate over all years and locations
     season_list = list(dict_mooring_locations.keys())
@@ -156,8 +157,9 @@ def weekly_manual_correction(number_ridges_threshold=15):
             # get the indices of ridges that have less than number_ridges_threshold ridges	
             number_ridges_delete = np.where([ridgeNum < number_ridges_threshold for ridgeNum in dict_ridge_statistics[loc]['number_ridges']])
             # if the number of ridges is less than the threshold, delete the data
-            for key in dict_ridge_statistics[loc].keys():
-                dict_ridge_statistics[loc][key] = remove_indices(dict_ridge_statistics[loc][key], number_ridges_delete)
+
+            # for key in dict_ridge_statistics[loc].keys():
+            #     dict_ridge_statistics[loc][key] = remove_indices(dict_ridge_statistics[loc][key], number_ridges_delete)
 
             dict_ridge_statistics_year_all[year][loc] = deepcopy(dict_ridge_statistics[loc])
 
@@ -317,6 +319,50 @@ def weekly_manual_correction(number_ridges_threshold=15):
   
                 
                 figure_weekly_analysis.canvas.draw()
+
+                # start of manual correction for this week
+                # controll unit is with num block (5 is ok, 2 is downarrow, 8 is uparrow, 4 is leftarraw, 6 is rightarrow, - is minus)
+                # rightarrow: value +1, leftarrow: value -1, uparrow: value +5, downarrow: value -5, -: delete value, enter: correct value
+                print('6: value +1, 4: value -1, 8: value +5, 2: value -5, -: delete value, 5: correct value \nif you use num block: make sure num lock is abled')
+                data_index = 0
+                delete_indices = []
+                while True:
+                    # choose the data point to be corrected in the spectogram (with the 'arrows' (num block))
+
+                    userInput = input('navigate/enter')
+                    for char in userInput:
+                        if char == '6':
+                            # rightarrow: value +1
+                            data_index += 1
+                        elif char == '4':
+                            # leftarrow: value -1
+                            data_index -= 1
+                        elif char == '8':
+                            # uparrow: value +5
+                            data_index += 5
+                        elif char == '2':
+                            # downarrow: value -5
+                            data_index -= 5
+                        elif char == '-':
+                            # -: delete value
+                            if thisIndex is None:
+                                print('no value to delete')
+                                continue
+                            delete_indices.append(thisIndex)
+                            thisIndex = None
+                        elif char == '5':
+                            # enter: correct value
+                            thisIndex = data_index
+                        else:
+                            print(f"invalid input: {char}")
+                            continue
+                    
+                    # delete the values that are marked for deletion
+                    dict_ridge_statistics[loc]['level_ice_deepest_mode'] = remove_indices(dict_ridge_statistics[loc]['level_ice_deepest_mode'], delete_indices)
+                    dict_ridge_statistics[loc]['mean_dateNum'] = remove_indices(dict_ridge_statistics[loc]['mean_dateNum'], delete_indices)
+
+                    # update the plots
+
 
 
 def remove_indices(d_at_key, indices):

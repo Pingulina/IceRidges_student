@@ -157,7 +157,7 @@ def plot_spectrum(ax, X, Y, HHi_plot, draft, time_mean, time_LI, LI_deepestMode,
     # CP44 = ax.scatter(0, 0, c='r', s=10, marker='s')
     lrs1x = (ax.get_xlim()[1]-ax.get_xlim()[0])/20
     lrs1y = (ax.get_ylim()[1]-ax.get_ylim()[0])/20
-    CP = mpatches.Rectangle((time_mean[week]-lrs1x/2, LI_deepestMode[week]-lrs1y/2), lrs1x, lrs1y, edgecolor='k', facecolor='none')
+    CP = mpatches.Rectangle((time_mean[week]-lrs1x/2, LI_deepestMode[week]-lrs1y/2), lrs1x, lrs1y, edgecolor='r', facecolor='none')
     # add the patch to the axis
     ax.add_patch(CP)
 

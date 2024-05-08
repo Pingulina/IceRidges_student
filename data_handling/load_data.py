@@ -3,6 +3,7 @@
 import os
 import sys
 import json
+import numpy as np
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 # Get the current working directory
@@ -27,7 +28,7 @@ def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_
     if path_to_json_processed is None:
         path_to_json_processed = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
 
-    while True and load_dict_ridge_statistics:
+    while True:
         if year is None:
             year = input("Enter the year you want to analyse: ")
         try:
@@ -37,30 +38,45 @@ def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_
             year = None
             continue
         
+        if load_dict_ridge_statistics:
+            json_file_name_processed = f"ridge_statistics_{year}.json"
+            # check if the json file exists
+            if not os.path.exists(os.path.join(path_to_json_processed, json_file_name_processed)):
+                print(f"The json file {json_file_name_processed} does not exist. Please enter a valid year.")
+                continue
+            # load the ridge statistics from the json file
+            with open(os.path.join(path_to_json_processed, json_file_name_processed), 'r') as file:
+                dict_ridge_statistics = json.load(file)
+                # make all entries in data to the data format named in type (e.g. list, dict, str, np.ndarray, np.float, ...)
+                for loc_dict in dict_ridge_statistics.keys():
+                    dict_ridge_statistics[loc_dict] = j2d.jsonified2dict(dict_ridge_statistics[loc_dict])
 
-        json_file_name_processed = f"ridge_statistics_{year}.json"
-        # check if the json file exists
-        if not os.path.exists(os.path.join(path_to_json_processed, json_file_name_processed)):
-            print(f"The json file {json_file_name_processed} does not exist. Please enter a valid year.")
-            continue
-        # load the ridge statistics from the json file
-        with open(os.path.join(path_to_json_processed, json_file_name_processed), 'r') as file:
-            dict_ridge_statistics = json.load(file)
-            # make all entries in data to the data format named in type (e.g. list, dict, str, np.ndarray, np.float, ...)
-            for loc_dict in dict_ridge_statistics.keys():
-                dict_ridge_statistics[loc_dict] = j2d.jsonified2dict(dict_ridge_statistics[loc_dict])
-
+                
             
-        
-        locations_this_year = dict_ridge_statistics.keys() 
-        if loc is None:
-            loc = input("Enter the location you want to analyse: ")
-        if loc in locations_this_year:
-            break
+            locations_this_year = dict_ridge_statistics.keys() 
+            if loc is None:
+                loc = input("Enter the location you want to analyse: ")
+            if loc in locations_this_year:
+                break
+            else:
+                print(f"The location you entered is not in the data. Please enter a valid location. The locations for this year are: {locations_this_year}")
+                loc = None
+                continue
         else:
-            print(f"The location you entered is not in the data. Please enter a valid location. The locations for this year are: {locations_this_year}")
-            loc = None
-            continue
+            # load mooring_locations.json from Data
+            dict_ridge_statistics = None
+            with open(os.path.join(os.path.join(os.getcwd(), 'Data'), 'mooring_locations.json'), 'r') as file:
+                dict_locations = json.load(file)
+                locations_this_year = dict_locations.keys()
+                locations_this_year = dict_locations[list(dict_locations.keys())[np.where([int(key[0:4]) == year for key in dict_locations.keys()])[0][0]]].keys()
+            if loc is None:
+                loc = input("Enter the location you want to analyse: ")
+            if loc in locations_this_year:
+                break
+            else:
+                print(f"The location you entered is not in the data. Please enter a valid location. The locations for this year are: {locations_this_year}")
+                loc = None
+                continue
     
     
     

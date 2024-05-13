@@ -51,6 +51,8 @@ load_data = import_module('load_data', 'data_handling')
 date_time_stuff = import_module('date_time_stuff', 'helper_functions')
 data_analysis_plot = import_module('data_analysis_plot', 'data_analysis')
 user_input_iteration = import_module('user_input_iteration', 'user_interaction')
+dict2json = import_module('dict2json', 'data_handling')
+
 
 def weekly_manual_correction(number_ridges_threshold=15):
     """correct the data manually
@@ -131,6 +133,7 @@ def weekly_manual_correction(number_ridges_threshold=15):
     
         loc_list = list(dict_mooring_locations[season].keys())
         loc_index = 0
+        dict_ridge_statistics_corrected = {}
         while True:
             print("--- Location ---")
             print("Press 'f' for next location, 'd' for this location and 's' for last location. Press 'x' to exit this season. You can also enter the loc_index directly. In all cases, press enter afterwards.")
@@ -233,7 +236,7 @@ def weekly_manual_correction(number_ridges_threshold=15):
             
 
             ax_specto = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[2:4,2:4])
-            ax_specto, thisWeek_patch_specto, scatter_DM, scatter_AM, CP44 = data_analysis_plot.plot_spectrum(
+            ax_specto, thisWeek_patch_specto, scatter_DM, scatter_AM, CP5 = data_analysis_plot.plot_spectrum(
                 ax_specto, X, Y, HHi_plot, draft, dict_ridge_statistics[loc]['mean_dateNum'], dateNum_LI, dict_ridge_statistics[loc]['level_ice_deepest_mode'], 
                 dict_ridge_statistics[loc]['level_ice_expect_deepest_mode'], dict_ridge_statistics[loc]['week_start'], dict_ridge_statistics[loc]['week_end'], week)
 
@@ -273,16 +276,16 @@ def weekly_manual_correction(number_ridges_threshold=15):
             while True:
                 # update the week
                 # get user input
-                print(f"Press 'f' for next week and 's' for last week. Press 'x' to finish this location. You can also enter the week number directly. In all cases, press enter afterwards.")
-                success, week = user_input_iteration.get_user_input_iteration(week, len(dict_ridge_statistics[loc]['week_start']))
-                if success == -1:
-                    break
-                elif success == 0:
-                    continue
-                elif success == 1:
-                    pass
-                else:
-                    raise ValueError("Invalid success value.")
+                # print(f"Press 'f' for next week, 'd' for this week and 's' for last week. Press 'x' to finish this location. You can also enter the week number directly. In all cases, press enter afterwards.")
+                # success, week = user_input_iteration.get_user_input_iteration(week, len(dict_ridge_statistics[loc]['week_start']))
+                # if success == -1:
+                #     break
+                # elif success == 0:
+                #     continue
+                # elif success == 1:
+                #     pass
+                # else:
+                #     raise ValueError("Invalid success value.")
 
                 # update the plots
                 figure_weekly_analysis.suptitle(f"Season {season}, location {loc}, week {week}", fontsize=16)
@@ -296,8 +299,8 @@ def weekly_manual_correction(number_ridges_threshold=15):
                     dict_ridge_statistics[loc]['keel_draft'], dict_ridge_statistics[loc]['keel_dateNum_ridge'], dict_ridge_statistics[loc]['keel_draft_ridge'], 
                     dict_ridge_statistics[loc]['keel_dateNum'], dict_ridge_statistics[loc]['level_ice_deepest_mode'], dateNum_every_day, week, xTickLabels)
                 
-                ax_specto, CP44 = data_analysis_plot.update_plot_spectrum(
-                    ax_specto, CP44, dict_ridge_statistics[loc]['mean_dateNum'], dict_ridge_statistics[loc]['level_ice_deepest_mode'], week)
+                ax_specto, CP5 = data_analysis_plot.update_plot_spectrum(
+                    ax_specto, CP5, dict_ridge_statistics[loc]['mean_dateNum'], dict_ridge_statistics[loc]['level_ice_deepest_mode'], week)
 
                 ax_kernel_estimate, DM_line, AM_line, kernel_estimate_line, PS_line, histogram_line = data_analysis_plot.update_plot_needName(
                     ax_kernel_estimate, DM_line, AM_line, kernel_estimate_line, PS_line, histogram_line, dateNum, draft, dict_ridge_statistics[loc]['week_start'], 
@@ -323,13 +326,15 @@ def weekly_manual_correction(number_ridges_threshold=15):
                 # start of manual correction for this week
                 # controll unit is with num block (5 is ok, 2 is downarrow, 8 is uparrow, 4 is leftarraw, 6 is rightarrow, - is minus)
                 # rightarrow: value +1, leftarrow: value -1, uparrow: value +5, downarrow: value -5, -: delete value, enter: correct value
-                print('6: value +1, 4: value -1, 8: value +5, 2: value -5, -: delete value, 5: correct value \nif you use num block: make sure num lock is abled')
+                print('6: value +1, 4: value -1, 8: value +5, 2: value -5, -: delete value, 5: correct value, 0: apply \nif you use num block: make sure num lock is abled')
                 data_index = 0
                 delete_indices = []
                 while True:
                     # choose the data point to be corrected in the spectogram (with the 'arrows' (num block))
 
                     userInput = input('navigate/enter')
+                    thisIndex = None
+                    focus_on = 'week'
                     for char in userInput:
                         if char == '6':
                             # rightarrow: value +1
@@ -352,16 +357,106 @@ def weekly_manual_correction(number_ridges_threshold=15):
                             thisIndex = None
                         elif char == '5':
                             # enter: correct value
-                            thisIndex = data_index
+                            if focus_on == 'week':
+                                thisIndex = data_index
+                                focus_on = 'point'
+                            elif focus_on == 'point':
+                                # correct the values
+                                new_deepest_mode = input('Enter the corrected LI deepest mode. Press only enter, if you want to keep the old value. ')
+                                if new_deepest_mode == '':
+                                    pass # keep the old value
+                                else:
+                                    new_deepest_mode = float(new_deepest_mode)
+                                    dict_ridge_statistics[loc]['level_ice_deepest_mode'][thisIndex] = new_deepest_mode
+
+                                new_mean_keel_draft = input('Enter the corrected mean keel draft. Press only enter, if you want to keep the old value. ')
+                                if new_mean_keel_draft == '':
+                                    pass
+                                else:
+                                    new_mean_keel_draft = float(new_mean_keel_draft)
+                                    dict_ridge_statistics[loc]['mean_keel_draft'][thisIndex] = new_mean_keel_draft
+
+                                new_deepest_ridge = input('Enter the corrected weekly deepest ridge. Press only enter, if you want to keep the old value. ')
+                                if new_deepest_ridge == '':
+                                    pass
+                                else:
+                                    new_deepest_ridge = float(new_deepest_ridge)
+                                    dict_ridge_statistics[loc]['draft_weekly_deepest_ridge'][thisIndex] = new_deepest_ridge
+
+                                new_number_ridges = input('Enter the corrected number of ridges. Press only enter, if you want to keep the old value. ')
+                                if new_number_ridges == '':
+                                    pass
+                                else:
+                                    new_number_ridges = int(new_number_ridges)
+                                    dict_ridge_statistics[loc]['number_ridges'][thisIndex] = new_number_ridges
+                        elif char == '0':
+                            # exit the loop
+                            break
                         else:
                             print(f"invalid input: {char}")
                             continue
+
+
                     
-                    # delete the values that are marked for deletion
-                    dict_ridge_statistics[loc]['level_ice_deepest_mode'] = remove_indices(dict_ridge_statistics[loc]['level_ice_deepest_mode'], delete_indices)
-                    dict_ridge_statistics[loc]['mean_dateNum'] = remove_indices(dict_ridge_statistics[loc]['mean_dateNum'], delete_indices)
+                    # delete the values that are marked for deletion in every list for the location
+                    for key in dict_ridge_statistics[loc].keys():
+                        try:
+                            dict_ridge_statistics[loc][key] = remove_indices(dict_ridge_statistics[loc][key], delete_indices)
+                        except IndexError as e:
+                            if key in ['peaks_location', 'peaks_intensity']:
+                                dict_ridge_statistics[loc][key] = remove_indices(dict_ridge_statistics[loc][key], delete_indices[:-1])
+                                # the last index can be the last element of the list. Peaks_location and peaks_intensity have one element less than the other lists.
+                            else:
+                                raise e
 
                     # update the plots
+                    figure_weekly_analysis.suptitle(f"Season {season}, location {loc}, week {week}", fontsize=16)
+                    # update the ice data plot
+                    ax_ice_data, patch_current_week_ice_data = data_analysis_plot.update_plot_data_draft(
+                        ax_ice_data, patch_current_week_ice_data, draft, dict_ridge_statistics[loc]['week_start'], dict_ridge_statistics[loc]['week_end'], week)
+                    
+                    # update the current week ice data plot
+                    ax_current_week_ice_data, ULS_draft_signal_thisWeek, RidgePeaks_thisWeek, LI_thickness_thisWeek = data_analysis_plot.update_plot_weekly_data_draft(
+                        ax_current_week_ice_data, ULS_draft_signal_thisWeek, RidgePeaks_thisWeek, LI_thickness_thisWeek, dict_ridge_statistics[loc]['keel_dateNum'], 
+                        dict_ridge_statistics[loc]['keel_draft'], dict_ridge_statistics[loc]['keel_dateNum_ridge'], dict_ridge_statistics[loc]['keel_draft_ridge'], 
+                        dict_ridge_statistics[loc]['keel_dateNum'], dict_ridge_statistics[loc]['level_ice_deepest_mode'], dateNum_every_day, week, xTickLabels)
+                    
+                    ax_specto, CP5 = data_analysis_plot.update_plot_spectrum(
+                        ax_specto, CP5, dict_ridge_statistics[loc]['mean_dateNum'], dict_ridge_statistics[loc]['level_ice_deepest_mode'], week)
+                    
+                    ax_kernel_estimate, DM_line, AM_line, kernel_estimate_line, PS_line, histogram_line = data_analysis_plot.update_plot_needName(
+                        ax_kernel_estimate, DM_line, AM_line, kernel_estimate_line, PS_line, histogram_line, dateNum, draft, dict_ridge_statistics[loc]['week_start'], 
+                        dict_ridge_statistics[loc]['week_end'], week, dict_ridge_statistics[loc]['level_ice_expect_deepest_mode'], dict_ridge_statistics[loc]['level_ice_deepest_mode'], 
+                        dict_ridge_statistics[loc]['peaks_location'], dict_ridge_statistics[loc]['peaks_intensity'])
+                    
+                    # update the rectangle to mark the current data point (week)
+                    ax_mean_ridge_keel_depth, CP1 = data_analysis_plot.update_plot_weekly_data_scatter(
+                        ax_mean_ridge_keel_depth, all_LIDM, all_MKD, dict_ridge_statistics[loc]['level_ice_deepest_mode'], 
+                        dict_ridge_statistics[loc]['mean_keel_draft'], week, CP1)
+                    
+                    ax_weekly_deepest_ridge, CP3 = data_analysis_plot.update_plot_weekly_data_scatter(
+                        ax_weekly_deepest_ridge, all_LIDM, all_Dmax, dict_ridge_statistics[loc]['level_ice_deepest_mode'], 
+                        dict_ridge_statistics[loc]['draft_weekly_deepest_ridge'], week, CP3)
+                    
+                    ax_number_of_ridges, CP4 = data_analysis_plot.update_plot_weekly_data_scatter(
+                        ax_number_of_ridges, all_LIDM, all_number_of_ridges, dict_ridge_statistics[loc]['level_ice_deepest_mode'], 
+                        dict_ridge_statistics[loc]['number_ridges'], week, CP4)
+                    
+                    figure_weekly_analysis.canvas.draw()
+
+                    if char == '0':
+                        break # break not only the for loop, but also the while loop
+                
+            dict_ridge_statistics_corrected[loc] = deepcopy(dict_ridge_statistics[loc])
+        # store the updated dict_ridge_statistics as json file
+        dict2json.dict2json(dict_ridge_statistics_corrected, os.path.join(path_to_json_processed, 'ridge_statistics_corrected', f'ridge_statistics_{year}.json'))
+        print(f"Data for season {season} has been corrected and stored in the folder 'ridge_statistics_corrected'.")
+
+    print('--- End of correction process ---')
+            
+
+
+
 
 
 

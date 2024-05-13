@@ -4,7 +4,7 @@ import matplotlib.patches as mpatches
 import scipy.stats
 
 
-def plot_weekly_data_scatter(ax, xData_all, yData_all, xData_thisYear, yData_thisYear, week, loc, xlabel:str, ylabel:str):
+def plot_weekly_data_scatter(ax, xData_all, yData_all, xData_thisYear, yData_thisYear, week, loc, xlabel:str, ylabel:str, second_rect=False):
     """ do the scatter plot of the weekly data
     """
     ax.set_xlabel(xlabel)
@@ -19,6 +19,13 @@ def plot_weekly_data_scatter(ax, xData_all, yData_all, xData_thisYear, yData_thi
     CP = mpatches.Rectangle((xData_thisYear[week]-lrs1x/2, yData_thisYear[week]-lrs1y/2), lrs1x, lrs1y, edgecolor='k', facecolor='none')
     # add the patch to the axis
     ax.add_patch(CP)
+
+    if second_rect:
+        # add a second rectangle to mark the current data point for manual correction
+        CP2 = mpatches.Rectangle((xData_thisYear[week]-lrs1x/2, yData_thisYear[week]-lrs1y/2), lrs1x, lrs1y, edgecolor='k', facecolor='none')
+        # add the patch to the axis
+        ax.add_patch(CP2)
+        return ax, LI_mode_all, LI_mode_thisYear, CP, CP2
     
     return ax, LI_mode_all, LI_mode_thisYear, CP
 
@@ -144,7 +151,7 @@ def update_plot_needName(ax, DM_line, AM_line, kernel_estimate_line, PS_line, hi
     return ax, DM_line, AM_line, kernel_estimate_line, PS_line, histogram_line
 
 
-def plot_spectrum(ax, X, Y, HHi_plot, draft, time_mean, time_LI, LI_deepestMode, LI_deepestMode_expect, week_starts, week_ends, week):
+def plot_spectrum(ax, X, Y, HHi_plot, draft, time_mean, time_LI, LI_deepestMode, LI_deepestMode_expect, week_starts, week_ends, week, second_rect = False):
     ax.pcolormesh(X, Y, HHi_plot.transpose(), shading='nearest')
     ax.set_ylim([0, 4])
     ax.set_xlabel('Time')
@@ -160,6 +167,13 @@ def plot_spectrum(ax, X, Y, HHi_plot, draft, time_mean, time_LI, LI_deepestMode,
     CP = mpatches.Rectangle((time_mean[week]-lrs1x/2, LI_deepestMode[week]-lrs1y/2), lrs1x, lrs1y, edgecolor='r', facecolor='none')
     # add the patch to the axis
     ax.add_patch(CP)
+
+    if second_rect:
+        # add a second rectangle to mark the current data point for manual correction
+        CP2 = mpatches.Rectangle((time_mean[week]-lrs1x/2, LI_deepestMode[week]-lrs1y/2), lrs1x, lrs1y, edgecolor='r', facecolor='none')
+        # add the patch to the axis
+        ax.add_patch(CP2)
+        return ax, patch_current_week_ice_data, scatter_DM, scatter_AM, CP, CP2
 
     return ax, patch_current_week_ice_data, scatter_DM, scatter_AM, CP
 

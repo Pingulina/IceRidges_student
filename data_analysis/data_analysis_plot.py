@@ -36,6 +36,13 @@ def update_plot_weekly_data_scatter(ax, xData_all, yData_all, xData_thisYear, yD
 
     return ax, CP
 
+def update_plot_weekly_data_scatter_allPoints(ax, xData_all, yData_all, xData_thisYear, yData_thisYear, week, LI_mode_all, LI_mode_thisYear, CP):
+    ax, CP = update_plot_weekly_data_scatter(ax, xData_all, yData_all, xData_thisYear, yData_thisYear, week, CP)
+    LI_mode_all.set_offsets(np.c_[xData_all, yData_all])
+    LI_mode_thisYear.set_offsets(np.c_[xData_thisYear, yData_thisYear])
+
+    return ax, LI_mode_all, LI_mode_thisYear, CP
+
 
 def plot_weekly_data_draft(ax, time, draft, time_ridge, draft_ridge, time_LI, draft_LI, dateNum_every_day, week, xTickLabels, xlabel:str, ylabel:str, ylim, dateTickDistance=1):
     ax.set_ylim(ylim[0], ylim[1])

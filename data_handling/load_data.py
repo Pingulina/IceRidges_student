@@ -19,7 +19,18 @@ constants = import_module('constants', 'helper_functions')
 j2d = import_module('jsonified2dict', 'initialization_preparation')
 
 
-def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_json_mooring=None, load_dict_ridge_statistics=True):
+def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_json_mooring=None, load_dict_ridge_statistics=True, robustOption=True):
+    """
+    load the data from one year.
+    If no robust option is chosen, the location is not checked. Only do this if you know the location exists
+    year: int, the year you want to analyse
+    loc: str, the location you want to analyse
+    path_to_json_processed: str, the path to the processed json files
+    path_to_json_mooring: str, the path to the mooring json files
+    load_dict_ridge_statistics: bool, if True, the ridge statistics are loaded from the json file
+    robustOption: bool, if True, the location is checked if it exists in the mooring_locations.json file.
+    :return: dateNum, draft, dict_ridge_statistics, year, loc
+"""
     
     if path_to_json_processed is None:
         pathName = os.getcwd()
@@ -63,20 +74,24 @@ def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_
                 loc = None
                 continue
         else:
-            # load mooring_locations.json from Data
             dict_ridge_statistics = None
-            with open(os.path.join(os.path.join(os.getcwd(), 'Data'), 'mooring_locations.json'), 'r') as file:
-                dict_locations = json.load(file)
-                locations_this_year = dict_locations.keys()
-                locations_this_year = dict_locations[list(dict_locations.keys())[np.where([int(key[0:4]) == year for key in dict_locations.keys()])[0][0]]].keys()
-            if loc is None:
-                loc = input("Enter the location you want to analyse: ")
-            if loc in locations_this_year:
-                break
+            if robustOption: # if no robust option is chosen, the location is not checked. Only do this if you know the location exists
+                # load mooring_locations.json from Data to check, if the location exists
+                with open(os.path.join(os.path.join(os.getcwd(), 'Data'), 'mooring_locations.json'), 'r') as file:
+                    dict_locations = json.load(file)
+                    locations_this_year = dict_locations.keys()
+                    locations_this_year = dict_locations[list(dict_locations.keys())[np.where([int(key[0:4]) == year for key in dict_locations.keys()])[0][0]]].keys()
+                if loc is None:
+                    loc = input("Enter the location you want to analyse: ")
+                if loc in locations_this_year:
+                    break
+                else:
+                    print(f"The location you entered is not in the data. Please enter a valid location. The locations for this year are: {locations_this_year}")
+                    loc = None
+                    continue
             else:
-                print(f"The location you entered is not in the data. Please enter a valid location. The locations for this year are: {locations_this_year}")
-                loc = None
-                continue
+                # if no robust option is chosen, the location is not checked. Only do this if you know the location exists
+                break
     
     
     
@@ -97,8 +112,13 @@ def load_data_all_years(path_to_json_processed=None):
     files.sort()
     dict_ridge_statistics_year_all = {}
     for file in files:
-        file_name = file.split('.')[0]
-        if file_name.split('_')[1] == 'statistics':
+        file_name_components = file.split('.')
+        file_name = file_name_components[0]
+        if len(file_name_components) > 1:
+            file_type = file_name_components[1]
+        else:
+            break # this is a folder
+        if file_name.split('_')[1] == 'statistics' and file_type == 'json':
             year = int(file_name.split('_')[2])
             with open(os.path.join(path_to_json_processed, file), 'r') as file:
                 dict_ridge_statistics_year = json.load(file)

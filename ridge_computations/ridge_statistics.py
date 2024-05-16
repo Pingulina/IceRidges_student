@@ -218,7 +218,8 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             pathName_thisData = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
             if not os.path.exists(pathName_thisData):
                 os.makedirs(pathName_thisData)
-            dict2json.dict2json(dict_yearly, os.path.join(pathName_thisData, f"ridge_statistics_{year}.json"))
+            for loc in dict_yearly.keys():
+                dict2json.dict2json(dict_yearly[loc], os.path.join(pathName_thisData, f"ridge_statistics_{year}{loc}.json"))
             
         # plot the data of all mooring locations from this year
         if constants.make_plots:

@@ -23,7 +23,7 @@ constants = import_module('constants', 'helper_functions')
 j2d = import_module('jsonified2dict', 'initialization_preparation')
 date_time_stuff = import_module('date_time_stuff', 'helper_functions')
 load_data = import_module('load_data', 'data_handling')
-data_analysis_plot = import_module('data_analysis_plot', 'data_analysis')
+data_analysis_plot = import_module('data_analysis_plot', 'plot_functions')
 user_input_interaction = import_module('user_input_iteration', 'user_interaction')
 
 

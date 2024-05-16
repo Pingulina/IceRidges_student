@@ -49,7 +49,7 @@ from import_module import import_module
 constants = import_module('constants', 'helper_functions')
 load_data = import_module('load_data', 'data_handling')
 date_time_stuff = import_module('date_time_stuff', 'helper_functions')
-data_analysis_plot = import_module('data_analysis_plot', 'data_analysis')
+data_analysis_plot = import_module('data_analysis_plot', 'plot_functions')
 user_input_iteration = import_module('user_input_iteration', 'user_interaction')
 dict2json = import_module('dict2json', 'data_handling')
 
@@ -64,6 +64,7 @@ def weekly_manual_correction(number_ridges_threshold=15):
     path_to_json_mooring = os.path.join(pathName, 'Data', 'uls_data')
 
     path_to_json_processed = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
+    path_to_json_corrected = os.path.join(constants.pathName_dataResults, 'ridge_statistics_corrected')
     dateNum, draft, _, year_user, loc_user = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, 
                                                                          path_to_json_mooring=path_to_json_mooring, load_dict_ridge_statistics=False
                                                                         )
@@ -420,12 +421,13 @@ def weekly_manual_correction(number_ridges_threshold=15):
                     break # break not only the for loop, but also the while loop
                 
             dict_ridge_statistics_corrected[loc] = deepcopy(dict_ridge_statistics[loc])
-        # store the updated dict_ridge_statistics as json file
-        # create the folder 'ridge_statistics_corrected' if it doesn't exist
-        if not os.path.exists(os.path.join(path_to_json_processed, 'ridge_statistics_corrected')):
-            os.makedirs(os.path.join(path_to_json_processed, 'ridge_statistics_corrected'))
-        dict2json.dict2json(dict_ridge_statistics_corrected, os.path.join(path_to_json_processed, 'ridge_statistics_corrected', f'ridge_statistics_{year}.json'))
-        print(f"Data for season {season} has been corrected and stored in the folder 'ridge_statistics_corrected'.")
+            # store the updated dict_ridge_statistics as json file
+            # create the folder 'ridge_statistics_corrected' if it doesn't exist
+            if not os.path.exists(os.path.join(path_to_json_corrected)):
+                os.makedirs(os.path.join(path_to_json_corrected))
+            dict2json.dict2json(dict_ridge_statistics_corrected[loc], os.path.join(path_to_json_corrected, f'ridge_statistics_{year}{loc}.json'))
+            print(f"Data for season {season} and location {loc} has been corrected and stored in the folder 'ridge_statistics_corrected'.")
+        print(f"Data for season {season} has been corrected.")
 
     print('--- End of correction process ---')
     return None

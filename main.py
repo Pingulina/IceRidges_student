@@ -17,6 +17,7 @@ def main():
     import data_analysis.weekly_visual_analysis as wva
     import data_handling.dict2json as dict2json
     import data_analysis.weekly_manual_correction as wmc
+    import data_analysis.preliminary_analysis_simulation as pas
     # d2j.example() # store the .dat files as .json files for the mooring data
 
     # rs.ridge_statistics()
@@ -26,17 +27,20 @@ def main():
     # ewd.extract_ridge_LI_data(overwrite=True)
 
     ### uncomment the following line to run the ridge_statistics.py file
-    # rs.ridge_statistics(years=[2004], saveAsJson=True) # dict_ridge_statistics = 
-    # store the ridge statistics in a json file
-    # dict2json.dict2json(dict_ridge_statistics, 'ridge_statistics.json')
-
+    # rs.ridge_statistics(years=[2005], poss_mooring_locs=['b'], saveAsJson=True)
 
     ### uncomment the following line to run the weekly_visual_analysis.py file
     # wva.weekly_visual_analysis()
 
     ### uncomment the following line to run the weekly_manual_correction.py file
-    wmc.weekly_manual_correction()
+    # wmc.weekly_manual_correction()
+
+    ### uncomment the following line to run the preliminary_analysis_simulation.py file
+    pas.prelim_analysis_simulation(2004, ['a', 'b', 'c'])
+
     return None
 
 if __name__ == "__main__":
+    print("main.py is being run directly")
     main()
+    print("main.py is done")

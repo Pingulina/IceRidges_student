@@ -181,7 +181,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             dict_yearly[loc]['level_ice_expect_deepest_mode'].extend(deepcopy(absolute_mode_weekly))
             dict_yearly[loc]['expect_deepest_ridge'].extend(deepcopy(draft_deepest_ridge))
             dict_yearly[loc]['number_ridges'].extend(deepcopy(R_no))
-            dict_yearly[loc]['mean_keel_draft'].extend(deepcopy(mean_keel_draft+5))
+            dict_yearly[loc]['mean_keel_draft'].extend(deepcopy(mean_keel_draft+constants.min_draft))
             dict_yearly[loc]['mean_dateNum'].extend(deepcopy(dateNum_rc_pd))
             dict_yearly[loc]['week_start'].extend(deepcopy(week_start))
             dict_yearly[loc]['week_end'].extend(deepcopy(week_end))

@@ -58,9 +58,11 @@ def prelim_analysis_simulation(years, locs):
             else:
                 dateNum, draft, dict_ridge_statistics_corrected, year, loc = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, path_to_json_mooring=path_to_json_mooring,
                                                                                              year=year, loc=loc)
-            level_ice_deepest_mode.extend(dict_ridge_statistics_corrected[loc]['level_ice_deepest_mode'])
-            mean_keel_draft.extend(dict_ridge_statistics_corrected[loc]['mean_keel_draft'])
-            number_of_ridges.extend(dict_ridge_statistics_corrected[loc]['number_ridges'])
+            week_to_keep = dict_ridge_statistics_corrected[loc]['week_to_keep']
+            # make lists of the data, include all data that is marked to keep (listed in week_to_keep)
+            level_ice_deepest_mode.extend(dict_ridge_statistics_corrected[loc]['level_ice_deepest_mode'][week_to_keep])
+            mean_keel_draft.extend(dict_ridge_statistics_corrected[loc]['mean_keel_draft'][week_to_keep])
+            number_of_ridges.extend(dict_ridge_statistics_corrected[loc]['number_ridges'][week_to_keep])
 
     # make numpy arrays
     level_ice_deepest_mode = np.array(level_ice_deepest_mode)

@@ -72,6 +72,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             dict_yearly[loc]['location'] = [] # Location of the data
             dict_yearly[loc]['peaks_intensity'] = [] # PKSall - intensities of all peaks
             dict_yearly[loc]['peaks_location'] = [] # LOCSall - locations of all peaks
+            dict_yearly[loc]['week_to_keep'] = [] # flag to keep the week
             
             
             # preallocate the variables
@@ -194,6 +195,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             dict_yearly[loc]['location'].extend(deepcopy([loc]*len(dateNum_reshape)))
             dict_yearly[loc]['peaks_intensity'].extend(deepcopy([value for key, value in intensities_all.items()]))
             dict_yearly[loc]['peaks_location'].extend(deepcopy([value for key, value in locs_all.items()]))
+            dict_yearly[loc]['week_to_keep'].extend(deepcopy(week_to_keep))
                     
             # plot the data in different plots (one figure) (one figure per location and year)
             if constants.make_plots:

@@ -31,7 +31,7 @@ def rayleigh_criterion(data_x, data_h):
     if type(data_x) != np.ndarray or type(data_h) != np.ndarray:
         raise ValueError("The input data is not a list or numpy array")
 
-    peak_indices, _ = scipy.signal.find_peaks(data_h, height=constants.min_draft+constants.machine_precision) # find the peaks in the data, that are larger than min_draft
+    peak_indices, _ = scipy.signal.find_peaks(data_h, height=constants.min_draft * (1+1e-5)) # +constants.machine_precision) # find the peaks in the data, that are larger than min_draft
     x_pot = np.array(data_x[peak_indices])
     h_pot = np.array(data_h[peak_indices])
 

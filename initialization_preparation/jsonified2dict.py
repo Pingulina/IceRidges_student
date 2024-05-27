@@ -26,6 +26,10 @@ def handle_dict(d):
             out[k] = int(v['data'])
         elif v['type'] in [np.float_.__name__, np.float16.__name__, np.float32.__name__, np.float64.__name__]:
             out[k] = float(v['data'])
+        elif v['type'] in [bool.__name__, np.bool_.__name__]:
+            out[k] = bool(v['data'])
+        elif v['type'] in [f"list of {bool.__name__}", f"list of {np.bool_.__name__}"]:
+            out[k] = [bool(i) for i in v['data']]
         else:
             out[k] = v['data']
     return out

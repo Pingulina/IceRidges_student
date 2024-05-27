@@ -57,12 +57,14 @@ def prelim_analysis_simulation(years, locs):
                                                                                              year=year, loc=loc)
             else:
                 dateNum, draft, dict_ridge_statistics_corrected, year, loc = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, path_to_json_mooring=path_to_json_mooring,
-                                                                                             year=year, loc=loc)
+                                                                                             year=year, loc=loc, skip_nonexistent_locs=True)
+                if dateNum is None:
+                    continue
             week_to_keep = dict_ridge_statistics_corrected[loc]['week_to_keep']
             # make lists of the data, include all data that is marked to keep (listed in week_to_keep)
-            level_ice_deepest_mode.extend(dict_ridge_statistics_corrected[loc]['level_ice_deepest_mode'][week_to_keep])
-            mean_keel_draft.extend(dict_ridge_statistics_corrected[loc]['mean_keel_draft'][week_to_keep])
-            number_of_ridges.extend(dict_ridge_statistics_corrected[loc]['number_ridges'][week_to_keep])
+            level_ice_deepest_mode.extend([dict_ridge_statistics_corrected[loc]['level_ice_deepest_mode'][weekNr] for weekNr in np.where(week_to_keep)[0]]) # needs to be this way, because dict entry is a list not a np.array
+            mean_keel_draft.extend([dict_ridge_statistics_corrected[loc]['mean_keel_draft'][weekNr] for weekNr in np.where(week_to_keep)[0]])
+            number_of_ridges.extend([dict_ridge_statistics_corrected[loc]['number_ridges'][weekNr] for weekNr in np.where(week_to_keep)[0]])
 
     # make numpy arrays
     level_ice_deepest_mode = np.array(level_ice_deepest_mode)
@@ -135,7 +137,15 @@ def prelim_analysis_simulation(years, locs):
         ax_ridgeNumber_probDist, regression_ridgeNumber, {'color':'tab:blue', 'bins':20}, line_x, {'color':'tab:red', 'distribution':'nakagami'}, 
         'normalized number of ridges', 'Probabitly distribution', xlim=[0, 3])
 
-
+    # figure simulated number of ridges over mean keel draft
+    ax_sim_ridgeNumber_ridgeDepth = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[2,2])
+    # curve fitting
+    line_x = np.arange(0, 5, 0.001)
+    line_y = 38.78 * line_x ** 2.047 # why??? This is in Ilja's code
+    number_of_ridges_sim = 38.78 * (mean_keel_draft-constants.min_draft) ** 2.047 * np.random.normal(ridgeNumber_probDist[0], ridgeNumber_probDist[1], len(mean_keel_draft))
+    ax_sim_ridgeNumber_ridgeDepth, scatter_sim_ridgeNumber_ridgeDepth, line_sim_ridgeNumber_ridgeDepth = prelim_plot.plot_scatter_with_line(
+        ax_sim_ridgeNumber_ridgeDepth, mean_keel_draft, number_of_ridges_sim, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
+        line_x+5, line_y, {'color':'tab:red'}, 'Mean keel draft [m]', 'Number of ridges', xlim=[constants.min_draft, 10], ylim=[5, 1200], title="Simulated")
 
     print('some stuff')
 

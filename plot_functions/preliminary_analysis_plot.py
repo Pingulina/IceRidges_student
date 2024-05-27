@@ -92,8 +92,10 @@ def plot_histogram_with_line(ax, hist_data, hist_properties:dict, line_x, line_p
     
     # plot the distribution line
     if line_properties.get('distribution', 'norm') == 'norm':
+        prob_distri = scipy.stats.norm.fit(hist_data)
         line_y = scipy.stats.norm.pdf(line_x, prob_distri[0], prob_distri[1])
     elif line_properties.get('distribution', 'norm') == 'nakagami':
+        prob_distri = scipy.stats.nakagami.fit(hist_data)
         line_y = scipy.stats.nakagami.pdf(line_x, prob_distri[0], prob_distri[1])
     plot_line = ax.plot(line_x, line_y, color=line_properties.get('color', 'red'), label=line_properties.get('label', None), 
                         linestyle=line_properties.get('linestyle', '-'), linewidth=line_properties.get('linewidth', 1.0))

@@ -30,6 +30,12 @@ def dict2jsonable(d):
         elif isinstance(v, (np.float_, np.float16, np.float32, np.float64)):
             out[k]['data'] = float(v)
             out[k]['type'] = type(v).__name__ # get the type of the variable as string # 'numpy.float'
+        elif isinstance(v, (bool, np.bool_)):
+            out[k]['data'] = int(v) # convert the boolean to an integer (False -> 0, True -> 1)
+            out[k]['type'] = type(v).__name__ # get the type of the variable as string
+        elif isinstance(v, list) and set(map(type, v)) in [{bool}, {np.bool_}]:
+            out[k]['data'] = [int(i) for i in v]
+            out[k]['type'] = f"list of {type(v[0]).__name__}"
         else:
             out[k]['data'] = v
             out[k]['type'] = type(v).__name__ # get the type of the variable as string

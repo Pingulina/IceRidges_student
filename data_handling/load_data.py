@@ -19,7 +19,7 @@ constants = import_module('constants', 'helper_functions')
 j2d = import_module('jsonified2dict', 'initialization_preparation')
 
 
-def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_json_mooring=None, load_dict_ridge_statistics=True, robustOption=True):
+def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_json_mooring=None, load_dict_ridge_statistics=True, skip_nonexistent_locs=False, robustOption=True):
     """
     load the data from one year.
     If no robust option is chosen, the location is not checked. Only do this if you know the location exists
@@ -57,6 +57,9 @@ def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_
         
         json_file_name_processed = f"ridge_statistics_{year}{loc}.json"
         if not os.path.exists(os.path.join(path_to_json_processed, json_file_name_processed)):
+            if skip_nonexistent_locs:
+                print(f"The json file ridge_statistics_{year}{loc}.json does not exist. Skipping this location.")
+                return None, None, None, year, loc
             print(f"The json file ridge_statistics_{year}{loc}.json does not exist. Please enter a valid year and location.")
             year = None
             loc = None

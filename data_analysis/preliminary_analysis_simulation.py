@@ -48,6 +48,7 @@ def prelim_analysis_simulation(years, locs):
     level_ice_deepest_mode = []
     mean_keel_draft = []
     number_of_ridges = []
+    draft_weekly_deepest_ridge = []
     for year in years:
         for loc in locs:
             # check, if this year and location exists in the corrected files, otherwise use the processed files
@@ -65,11 +66,13 @@ def prelim_analysis_simulation(years, locs):
             level_ice_deepest_mode.extend([dict_ridge_statistics_corrected[loc]['level_ice_deepest_mode'][weekNr] for weekNr in np.where(week_to_keep)[0]]) # needs to be this way, because dict entry is a list not a np.array
             mean_keel_draft.extend([dict_ridge_statistics_corrected[loc]['mean_keel_draft'][weekNr] for weekNr in np.where(week_to_keep)[0]])
             number_of_ridges.extend([dict_ridge_statistics_corrected[loc]['number_ridges'][weekNr] for weekNr in np.where(week_to_keep)[0]])
+            draft_weekly_deepest_ridge.extend([dict_ridge_statistics_corrected[loc]['deepest_ridge'][weekNr] for weekNr in np.where(week_to_keep)[0]])
 
     # make numpy arrays
     level_ice_deepest_mode = np.array(level_ice_deepest_mode)
     mean_keel_draft = np.array(mean_keel_draft)
     number_of_ridges = np.array(number_of_ridges)
+    draft_weekly_deepest_ridge = np.array(draft_weekly_deepest_ridge)
     
     # make a figure with subplot grid (3 columns, 6 rows)
     plt.ion()
@@ -146,6 +149,83 @@ def prelim_analysis_simulation(years, locs):
     ax_sim_ridgeNumber_ridgeDepth, scatter_sim_ridgeNumber_ridgeDepth, line_sim_ridgeNumber_ridgeDepth = prelim_plot.plot_scatter_with_line(
         ax_sim_ridgeNumber_ridgeDepth, mean_keel_draft, number_of_ridges_sim, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
         line_x+5, line_y, {'color':'tab:red'}, 'Mean keel draft [m]', 'Number of ridges', xlim=[constants.min_draft, 10], ylim=[5, 1200], title="Simulated")
+    
+    # figure exceedence probability over number of ridges
+    ax_exceedence_prob_ridgeNumber = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[3,0])
+    # make the y-scale logarithmic
+    ax_exceedence_prob_ridgeNumber.set_yscale('log')
+    scatter_x = np.sort(regression_ridgeNumber)
+    scatter_y = np.arange(len(scatter_x), 0, -1) / len(scatter_x)
+    line_x = np.arange(0, 3, 0.01)
+    line_y = 1- scipy.stats.nakagami.cdf(line_x, ridgeNumber_probDist[0], ridgeNumber_probDist[1])
+    ax_exceedence_prob_ridgeNumber, scatter_exceedence_prob_ridgeNumber, line_exceedence_prob_ridgeNumber = prelim_plot.plot_scatter_with_line(
+        ax_exceedence_prob_ridgeNumber, scatter_x, scatter_y, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
+        line_x, line_y, {'color':'tab:red'}, 'normalized number of ridges', 'Exceedence probability', xlim=[0, 3], ylim=[1e-4, 1], title="Data")
+
+    # figure normalized number of ridges ove mean keel draft
+    ax_ridgeNumber_ridgeDepth = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[3,1])
+    ax_ridgeNumber_ridgeDepth, scatter_ridgeNumber_ridgeDepth = prelim_plot.plot_scatter(
+        ax_ridgeNumber_ridgeDepth, mean_keel_draft, regression_ridgeNumber, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5},
+        'Mean keel draft [m]', 'normalized number of ridges', xlim=[constants.min_draft, 10], ylim=[0, 5], title="Data")
+
+    # figure simulated number of ridges over level ice deepest mode
+    ax_sim_ridgeNumber_LIDM = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[3,2])
+    ax_sim_ridgeNumber_LIDM, scatter_sim_ridgeNumber_LIDM = prelim_plot.plot_scatter(
+        ax_sim_ridgeNumber_LIDM, level_ice_deepest_mode, number_of_ridges_sim, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
+        'LI_DM [m]', 'Number of ridges', xlim=[0, 5], ylim=[0, 1200], title="Simulated")
+    
+    # simulation keel depth
+    mean_keel_draft_simulated = curve_fitting(level_ice_deepest_mode, mean_keel_draft, level_ice_deepest_mode)[0] * np.random.normal(ridgeDepth_probDist[0], ridgeDepth_probDist[1], len(mean_keel_draft))
+    number_of_ridges_simByDraft = 38.78 * (mean_keel_draft_simulated-constants.min_draft) ** 2.047 * np.random.normal(ridgeNumber_probDist[0], ridgeNumber_probDist[1], len(mean_keel_draft_simulated))
+    # exceedance probability of keel depth (depths of all keys)
+    weeks_to_keep = dict_ridge_statistics_corrected[loc]['week_to_keep']
+    keel_draft_ridge_toKeep = np.concatenate([dict_ridge_statistics_corrected[loc]['keel_draft_ridge'][weekNr] for weekNr in np.where(weeks_to_keep)[0]])
+    scatter1_x = np.sort(keel_draft_ridge_toKeep)
+    scatter1_y = np.arange(len(scatter1_x), 0, -1) / len(scatter1_x)
+
+    keel_draft_ridge_toKeep_sim = np.concatenate([5 + np.random.exponential(mean_keel_draft_simulated[weekNr] - 5, int(np.ceil(number_of_ridges_simByDraft[weekNr]))) for weekNr in range(len(mean_keel_draft_simulated))])
+    keel_draft_ridge_toKeep_max_sim = np.array([max(5 + np.random.exponential(mean_keel_draft_simulated[weekNr] - 5, int(np.ceil(number_of_ridges_simByDraft[weekNr])))) for weekNr in np.where(weeks_to_keep)[0]])
+    scatter2_x = np.sort(keel_draft_ridge_toKeep_sim)
+    scatter2_y = np.arange(len(scatter2_x), 0, -1) / len(scatter2_x)
+
+    # figure exceedence probablity over keel depth
+    ax_exceedence_prob_ridgeDepth = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[4,0])
+    ax_exceedence_prob_ridgeDepth.set_yscale('log')
+    
+    ax_exceedence_prob_ridgeDepth, scatter_exceedence_prob_ridgeDepth_data, scatter_exceedence_prob_ridgeDepth_sim = prelim_plot.plot_scatter_double(
+        ax_exceedence_prob_ridgeDepth, scatter1_x, scatter1_y, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
+        scatter2_x, scatter2_y, {'color':'tab:red', 'marker':'o', 's':6, 'alpha':0.5}, 'Keel depth [m]', 'Exceedence probability', xlim=[0, 40])
+
+
+
+    # figure keel depth probability denstiy
+    ax_probDens_ridgeDepth = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[4,1])
+    ax_probDens_ridgeDepth.set_yscale('log')
+    ax_probDens_ridgeDepth, hist_probDens_ridgeDepth_data, hist_probDens_ridgeDepth_sim = prelim_plot.plot_histogram_double(
+        ax_probDens_ridgeDepth, keel_draft_ridge_toKeep, {'color':'tab:blue', 'bins':30, 'density':True}, keel_draft_ridge_toKeep_sim, {'color':'tab:red', 'bins':30, 'density':True},
+        'Keel depth [m]', 'Probability density')
+    
+    # figure probabiltiy density over keel depth
+    
+    # figure weekly deepest keel over level ice deepest mode
+    ax_weekly_deepest_keel_LIDM = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[5,0])
+    line_x = np.arange(0, 4, 1)
+    line_y, bb = curve_fitting(level_ice_deepest_mode, draft_weekly_deepest_ridge, line_x)
+    ax_weekly_deepest_keel_LIDM, scatter_weekly_deepest_keel_LIDM, line_weekly_deepest_keel_LIDM = prelim_plot.plot_scatter_with_line(
+        ax_weekly_deepest_keel_LIDM, level_ice_deepest_mode, draft_weekly_deepest_ridge, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
+        line_x, line_y, {'color':'tab:red'}, 'LI_DM [m]', 'Weekly deepest keel [m]', xlim=[0, 4], ylim=[5, 9], title="Data")
+
+    # figure simulated weekly deepest keel over level ice deepest mode
+    ax_sim_weekly_deepest_keel_LIDM = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[5,1])
+    line_x = np.arange(0, 4, 1)
+    line_y, bb = curve_fitting(level_ice_deepest_mode, keel_draft_ridge_toKeep_max_sim, line_x)
+    ax_sim_weekly_deepest_keel_LIDM, scatter_sim_weekly_deepest_keel_LIDM, line_sim_weekly_deepest_keel_LIDM = prelim_plot.plot_scatter_with_line(
+        ax_sim_weekly_deepest_keel_LIDM, level_ice_deepest_mode, keel_draft_ridge_toKeep_max_sim, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
+        line_x, line_y, {'color':'tab:red'}, 'LI_DM [m]', 'Weekly deepest keel [m]', xlim=[0, 4], ylim=[5, 9], title="Simulated")
+
+    # figure weekly deepest keel simulated over measured
+    ax_weekly_deepest_keel_sim_data = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[5,2])
+
 
     print('some stuff')
 

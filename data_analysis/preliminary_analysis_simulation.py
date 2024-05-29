@@ -49,6 +49,7 @@ def prelim_analysis_simulation(years, locs):
     mean_keel_draft = []
     number_of_ridges = []
     draft_weekly_deepest_ridge = []
+    weeks_to_keep = []
     for year in years:
         for loc in locs:
             # check, if this year and location exists in the corrected files, otherwise use the processed files
@@ -66,13 +67,16 @@ def prelim_analysis_simulation(years, locs):
             level_ice_deepest_mode.extend([dict_ridge_statistics_corrected[loc]['level_ice_deepest_mode'][weekNr] for weekNr in np.where(week_to_keep)[0]]) # needs to be this way, because dict entry is a list not a np.array
             mean_keel_draft.extend([dict_ridge_statistics_corrected[loc]['mean_keel_draft'][weekNr] for weekNr in np.where(week_to_keep)[0]])
             number_of_ridges.extend([dict_ridge_statistics_corrected[loc]['number_ridges'][weekNr] for weekNr in np.where(week_to_keep)[0]])
-            draft_weekly_deepest_ridge.extend([dict_ridge_statistics_corrected[loc]['deepest_ridge'][weekNr] for weekNr in np.where(week_to_keep)[0]])
+            draft_weekly_deepest_ridge.extend([dict_ridge_statistics_corrected[loc]['draft_weekly_deepest_ridge'][weekNr] for weekNr in np.where(week_to_keep)[0]])
+
+            weeks_to_keep.extend([dict_ridge_statistics_corrected[loc]['week_to_keep'][weekNr] for weekNr in np.where(week_to_keep)[0]])
 
     # make numpy arrays
     level_ice_deepest_mode = np.array(level_ice_deepest_mode)
     mean_keel_draft = np.array(mean_keel_draft)
     number_of_ridges = np.array(number_of_ridges)
     draft_weekly_deepest_ridge = np.array(draft_weekly_deepest_ridge)
+    weeks_to_keep = np.array(weeks_to_keep)
     
     # make a figure with subplot grid (3 columns, 6 rows)
     plt.ion()
@@ -121,8 +125,12 @@ def prelim_analysis_simulation(years, locs):
 
 
     # figure more thickness over level ice deepest mode?
-    ax_ridgeNumber_probDist = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[1, 1])
-
+    ax_normalizedRidgeNumber_LIDM = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[1, 1])
+    normalized_number_of_ridges = np.divide(number_of_ridges[level_ice_deepest_mode > 0], 91.74 * level_ice_deepest_mode[level_ice_deepest_mode > 0] ** 1.048) # TODO: why these numbers in Ilja's code?
+    ax_normalizedRidgeNumber_LIDM, scatter_normalizedRidgeNumber_LIDM = prelim_plot.plot_scatter(
+        ax_normalizedRidgeNumber_LIDM, level_ice_deepest_mode[level_ice_deepest_mode > 0], normalized_number_of_ridges, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5},
+        'LI_DM [m]', 'normalized number of ridges', xlim=[0, 3], ylim=[0, 5], title="Data")
+    
     # figure data number of ridges over mean keel draft
     ax_data_ridgeNumber_ridgeDepth = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[2,0])
     # curve fitting
@@ -178,8 +186,8 @@ def prelim_analysis_simulation(years, locs):
     mean_keel_draft_simulated = curve_fitting(level_ice_deepest_mode, mean_keel_draft, level_ice_deepest_mode)[0] * np.random.normal(ridgeDepth_probDist[0], ridgeDepth_probDist[1], len(mean_keel_draft))
     number_of_ridges_simByDraft = 38.78 * (mean_keel_draft_simulated-constants.min_draft) ** 2.047 * np.random.normal(ridgeNumber_probDist[0], ridgeNumber_probDist[1], len(mean_keel_draft_simulated))
     # exceedance probability of keel depth (depths of all keys)
-    weeks_to_keep = dict_ridge_statistics_corrected[loc]['week_to_keep']
-    keel_draft_ridge_toKeep = np.concatenate([dict_ridge_statistics_corrected[loc]['keel_draft_ridge'][weekNr] for weekNr in np.where(weeks_to_keep)[0]])
+    weeks_to_keep_thisLoc = dict_ridge_statistics_corrected[loc]['week_to_keep']
+    keel_draft_ridge_toKeep = np.concatenate([dict_ridge_statistics_corrected[loc]['keel_draft_ridge'][weekNr] for weekNr in np.where(weeks_to_keep_thisLoc)[0]])
     scatter1_x = np.sort(keel_draft_ridge_toKeep)
     scatter1_y = np.arange(len(scatter1_x), 0, -1) / len(scatter1_x)
 
@@ -213,7 +221,7 @@ def prelim_analysis_simulation(years, locs):
     line_y, bb = curve_fitting(level_ice_deepest_mode, draft_weekly_deepest_ridge, line_x)
     ax_weekly_deepest_keel_LIDM, scatter_weekly_deepest_keel_LIDM, line_weekly_deepest_keel_LIDM = prelim_plot.plot_scatter_with_line(
         ax_weekly_deepest_keel_LIDM, level_ice_deepest_mode, draft_weekly_deepest_ridge, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
-        line_x, line_y, {'color':'tab:red'}, 'LI_DM [m]', 'Weekly deepest keel [m]', xlim=[0, 4], ylim=[5, 9], title="Data")
+        line_x, line_y, {'color':'tab:red'}, 'LI_DM [m]', 'Weekly deepest keel [m]', xlim=[0, 3], ylim=[5, 40], title="Data")
 
     # figure simulated weekly deepest keel over level ice deepest mode
     ax_sim_weekly_deepest_keel_LIDM = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[5,1])
@@ -221,10 +229,17 @@ def prelim_analysis_simulation(years, locs):
     line_y, bb = curve_fitting(level_ice_deepest_mode, keel_draft_ridge_toKeep_max_sim, line_x)
     ax_sim_weekly_deepest_keel_LIDM, scatter_sim_weekly_deepest_keel_LIDM, line_sim_weekly_deepest_keel_LIDM = prelim_plot.plot_scatter_with_line(
         ax_sim_weekly_deepest_keel_LIDM, level_ice_deepest_mode, keel_draft_ridge_toKeep_max_sim, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
-        line_x, line_y, {'color':'tab:red'}, 'LI_DM [m]', 'Weekly deepest keel [m]', xlim=[0, 4], ylim=[5, 9], title="Simulated")
+        line_x, line_y, {'color':'tab:red'}, 'LI_DM [m]', 'Weekly deepest keel [m]', xlim=[0, 3], ylim=[5, 40], title="Simulated")
 
     # figure weekly deepest keel simulated over measured
     ax_weekly_deepest_keel_sim_data = figure_prelim_analysis.add_subplot(gridspec_prelim_analysis[5,2])
+    line_x = np.arange(0, 40, 1)
+    line_y = np.arange(0, 40, 1)
+    # equal axis
+    ax_weekly_deepest_keel_sim_data.set_aspect('equal', adjustable='box')
+    ax_weekly_deepest_keel_sim_data, scatter_weekly_deepest_keel_sim_data, line_weekly_deepest_keel_sim_data = prelim_plot.plot_scatter_with_line(
+        ax_weekly_deepest_keel_sim_data, draft_weekly_deepest_ridge, keel_draft_ridge_toKeep_max_sim, {'color':'tab:blue', 'marker':'o', 's':6, 'alpha':0.5}, 
+        line_x, line_y, {'color':'tab:red'}, 'Data[m]', 'Simulation [m]', xlim=[5, 40], ylim=[5, 40], title="Weekly deepest keel")
 
 
     print('some stuff')

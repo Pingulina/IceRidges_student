@@ -13,11 +13,12 @@ def main():
     import initialization_preparation.data2json as d2j
     import initialization_preparation.extract_ridge_LI_data as ewd
     import initialization_preparation.data2dict as d2d
-    import ridge_computations.ridge_statistics as rs
+    import data_analysis.ridge_statistics as rs
     import data_analysis.weekly_visual_analysis as wva
     import data_handling.dict2json as dict2json
     import data_analysis.weekly_manual_correction as wmc
     import data_analysis.preliminary_analysis_simulation as pas
+    import data_analysis.level_ice_statistics as lis
     # d2j.example() # store the .dat files as .json files for the mooring data
 
     # rs.ridge_statistics()
@@ -36,7 +37,9 @@ def main():
     # wmc.weekly_manual_correction()
 
     ### uncomment the following line to run the preliminary_analysis_simulation.py file
-    pas.prelim_analysis_simulation([2004, 2006], ['a', 'b', 'c', 'd'])
+    # pas.prelim_analysis_simulation([2004, 2006], ['a', 'b', 'c', 'd'])
+
+    lis.level_ice_statistics(year=2004, loc='a')
 
     return None
 

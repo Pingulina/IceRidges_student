@@ -54,6 +54,7 @@ def level_ice_statistics(year=None, loc=None):
 
     sucess2, dateNum_rc, draft_rc, _ = j2np.json2numpy(os.path.join(path_to_json_mooring, f"mooring_{season}_ridge.json"), loc)
     sucess3, dateNum_LI, draft_LI, draft_mode = j2np.json2numpy(os.path.join(path_to_json_mooring, f"mooring_{season}_LI.json"), loc)
+   
     if not (sucess2 and sucess3):
         print(f"Data for {loc} in {year} not found.")
         return None
@@ -63,9 +64,12 @@ def level_ice_statistics(year=None, loc=None):
     pathName_ridgeStatistics = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
     dateNum, draft, dict_ridge_statistics, year, loc = load_data.load_data_oneYear(path_to_json_processed=pathName_ridgeStatistics, path_to_json_mooring=path_to_json_mooring,
                                                                                              year=year, loc=loc, skip_nonexistent_locs=True)
+    
 
+    dateNum_reshape_hourly, draft_reshape_hourly = rce.extract_hourly_data_draft(dateNum, draft)
 
-    dateNum_reshape, draft_reshape = rce.extract_weekly_data_draft(dateNum, draft)
+    draft_reshape_rounded = np.round(draft_reshape_hourly*1000)
+    level_ice_deepest_mode_hourly = [max(set(hourly_data), key=hourly_data.tolist().count) / 1000 for hourly_data in draft_reshape_rounded]
 
     level_ice_deepest_mode = dict_ridge_statistics[loc]['level_ice_deepest_mode']
     mean_dateNum = dict_ridge_statistics[loc]['mean_dateNum']
@@ -102,7 +106,11 @@ def level_ice_statistics(year=None, loc=None):
     # initialize the line indicating the current mode
     line_levelIce_current_mode = ax_levelIce_mode.plot([0, 0], [0, 12], 'r', zorder=1)
     # initialize the histogram
-    ax_levelIce_mode, hist_levelIce_mode = plot_histogram(ax_levelIce_mode, level_ice_deepest_mode, {'bins': 80}, xlim=[-0.1, 8])
+    ax_levelIce_mode, hist_levelIce_mode = plot_histogram(ax_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': int((max(level_ice_deepest_mode_hourly) - min(level_ice_deepest_mode_hourly))/0.1), 'density':True}, xlim=[-0.1, 8], ylim=[0, 4])
+    
+
+    # continue in line 102 matlab code
+    
     print('done')
 
 
@@ -114,7 +122,7 @@ def plot_histogram(ax, hist_data, hist_properties, xlim=None, ylim=None):
         ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
-    hist_numpy = np.histogram(hist_data, bins=hist_properties.get('bins', 10))
+    hist_numpy = np.histogram(hist_data, bins=hist_properties.get('bins', 10), density=hist_properties.get('density', False))
     hist_line = ax.bar(hist_numpy[1][:-1], hist_numpy[0], align='edge', color=hist_properties.get('color', 'tab:blue'), alpha=hist_properties.get('alpha', 0.5), 
                        zorder=0, width=(max(hist_data)-min(hist_data))/hist_properties.get('bins', 10))
     return ax, hist_line

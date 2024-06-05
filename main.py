@@ -31,7 +31,7 @@ def main():
     # rs.ridge_statistics(years=[2005, 2006], poss_mooring_locs=['a', 'b', 'c', 'd'], saveAsJson=True) # , 2005, 2006
 
     ### uncomment the following line to run the weekly_visual_analysis.py file
-    # wva.weekly_visual_analysis()
+    wva.weekly_visual_analysis()
 
     ### uncomment the following line to run the weekly_manual_correction.py file
     # wmc.weekly_manual_correction()
@@ -39,7 +39,7 @@ def main():
     ### uncomment the following line to run the preliminary_analysis_simulation.py file
     # pas.prelim_analysis_simulation([2004, 2006], ['a', 'b', 'c', 'd'])
 
-    lis.level_ice_statistics(year=2004, loc='a')
+    # lis.level_ice_statistics(year=2004, loc='a')
 
     return None
 

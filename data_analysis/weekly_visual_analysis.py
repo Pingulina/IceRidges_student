@@ -75,15 +75,26 @@ def weekly_visual_analysis():
 
     # figure ice data
     ax_ice_data = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[0:2,0:4])
-    
-    ax_ice_data, patch_current_week_ice_data, ULS_draft_signal, RidgePeaks, LI_thickness = data_analysis_plot.plot_data_draft(
+
+    ax_ice_data, patch_current_week_ice_data, ULS_draft_signal, RidgePeaks, LI_thickness = data_analysis_plot.initialize_plot_data_draft(
         ax_ice_data, dateNum, draft, dict_ridge_statistics[loc]['keel_dateNum_ridge'], dict_ridge_statistics[loc]['keel_draft_ridge'], 
         dict_ridge_statistics[loc]['keel_dateNum'], dict_ridge_statistics[loc]['level_ice_deepest_mode'], dict_ridge_statistics[loc]['week_start'], 
-        dict_ridge_statistics[loc]['week_end'], week, every_nth, xTickLabels, 'Date', 'Draft [m]', [0, 30])
-
+        dict_ridge_statistics[loc]['week_end'], week, every_nth, 'Date', 'Draft [m]', [0, 30], xTickLabels=xTickLabels)
+    
+    ax_ice_data, patch_current_week_ice_data, ULS_draft_signal, RidgePeaks, LI_thickness = data_analysis_plot.plot_data_draft(
+        ax_ice_data, patch_current_week_ice_data, ULS_draft_signal, RidgePeaks, LI_thickness, dateNum, draft, dict_ridge_statistics[loc]['keel_dateNum_ridge'], dict_ridge_statistics[loc]['keel_draft_ridge'], 
+        dict_ridge_statistics[loc]['keel_dateNum'], dict_ridge_statistics[loc]['level_ice_deepest_mode'], dict_ridge_statistics[loc]['week_start'], 
+        dict_ridge_statistics[loc]['week_end'], week, every_nth, xTickLabels, [0, 30])
+    
+    
     # figure current week ice data
 
     ax_current_week_ice_data = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[2:4,0:4])
+
+    ax_current_week_ice_data, ULS_draft_signal_thisWeek, RidgePeaks_thisWeek, LI_thickness_thisWeek = data_analysis_plot.initialize_plot_weekly_data_draft(
+        ax_current_week_ice_data, dict_ridge_statistics[loc]['keel_dateNum'], dict_ridge_statistics[loc]['keel_draft'], dict_ridge_statistics[loc]['keel_dateNum_ridge'], dict_ridge_statistics[loc]['keel_draft_ridge'], dict_ridge_statistics[loc]['keel_dateNum'], 
+        dict_ridge_statistics[loc]['level_ice_deepest_mode'], dateNum_every_day, week, 'Date', 'Draft [m]', [0, 30], xTickLabels=xTickLabels)
+    
     ax_current_week_ice_data, ULS_draft_signal_thisWeek, RidgePeaks_thisWeek, LI_thickness_thisWeek = data_analysis_plot.plot_weekly_data_draft(
         ax_current_week_ice_data, dict_ridge_statistics[loc]['keel_dateNum'], dict_ridge_statistics[loc]['keel_draft'], dict_ridge_statistics[loc]['keel_dateNum_ridge'], dict_ridge_statistics[loc]['keel_draft_ridge'], dict_ridge_statistics[loc]['keel_dateNum'], 
         dict_ridge_statistics[loc]['level_ice_deepest_mode'], dateNum_every_day, week, xTickLabels, 'Date', 'Draft [m]', [0, 30])

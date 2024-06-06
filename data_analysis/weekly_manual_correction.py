@@ -85,7 +85,7 @@ def weekly_manual_correction(number_ridges_threshold=15):
     with open(os.path.join(constants.pathName_dataRaw, 'mooring_locations.json'), 'r') as file:
         dict_mooring_locations = json.load(file)
     # get the years from the files   
-    mooring_years = [thisFile.split('.')[0].split('_')[-1] for thisFile in files]
+    mooring_years = [thisFile.split('.')[0].split('_')[-1][0:4] for thisFile in files]
     
     # kick out all the years from dict_mooring_locations, that are not stored in the ridge_statistics folder
     dict_mooring_locations = {key: dict_mooring_locations[key] for key in dict_mooring_locations.keys() if key[0:4] in mooring_years}

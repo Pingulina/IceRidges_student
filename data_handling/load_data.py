@@ -121,7 +121,7 @@ def load_data_all_years(path_to_json_processed=None):
             year = int(file_name.split('_')[2][0:4])
             loc = file_name.split('_')[2][4:]
             try:
-                assert len(dict_ridge_statistics_year_all[year].keys()) == 0
+                assert len(dict_ridge_statistics_year_all[year].keys()) > 0
             except KeyError:
                 dict_ridge_statistics_year_all[year] = {}
             except AssertionError:

@@ -21,6 +21,8 @@ mooring_locs = import_module('mooring_locations', 'helper_functions')
 j2np = import_module('json2numpy', 'data_handling')
 load_data = import_module('load_data', 'data_handling')
 rce = import_module('ridge_compute_extract', 'data_handling')
+user_input_iteration = import_module('user_input_iteration', 'user_interaction')
+
 
 
 def level_ice_statistics(year=None, loc=None):
@@ -94,7 +96,7 @@ def level_ice_statistics(year=None, loc=None):
     ############ estimating the level ice statistics for each level_ice_statistics_day period ############
 
     # ice draft overview
-    ax_iceDraft_overview = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0, 0:2])
+    ax_iceDraft_overview = figure_LI_statistics.add_subplot(gridspec_LI_statistics[2, 0:2])
     ax_iceDraft_overview.plot(dateNum[0:-1:20], draft[0:-1:20], 'tab:blue', label='Ice draft')
     ax_iceDraft_overview.plot(dateNum_LI, draft_LI, 'tab:orange', label='Level ice draft')
     ax_iceDraft_overview.set_title('Ice draft overview')
@@ -104,40 +106,36 @@ def level_ice_statistics(year=None, loc=None):
     ax_iceDraft_overview.set_xticks(dateNum[newMonthIndex[::2]])
     ax_iceDraft_overview.set_xticklabels(dateTicks, rotation=45)
 
-    # level ice mode
-    ax_levelIce_mode = figure_LI_statistics.add_subplot(gridspec_LI_statistics[1, 0:2])
-    # initialize the line indicating the current mode
-    line_levelIce_current_mode = ax_levelIce_mode.plot([0, 0], [0, 12], 'r', zorder=1)
-    # initialize the histogram
+
+    # histogram parameters
     histBins = int((max(level_ice_deepest_mode_hourly) - min(level_ice_deepest_mode_hourly))/0.1)
     histBins_array = np.arange(min(level_ice_deepest_mode_hourly)-0.1, max(level_ice_deepest_mode_hourly), 0.1)
-    ax_levelIce_mode, hist_levelIce_mode = plot_histogram(ax_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins, 'density':True}, xlim=[-0.1, 8], ylim=[0, 4])
-    
-
     period = int((24 / constants.level_ice_time) * constants.level_ice_statistic_days) # number of hours in a level ice statistic period (week)
     ### make weekly histogram data
     # alocate memory for histogram data variables
     hist_levelIce_mode_weekly = np.zeros((int(len(level_ice_deepest_mode_hourly)/period), len(histBins_array)-1))
     dateNum_hist_levelIce_weekly = np.zeros(int(len(level_ice_deepest_mode_hourly)/period))
-    
-    # plot the data
-    # the figure should contain a spectogram and some lines on top of it (all in one plot)
-
+    hist_levelIce_mode_weekly_dens = np.zeros((int(len(level_ice_deepest_mode_hourly)/period), len(histBins_array)-1))
 
     for i in range(int(len(level_ice_deepest_mode_hourly)/period)):
         hist_levelIce_mode_weekly[i], _ = np.histogram(level_ice_deepest_mode_hourly[i*period:(i+1)*period], bins=histBins_array)
+        hist_levelIce_mode_weekly_dens[i], _ = np.histogram(level_ice_deepest_mode_hourly[i*period:(i+1)*period], bins=histBins_array, density=True)
         dateNum_hist_levelIce_weekly[i] = np.mean(dateNum_LI[i*period:(i+1)*period])
 
     histBins_mids = histBins_array[0:-1] + np.diff(histBins_array)/2
     [X, Y] = np.meshgrid(dateNum_hist_levelIce_weekly, histBins_mids)
+    week = 0
+
+
+
     # initialize the spectrum plot
     # the figure should contain a spectogram and some lines on top of it (all in one plot)
     hist_levelIce_mode_weekly_plot = hist_levelIce_mode_weekly / (period+1)
 
-    ax_iceDraft_spectrum = figure_LI_statistics.add_subplot(gridspec_LI_statistics[2, 0:2])
+    ax_iceDraft_spectrum = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:2, 0:2])
     ax_iceDraft_spectrum, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker = initialize_plot_spectrum(
         ax_iceDraft_spectrum, X, Y, hist_levelIce_mode_weekly.T, {}, dateNum_hist_levelIce_weekly, level_ice_deepest_mode, {}, 
-        dateNum_hist_levelIce_weekly, level_ice_expect_deepest_mode, {}, dateNum_hist_levelIce_weekly[0], level_ice_deepest_mode[0], ylim=[0,3])
+        dateNum_hist_levelIce_weekly, level_ice_expect_deepest_mode, {}, dateNum_hist_levelIce_weekly[0], level_ice_deepest_mode[0], ylim=[0,3], xticks=dateNum[newMonthIndex[::2]])
     
 
     ax_iceDraft_overview, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker = plot_spectrum(
@@ -146,13 +144,35 @@ def level_ice_statistics(year=None, loc=None):
         dateNum_hist_levelIce_weekly, level_ice_expect_deepest_mode, dateNum_hist_levelIce_weekly[0], level_ice_deepest_mode[0]
     )
 
-
+    # level ice mode
+    ax_levelIce_mode = figure_LI_statistics.add_subplot(gridspec_LI_statistics[3, 0:2])
+    # initialize the line indicating the current mode
+    line_levelIce_current_mode = ax_levelIce_mode.plot([0, 0], [0, 12], 'r', zorder=1)
+    # initialize the histogram
+    ax_levelIce_mode, hist_levelIce_mode = initialize_plot_histogram(ax_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins, 'density':True}, xlim=[-0.1, 8], ylim=[0, 4])
+    ax_levelIce_mode, hist_levelIce_mode = plot_histogram(ax_levelIce_mode, hist_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins, 'density':True})
     
+    # initialize the plot for weekly histogram
+    ax_levelIce_mode_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:2, 2])
+    ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = initialize_plot_histogram(ax_levelIce_mode_weekly, hist_levelIce_mode_weekly_plot[week], 
+                                                                                        {'bins': histBins, 'density':True}, xlim=[-0.1, 3.1])
+    while True:
+        # loop through the weeks
+        print("Press 'f' for next week, 'd' for this week and 's' for last week and 'x' to exit the program. You can also enter the week directly. In all cases, press enter afterwards.")
+        success, week = user_input_iteration.get_user_input_iteration(week, len(hist_levelIce_mode_weekly))
+        if success == -1:
+            break
+        elif success == 0:
+            continue
+        elif success == 1:
+            pass
+        else:
+            raise ValueError("Invalid success value.")
+        ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = plot_histogram(ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly, hist_levelIce_mode_weekly_dens[week])
     print('done')
 
 
-
-def plot_histogram(ax, hist_data, hist_properties, xlim=None, ylim=None):
+def initialize_plot_histogram(ax, hist_data, hist_properties, xlim=None, ylim=None):
     """Plot a histogram of the data in hist_data on the axis ax with the properties specified in hist_properties
     """
     if xlim is not None:
@@ -162,6 +182,19 @@ def plot_histogram(ax, hist_data, hist_properties, xlim=None, ylim=None):
     hist_numpy = np.histogram(hist_data, bins=hist_properties.get('bins', 10), density=hist_properties.get('density', False))
     hist_line = ax.bar(hist_numpy[1][:-1], hist_numpy[0], align='edge', color=hist_properties.get('color', 'tab:blue'), alpha=hist_properties.get('alpha', 0.5), 
                        zorder=0, width=(max(hist_data)-min(hist_data))/hist_properties.get('bins', 10))
+    return ax, hist_line
+
+def plot_histogram(ax, hist_line, hist_data, hist_properties={}):
+    """Plot a histogram of the data in hist_data on the axis ax with the properties specified in hist_properties
+    """
+    if not hist_properties == {}:
+        hist_data, _ = np.histogram(hist_data, bins=hist_properties.get('bins', 10), density=hist_properties.get('density', False))
+    for i in range(len(hist_line)):
+        hist_line[i].set_height(hist_data[i])
+    # hist_line.remove()
+    # hist_numpy = np.histogram(hist_data, bins=hist_properties.get('bins', 10), density=hist_properties.get('density', False))
+    # hist_line = ax.bar(hist_numpy[1][:-1], hist_numpy[0], align='edge', color=hist_properties.get('color', 'tab:blue'), alpha=hist_properties.get('alpha', 0.5), 
+    #                     zorder=0, width=(max(hist_data)-min(hist_data))/hist_properties.get('bins', 10))
     return ax, hist_line
 
 def plot_spectrum(ax, colorMesh, scatter1_line, scatter2_line, CP, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter2_x, scatter2_y, currentPoint_x, currentPoint_y):
@@ -180,11 +213,13 @@ def plot_spectrum(ax, colorMesh, scatter1_line, scatter2_line, CP, spec_x, spec_
     return ax, colorMesh, scatter1_line, scatter2_line, CP
 
 
-def initialize_plot_spectrum(ax, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter1_properties, scatter2_x, scatter2_y, scatter2_properties, currentPoint_x, currentPoint_y, xlim=None, ylim=None):
+def initialize_plot_spectrum(ax, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter1_properties, scatter2_x, scatter2_y, scatter2_properties, currentPoint_x, currentPoint_y, xlim=None, ylim=None, xticks=None):
     if xlim is not None:
         ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
+    if xticks is not None:
+        ax.set_xticks(xticks)
     colorMesh = ax.pcolormesh(spec_x, spec_y, spec_z, shading=spec_properties.get('shading', 'nearest'))
 
     scatter1_line = ax.scatter(scatter1_x, scatter1_y, c=scatter1_properties.get('color','r'), s=scatter1_properties.get('size', 10), marker=scatter1_properties.get('marker','o'), zorder=2) # scatter shape: circles

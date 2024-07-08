@@ -155,7 +155,7 @@ def level_ice_statistics(year=None, loc=None):
     # initialize the plot for weekly histogram
     ax_levelIce_mode_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:2, 2])
     ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = initialize_plot_histogram(ax_levelIce_mode_weekly, hist_levelIce_mode_weekly_plot[week], 
-                                                                                        {'bins': histBins, 'density':True}, xlim=[-0.1, 3.1])
+                                                                                        {'bins': histBins, 'density':True}, xlim=[-0.1, 3.1], ylim=[0, 2.1])
     while True:
         # loop through the weeks
         print("Press 'f' for next week, 'd' for this week and 's' for last week and 'x' to exit the program. You can also enter the week directly. In all cases, press enter afterwards.")
@@ -169,6 +169,7 @@ def level_ice_statistics(year=None, loc=None):
         else:
             raise ValueError("Invalid success value.")
         ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = plot_histogram(ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly, hist_levelIce_mode_weekly_dens[week])
+        currentPoint_marker = update_plot_spectrum(ax_iceDraft_spectrum, currentPoint_marker, dateNum_hist_levelIce_weekly[week], level_ice_deepest_mode[week])
     print('done')
 
 
@@ -232,3 +233,16 @@ def initialize_plot_spectrum(ax, spec_x, spec_y, spec_z, spec_properties, scatte
     ax.add_patch(CP)
 
     return ax, colorMesh, scatter1_line, scatter2_line, CP
+
+
+def update_plot_spectrum(ax, CP, currentPoint_x, currentPoint_y):
+    """update the current point marker in spectrum plot
+    :param CP: current point line
+    :param currentPoint_x: x-coordinate of current point
+    :param currentPoint_y: y-coordinate of current point
+    :return: CP
+    """
+    lrs1x = (ax.get_xlim()[1]-ax.get_xlim()[0])/20
+    lrs1y = (ax.get_ylim()[1]-ax.get_ylim()[0])/20
+    CP.set_xy([currentPoint_x-lrs1x/2, currentPoint_y-lrs1y/2])
+    return CP

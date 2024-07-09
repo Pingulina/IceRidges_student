@@ -6,6 +6,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from datetime import datetime as dt
+import scipy.stats
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 # Get the current working directory
@@ -122,6 +123,15 @@ def level_ice_statistics(year=None, loc=None):
         hist_levelIce_mode_weekly_dens[i], _ = np.histogram(level_ice_deepest_mode_hourly[i*period:(i+1)*period], bins=histBins_array, density=True)
         dateNum_hist_levelIce_weekly[i] = np.mean(dateNum_LI[i*period:(i+1)*period])
 
+    hist_draft_mode_weekly = np.zeros((int(len(draft_reshape_hourly)/constants.level_ice_statistic_days), len(histBins_array)-1))
+    dateNum_hist_draft_weekly = np.zeros(int(len(draft_reshape_hourly)/constants.level_ice_statistic_days))
+    hist_draft_mode_weekly_dens = np.zeros((int(len(draft_reshape_hourly)/constants.level_ice_statistic_days), len(histBins_array)-1))
+
+    for i in range(int(len(draft_reshape_hourly)/constants.level_ice_statistic_days)):
+        hist_draft_mode_weekly[i], _ = np.histogram(draft_reshape_hourly[i*constants.level_ice_statistic_days:(i+1)*constants.level_ice_statistic_days], bins=histBins_array)
+        hist_draft_mode_weekly_dens[i], _ = np.histogram(draft_reshape_hourly[i*constants.level_ice_statistic_days:(i+1)*constants.level_ice_statistic_days], bins=histBins_array, density=True)
+        dateNum_hist_draft_weekly[i] = np.mean(dateNum[i*constants.level_ice_statistic_days:(i+1)*constants.level_ice_statistic_days])
+
     histBins_mids = histBins_array[0:-1] + np.diff(histBins_array)/2
     [X, Y] = np.meshgrid(dateNum_hist_levelIce_weekly, histBins_mids)
     week = 0
@@ -149,17 +159,19 @@ def level_ice_statistics(year=None, loc=None):
     # initialize the line indicating the current mode
     line_levelIce_current_mode = ax_levelIce_mode.plot([0, 0], [0, 12], 'r', zorder=1)
     # initialize the histogram
-    ax_levelIce_mode, hist_levelIce_mode = initialize_plot_histogram(ax_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins, 'density':True}, xlim=[-0.1, 8], ylim=[0, 4])
-    ax_levelIce_mode, hist_levelIce_mode = plot_histogram(ax_levelIce_mode, hist_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins, 'density':True})
+    ax_levelIce_mode, hist_levelIce_mode = initialize_plot_histogram(ax_levelIce_mode, draft_reshape_hourly, {'bins': histBins_array, 'density':True}, xlim=[-0.1, 8], ylim=[0, 4])
+    # ax_levelIce_mode, hist_levelIce_mode = plot_histogram(ax_levelIce_mode, hist_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins, 'density':True})
     
     # initialize the plot for weekly histogram
     ax_levelIce_mode_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:2, 2])
-    ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = initialize_plot_histogram(ax_levelIce_mode_weekly, hist_levelIce_mode_weekly_plot[week], 
-                                                                                        {'bins': histBins, 'density':True}, xlim=[-0.1, 3.1], ylim=[0, 2.1])
+    ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = initialize_plot_histogram(ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], 
+                                                                                        {'bins': histBins_array, 'density':True}, hist_points=histBins_array, xlim=[-0.1, 3.1], ylim=[0, 2.1])
+    ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = initialize_plot_distribution(ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], histBins_array, {'color':'r'})
+    
     while True:
         # loop through the weeks
         print("Press 'f' for next week, 'd' for this week and 's' for last week and 'x' to exit the program. You can also enter the week directly. In all cases, press enter afterwards.")
-        success, week = user_input_iteration.get_user_input_iteration(week, len(hist_levelIce_mode_weekly))
+        success, week = user_input_iteration.get_user_input_iteration(week, len(hist_draft_mode_weekly))
         if success == -1:
             break
         elif success == 0:
@@ -168,21 +180,27 @@ def level_ice_statistics(year=None, loc=None):
             pass
         else:
             raise ValueError("Invalid success value.")
-        ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = plot_histogram(ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly, hist_levelIce_mode_weekly_dens[week])
+        line_levelIce_current_mode[0].set_xdata(np.ones(2)*level_ice_deepest_mode[week])
+        ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = plot_histogram(ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week])
         currentPoint_marker = update_plot_spectrum(ax_iceDraft_spectrum, currentPoint_marker, dateNum_hist_levelIce_weekly[week], level_ice_deepest_mode[week])
     print('done')
 
 
-def initialize_plot_histogram(ax, hist_data, hist_properties, xlim=None, ylim=None):
+def initialize_plot_histogram(ax, hist_data, hist_properties, hist_points=None, xlim=None, ylim=None):
     """Plot a histogram of the data in hist_data on the axis ax with the properties specified in hist_properties
     """
     if xlim is not None:
         ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
-    hist_numpy = np.histogram(hist_data, bins=hist_properties.get('bins', 10), density=hist_properties.get('density', False))
-    hist_line = ax.bar(hist_numpy[1][:-1], hist_numpy[0], align='edge', color=hist_properties.get('color', 'tab:blue'), alpha=hist_properties.get('alpha', 0.5), 
-                       zorder=0, width=(max(hist_data)-min(hist_data))/hist_properties.get('bins', 10))
+    if hist_points is not None:
+        hist_heights = hist_data
+    else:
+        hist_numpy = np.histogram(hist_data, bins=hist_properties.get('bins', 10), density=hist_properties.get('density', False))
+        hist_heights = hist_numpy[0]
+        hist_points = hist_numpy[1]
+    hist_line = ax.bar(hist_points[:-1], hist_heights, align='edge', color=hist_properties.get('color', 'tab:blue'), alpha=hist_properties.get('alpha', 0.5), 
+                       zorder=0, width=0.1)
     return ax, hist_line
 
 def plot_histogram(ax, hist_line, hist_data, hist_properties={}):
@@ -197,6 +215,14 @@ def plot_histogram(ax, hist_line, hist_data, hist_properties={}):
     # hist_line = ax.bar(hist_numpy[1][:-1], hist_numpy[0], align='edge', color=hist_properties.get('color', 'tab:blue'), alpha=hist_properties.get('alpha', 0.5), 
     #                     zorder=0, width=(max(hist_data)-min(hist_data))/hist_properties.get('bins', 10))
     return ax, hist_line
+
+def initialize_plot_distribution(ax, hist_data, line_x, dist_properties={}):
+    """Plot a distribution of the data in dist_data on the axis ax fitting for the line_x values on already initialited axis ax
+    """
+    prob_distri = scipy.stats.norm.fit(hist_data)
+    line_y = scipy.stats.norm.pdf(line_x, prob_distri[0], prob_distri[1])
+    dist_line = ax.plot(line_x, line_y, c=dist_properties.get('color','r'), zorder=1)
+    return ax, dist_line
 
 def plot_spectrum(ax, colorMesh, scatter1_line, scatter2_line, CP, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter2_x, scatter2_y, currentPoint_x, currentPoint_y):
     """plot a spectrum of the data in x and y on the axis ax with the properties specified in spectrum_properties

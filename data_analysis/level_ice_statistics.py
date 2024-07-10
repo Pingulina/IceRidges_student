@@ -100,10 +100,11 @@ def level_ice_statistics(year=None, loc=None):
     ax_iceDraft_overview = figure_LI_statistics.add_subplot(gridspec_LI_statistics[2, 0:2])
     ax_iceDraft_overview.plot(dateNum[0:-1:20], draft[0:-1:20], 'tab:blue', label='Ice draft')
     ax_iceDraft_overview.plot(dateNum_LI, draft_LI, 'tab:orange', label='Level ice draft')
+    ax_iceDraft_overview.plot(dateNum_LI, level_ice_deepest_mode_hourly, 'tab:red', label='Level ice deepest mode')
     ax_iceDraft_overview.set_title('Ice draft overview')
     ax_iceDraft_overview.set_xlabel('Date')
     ax_iceDraft_overview.set_ylabel('Ice draft [m]')
-    ax_iceDraft_overview.legend(loc='upper right')
+    ax_iceDraft_overview.legend(loc='upper left')
     ax_iceDraft_overview.set_xticks(dateNum[newMonthIndex[::2]])
     ax_iceDraft_overview.set_xticklabels(dateTicks, rotation=45)
 
@@ -126,11 +127,13 @@ def level_ice_statistics(year=None, loc=None):
     hist_draft_mode_weekly = np.zeros((int(len(draft_reshape_hourly)/constants.level_ice_statistic_days), len(histBins_array)-1))
     dateNum_hist_draft_weekly = np.zeros(int(len(draft_reshape_hourly)/constants.level_ice_statistic_days))
     hist_draft_mode_weekly_dens = np.zeros((int(len(draft_reshape_hourly)/constants.level_ice_statistic_days), len(histBins_array)-1))
+    hist_draft_mode_weekly_points = np.zeros((int(len(draft_reshape_hourly)/constants.level_ice_statistic_days), len(histBins_array)))
+    hist_draft_mode_weekly_dens_points = np.zeros((int(len(draft_reshape_hourly)/constants.level_ice_statistic_days), len(histBins_array)))
 
     for i in range(int(len(draft_reshape_hourly)/constants.level_ice_statistic_days)):
-        hist_draft_mode_weekly[i], _ = np.histogram(draft_reshape_hourly[i*constants.level_ice_statistic_days:(i+1)*constants.level_ice_statistic_days], bins=histBins_array)
-        hist_draft_mode_weekly_dens[i], _ = np.histogram(draft_reshape_hourly[i*constants.level_ice_statistic_days:(i+1)*constants.level_ice_statistic_days], bins=histBins_array, density=True)
-        dateNum_hist_draft_weekly[i] = np.mean(dateNum[i*constants.level_ice_statistic_days:(i+1)*constants.level_ice_statistic_days])
+        hist_draft_mode_weekly[i], hist_draft_mode_weekly_points[i] = np.histogram(draft_reshape_hourly[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24], bins=histBins_array)
+        hist_draft_mode_weekly_dens[i], hist_draft_mode_weekly_dens_points[i] = np.histogram(draft_reshape_hourly[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24], bins=histBins_array, density=True)
+        dateNum_hist_draft_weekly[i] = np.mean(dateNum[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24])
 
     histBins_mids = histBins_array[0:-1] + np.diff(histBins_array)/2
     [X, Y] = np.meshgrid(dateNum_hist_levelIce_weekly, histBins_mids)
@@ -159,13 +162,13 @@ def level_ice_statistics(year=None, loc=None):
     # initialize the line indicating the current mode
     line_levelIce_current_mode = ax_levelIce_mode.plot([0, 0], [0, 12], 'r', zorder=1)
     # initialize the histogram
-    ax_levelIce_mode, hist_levelIce_mode = initialize_plot_histogram(ax_levelIce_mode, draft_reshape_hourly, {'bins': histBins_array, 'density':True}, xlim=[-0.1, 8], ylim=[0, 4])
+    ax_levelIce_mode, hist_levelIce_mode = initialize_plot_histogram(ax_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins_array, 'density':True}, xlim=[-0.1, 8], ylim=[0, 4])
     # ax_levelIce_mode, hist_levelIce_mode = plot_histogram(ax_levelIce_mode, hist_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins, 'density':True})
     
     # initialize the plot for weekly histogram
     ax_levelIce_mode_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:2, 2])
     ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = initialize_plot_histogram(ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], 
-                                                                                        {'bins': histBins_array, 'density':True}, hist_points=histBins_array, xlim=[-0.1, 3.1], ylim=[0, 2.1])
+                                                                                        {'bins': histBins_array, 'density':True}, hist_points=histBins_array, xlim=[-0.1, 3.1], ylim=[0, 4.1])
     ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = initialize_plot_distribution(ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], histBins_array, {'color':'r'})
     
     while True:

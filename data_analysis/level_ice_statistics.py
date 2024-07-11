@@ -84,6 +84,7 @@ def level_ice_statistics(year=None, loc=None):
     newMonthIndex = np.where([dt.fromordinal(int(dateNum[newDayIndex[i]])).month - dt.fromordinal(int(dateNum[newDayIndex[i-1]])).month for i in range(len(newDayIndex))])
     newMonthIndex = newDayIndex[newMonthIndex]
     dateTicks = [str(dt.fromordinal(thisDate))[0:7] for thisDate in dateNum[newMonthIndex[::2]].astype(int)]
+    dateTicks_days = [str(dt.fromordinal(thisDate))[0:10] for thisDate in dateNum[newDayIndex].astype(int)]
 
     ##### initializing the plot #####
     plt.ion()
@@ -169,12 +170,25 @@ def level_ice_statistics(year=None, loc=None):
     ax_levelIce_mode_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:2, 2])
     ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = initialize_plot_histogram(ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], 
                                                                                         {'bins': histBins_array, 'density':True}, hist_points=histBins_array, xlim=[-0.1, 3.1], ylim=[0, 4.1])
-    ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = initialize_plot_distribution(ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], histBins_array, {'color':'r'})
+    interpolated_histBins_array = np.linspace(histBins_array[0], histBins_array[-1], len(histBins_array)*4)
+    ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = initialize_plot_distribution(ax_levelIce_mode_weekly, np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), interpolated_histBins_array, {'color':'r'})
     
+
+    ax_levelIce_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[2, 2])
+    ax_levelIce_weekly, line_draftLI_weekly = initialize_plot_draft(
+        ax_levelIce_weekly, np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
+        np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), {'color':'tab:blue', 'linewidth':0.5}, ylim=[-0.1, 5.1],
+        x_ticks=dateNum[newDayIndex[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days:2]], 
+        x_ticklabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days:2])
+    ax_levelIce_weekly, line_LI_DM_weekly = initialize_plot_straightLine(
+        ax_levelIce_weekly, [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], 
+        level_ice_deepest_mode[week], {'color':'r', 'linestyle':'--'})
+
+
     while True:
         # loop through the weeks
         print("Press 'f' for next week, 'd' for this week and 's' for last week and 'x' to exit the program. You can also enter the week directly. In all cases, press enter afterwards.")
-        success, week = user_input_iteration.get_user_input_iteration(week, len(hist_draft_mode_weekly))
+        success, week = user_input_iteration.get_user_input_iteration(week, len(level_ice_deepest_mode))
         if success == -1:
             break
         elif success == 0:
@@ -185,9 +199,58 @@ def level_ice_statistics(year=None, loc=None):
             raise ValueError("Invalid success value.")
         line_levelIce_current_mode[0].set_xdata(np.ones(2)*level_ice_deepest_mode[week])
         ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = plot_histogram(ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week])
+        ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = update_plot_distribution(ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly, np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), interpolated_histBins_array)
         currentPoint_marker = update_plot_spectrum(ax_iceDraft_spectrum, currentPoint_marker, dateNum_hist_levelIce_weekly[week], level_ice_deepest_mode[week])
+        ax_levelIce_weekly, line_draftLI_weekly = plot_draft(
+            ax_levelIce_weekly, line_draftLI_weekly, np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
+            np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
+            x_ticks=dateNum[newDayIndex[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days:2]], 
+            x_ticklabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days:2])
+        ax_levelIce_weekly, line_LI_DM_weekly = plot_straightLine(
+            ax_levelIce_weekly, line_LI_DM_weekly, [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24][0], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24][0]], 
+            level_ice_deepest_mode[week])
     print('done')
 
+
+def initialize_plot_straightLine(ax, x, y, line_properties={}):
+    """Plot a straight line on the axis ax with constant y value
+    """
+    straightLine = ax.plot(x, np.ones(len(x))*y, c=line_properties.get('color', 'r'), linewidth=line_properties.get('linewidth', 1), zorder=0)
+    return ax, straightLine[0]
+
+def plot_straightLine(ax, straightLine, x, y):
+    """Plot a straight line on the axis ax with constant y value
+    """
+    straightLine.set_xdata(x)
+    straightLine.set_ydata(np.ones(len(x))*y)
+    return ax, straightLine
+
+def initialize_plot_draft(ax, dateNum_data, draft_data, draft_properties={}, xlim=None, ylim=None, x_ticks=None, x_ticklabels=None):
+    """Plot the draft data on the axis ax with the properties specified in draft_properties
+    """
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+    draft_line = ax.plot(dateNum_data, draft_data, c=draft_properties.get('color', 'tab:blue'), linewidth=draft_properties.get('linewidth', 1), zorder=0)
+    if x_ticks is not None:
+        ax.set_xticks(x_ticks)
+        if x_ticklabels is not None:
+            ax.set_xticklabels(x_ticklabels, rotation=45)
+    ax.set_xlim([min(dateNum_data), max(dateNum_data)])
+    return ax, draft_line[0]
+
+def plot_draft(ax, draft_line, dateNum_data, draft_data, x_ticks=None, x_ticklabels=None):
+    """Plot the draft data on the axis ax with the properties specified in draft_properties
+    """
+    draft_line.set_xdata(dateNum_data)
+    draft_line.set_ydata(draft_data)
+    if x_ticks is not None:
+        ax.set_xticks(x_ticks)
+        if x_ticklabels is not None:
+            ax.set_xticklabels(x_ticklabels, rotation=45)
+    ax.set_xlim([min(dateNum_data), max(dateNum_data)])
+    return ax, draft_line
 
 def initialize_plot_histogram(ax, hist_data, hist_properties, hist_points=None, xlim=None, ylim=None):
     """Plot a histogram of the data in hist_data on the axis ax with the properties specified in hist_properties
@@ -222,9 +285,21 @@ def plot_histogram(ax, hist_line, hist_data, hist_properties={}):
 def initialize_plot_distribution(ax, hist_data, line_x, dist_properties={}):
     """Plot a distribution of the data in dist_data on the axis ax fitting for the line_x values on already initialited axis ax
     """
-    prob_distri = scipy.stats.norm.fit(hist_data)
-    line_y = scipy.stats.norm.pdf(line_x, prob_distri[0], prob_distri[1])
+    # prob_distri = scipy.stats.norm.fit(hist_data)
+    # line_y = scipy.stats.norm.pdf(line_x, prob_distri[0], prob_distri[1])
+    kde = scipy.stats.gaussian_kde(hist_data, bw_method=0.1)
+    line_y = kde(line_x)
     dist_line = ax.plot(line_x, line_y, c=dist_properties.get('color','r'), zorder=1)
+    return ax, dist_line[0]
+
+def update_plot_distribution(ax, dist_line, hist_data, line_x):
+    """Update the line of the distirbtion of the data in hist_data on the axis ax
+    """
+    # prob_distri = scipy.stats.norm.fit(hist_data)
+    # line_y = scipy.stats.norm.pdf(line_x, prob_distri[0], prob_distri[1])
+    kde = scipy.stats.kde.gaussian_kde(hist_data, bw_method=0.1)
+    line_y = kde(line_x)
+    dist_line.set_ydata(line_y)
     return ax, dist_line
 
 def plot_spectrum(ax, colorMesh, scatter1_line, scatter2_line, CP, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter2_x, scatter2_y, currentPoint_x, currentPoint_y):

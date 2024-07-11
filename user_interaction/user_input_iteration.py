@@ -26,5 +26,6 @@ def get_user_input_iteration(index, max_index):
     elif index >= max_index:
         # week is too large, set it to the first week
         index = 0
+        print('End of iteration reached; start at the beginning again.')
 
     return success, index

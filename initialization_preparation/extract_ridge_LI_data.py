@@ -99,7 +99,7 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
             dateNum = np.array(data_dict['dateNum'])
             draft = np.array(data_dict['draft'])
             # fit dateNum to sample rate (full seconds)
-            dateNum = np.round(dateNum * 1/sample_rate * (3600 * 24)) / (1/sample_rate * (3600 * 24))
+            dateNum = np.round(dateNum * sample_rate * (3600 * 24)) / (sample_rate * (3600 * 24))
 
 
             # mean time interval between two measurements

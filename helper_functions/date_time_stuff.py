@@ -40,6 +40,29 @@ def datestr(date_num, format='YYYYMMDD'):
         return format_dot_date_short(d)
     else:
         raise ValueError('The format ' + format + ' is not supported.')
+    
+
+def datestr_hour(date_num, format='YYYYMMDDHHmmss'):
+    """Convert a date number to a string, equivalent to the datestr function in matlab, include the hour
+    date_num: float, date number (1 is 1.1.0001 00:00:00, 1.5 is 1.1.0001 12:00:00, ...)
+    return: str, date in the format YYYYMMDDHH"""
+    d = dt.fromordinal(int(date_num))
+    hours = int((date_num - int(date_num))*24)
+    d = d.replace(hour=hours)
+    minutes = int(((date_num - int(date_num))*24 - hours)*60)
+    seconds = int((((date_num - int(date_num))*24 - hours)*60 - minutes)*60)
+    d = d.replace(minute=minutes)
+    d = d.replace(second=seconds)
+    if format == 'YYYYMMDDHHmmss':
+        return d.strftime('%Y%m%d%H%M%S')
+    elif format == 'YYYY-MM-DD HH:mm:ss':
+        return d.strftime('%Y-%m-%d %H:%M:%S')
+    elif format == 'DD.MM.YYYY HH:mm:ss':
+        return d.strftime('%d.%m.%Y %H:%M:%S')
+    elif format == 'HH:mm:ss':
+        return d.strftime('%H:%M:%S')
+    else:
+        raise ValueError('The format ' + format + ' is not supported.')
    
 
 def format_YYYYMMDD(dateNum:int):

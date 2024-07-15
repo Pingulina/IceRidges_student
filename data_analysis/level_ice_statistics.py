@@ -92,7 +92,7 @@ def level_ice_statistics(year=None, loc=None):
     ##### initializing the plot #####
     plt.ion()
     figure_LI_statistics = plt.figure(layout='constrained', figsize=(8,8)) # 4/5 aspect ratio
-    gridspec_LI_statistics = figure_LI_statistics.add_gridspec(6,3)
+    gridspec_LI_statistics = figure_LI_statistics.add_gridspec(8,4)
     figure_LI_statistics.suptitle(f"Level ice statistics", fontsize=16)
 
 
@@ -124,8 +124,11 @@ def level_ice_statistics(year=None, loc=None):
     hist_draft_mode_weekly_dens_points = np.zeros((int(len(draft_reshape_hourly)/constants.level_ice_statistic_days), len(histBins_array)))
 
     for i in range(int(len(draft_reshape_hourly)/constants.level_ice_statistic_days)):
-        hist_draft_mode_weekly[i], hist_draft_mode_weekly_points[i] = np.histogram(draft_reshape_hourly[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24], bins=histBins_array)
-        hist_draft_mode_weekly_dens[i], hist_draft_mode_weekly_dens_points[i] = np.histogram(draft_reshape_hourly[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24], bins=histBins_array, density=True)
+        hist_draft_mode_weekly[i], hist_draft_mode_weekly_points[i] = np.histogram(draft_reshape_hourly[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24], 
+                                                                                   bins=histBins_array)
+        hist_draft_mode_weekly_dens[i], hist_draft_mode_weekly_dens_points[i] = np.histogram(
+            draft_reshape_hourly[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24], bins=histBins_array, density=True
+            )
         dateNum_hist_draft_weekly[i] = np.mean(dateNum[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24])
 
     histBins_mids = histBins_array[0:-1] + np.diff(histBins_array)/2
@@ -138,7 +141,7 @@ def level_ice_statistics(year=None, loc=None):
     # the figure should contain a spectogram and some lines on top of it (all in one plot)
     hist_levelIce_mode_weekly_plot = hist_levelIce_mode_weekly / (period+1)
 
-    ax_iceDraft_spectrum = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:2, 0:2])
+    ax_iceDraft_spectrum = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:2, 0:3])
     ax_iceDraft_spectrum.set_title('Level ice draft spectrum')
     ax_iceDraft_spectrum.set_xlabel('Date')
     ax_iceDraft_spectrum.set_ylabel('Level ice draft [m]')
@@ -152,23 +155,29 @@ def level_ice_statistics(year=None, loc=None):
         X, Y, hist_levelIce_mode_weekly.T, {}, dateNum_hist_levelIce_weekly, level_ice_deepest_mode, 
         dateNum_hist_levelIce_weekly, level_ice_expect_deepest_mode, dateNum_hist_levelIce_weekly[0], level_ice_deepest_mode[0]
     )
+    ax_iceDraft_spectrum.set_xticks(dateNum[newMonthIndex[::2]])
+    ax_iceDraft_spectrum.set_xticklabels(dateTicks) #, rotation=45)
 
     # ice draft overview
-    ax_iceDraft_overview = figure_LI_statistics.add_subplot(gridspec_LI_statistics[2, 0:2])
+    ax_iceDraft_overview = figure_LI_statistics.add_subplot(gridspec_LI_statistics[2:4, 0:3])
     line_iceDraft_ice = ax_iceDraft_overview.plot(dateNum[0:-1:20], draft[0:-1:20], 'tab:blue', label='Ice draft', zorder=1)
     line_iceDraft_LI = ax_iceDraft_overview.plot(dateNum_LI, draft_LI, 'tab:orange', label='Level ice draft', zorder=2)
     line_iceDraft_LIDM = ax_iceDraft_overview.plot(dateNum_LI, level_ice_deepest_mode_hourly, 'tab:red', label='Level ice deepest mode', zorder=3)
-    currentWeekPatch = mpatches.Rectangle((dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0), constants.level_ice_statistic_days, 30, edgecolor='None', facecolor='red', alpha=0.3, zorder=4)
+    line_iceDraft_LIDM_expect = ax_iceDraft_overview.plot(dateNum_hist_levelIce_weekly, level_ice_expect_deepest_mode, 'tab:olive', label='LI expected deepest mode', zorder=4)
+    currentWeekPatch = mpatches.Rectangle((dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0), constants.level_ice_statistic_days, 30, 
+                                          edgecolor='None', facecolor='red', alpha=0.3, zorder=4)
     line_iceDraft_currentWeekPatch = ax_iceDraft_overview.add_patch(currentWeekPatch)
     ax_iceDraft_overview.set_title('Ice draft overview')
     ax_iceDraft_overview.set_xlabel('Date')
     ax_iceDraft_overview.set_ylabel('Ice draft [m]')
-    ax_iceDraft_overview.legend(loc='upper left')
+    # ax_iceDraft_overview.legend(loc='upper left')
     ax_iceDraft_overview.set_xticks(dateNum[newMonthIndex[::2]])
-    ax_iceDraft_overview.set_xticklabels(dateTicks, rotation=45)
+    ax_iceDraft_overview.set_xticklabels(dateTicks) #, rotation=45)
+    ax_iceDraft_overview.set_ylim([-0.1, 30])
+    ax_iceDraft_overview.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
 
     ### level ice mode of the whole season
-    ax_levelIce_mode = figure_LI_statistics.add_subplot(gridspec_LI_statistics[2, 2])
+    ax_levelIce_mode = figure_LI_statistics.add_subplot(gridspec_LI_statistics[3:6, 3])
     ax_levelIce_mode.set_title('Level ice mode')
     ax_levelIce_mode.set_xlabel('Ice draft [m]')
     ax_levelIce_mode.set_ylabel('Density [-]')
@@ -179,49 +188,68 @@ def level_ice_statistics(year=None, loc=None):
     # ax_levelIce_mode, hist_levelIce_mode = plot_histogram(ax_levelIce_mode, hist_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins, 'density':True})
     
     ### level ice mode weekly
-    ax_levelIce_mode_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:2, 2])
+    ax_levelIce_mode_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:3, 3])
     ax_levelIce_mode_weekly.set_title('Weekly level ice mode')
     ax_levelIce_mode_weekly.set_xlabel('Ice draft [m]')
     ax_levelIce_mode_weekly.set_ylabel('Density [-]')
     ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = initialize_plot_histogram(ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], 
                                                                                         {'bins': histBins_array, 'density':True}, hist_points=histBins_array, xlim=[-0.1, 3.1], ylim=[0, 4.1])
     interpolated_histBins_array = np.linspace(histBins_array[0], histBins_array[-1], len(histBins_array)*4)
-    ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = initialize_plot_distribution(ax_levelIce_mode_weekly, np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), interpolated_histBins_array, {'color':'r'})
+    ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = initialize_plot_distribution(
+        ax_levelIce_mode_weekly, np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
+        interpolated_histBins_array, {'color':'r'})
     
 
     ### plot weekly level ice thickness
-    ax_levelIce_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[3, 0:2])
-    ax_levelIce_weekly.set_title('Weekly level ice thickness')
+    ax_levelIce_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[4:6, 0:3])
+    ax_levelIce_weekly.set_title('Weekly level ice draft')
     ax_levelIce_weekly.set_xlabel('Date')
     ax_levelIce_weekly.set_ylabel('Ice draft [m]')
+    ax_levelIce_weekly.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
     ax_levelIce_weekly, line_draftLI_weekly = initialize_plot_draft(
         ax_levelIce_weekly, np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
-        np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), {'color':'tab:blue', 'linewidth':0.5}, ylim=[-0.1, 5.1],
-        x_ticks=dateNum[newDayIndex[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days:2]], 
-        x_ticklabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days:2])
+        np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
+        {'color':'tab:blue', 'linewidth':0.5}, ylim=[-0.1, 5.1],
+        x_ticks=dateNum[newDayIndex[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2]], 
+        x_ticklabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2])
     ax_levelIce_weekly, line_LI_DM_weekly = initialize_plot_straightLine(
         ax_levelIce_weekly, [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], 
         level_ice_deepest_mode[week], {'color':'r', 'linestyle':'--'})
     ax_levelIce_weekly, line_LI_Dm_expect_weekly = initialize_plot_straightLine(
         ax_levelIce_weekly, [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], 
-        level_ice_expect_deepest_mode[week], {'color':'tab:orange', 'linestyle':'--'})
-    currentDayPatch = mpatches.Rectangle((dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0), 1, 30, edgecolor='None', facecolor='red', alpha=0.3, zorder=4)
+        level_ice_expect_deepest_mode[week], {'color':'tab:olive', 'linestyle':'--'})
+    currentDayPatch = mpatches.Rectangle((dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0), 1, 30, edgecolor='None', facecolor='tab:green', alpha=0.3, zorder=4)
     line_levelIce_weekly_currentDayPatch = ax_levelIce_weekly.add_patch(currentDayPatch)
 
 
     ### plot daily level ice thickness
-    ax_levelIce_daily = figure_LI_statistics.add_subplot(gridspec_LI_statistics[3, 2])
-    ax_levelIce_daily.set_title('Daily level ice thickness')
-    ax_levelIce_daily.set_xlabel('Date')
+    ax_levelIce_daily = figure_LI_statistics.add_subplot(gridspec_LI_statistics[6:8, 0:3])
+    ax_levelIce_daily.set_title(f"Daily LI draft {dateTicks_days[week*constants.level_ice_statistic_days+day]}")
+    ax_levelIce_daily.set_xlabel('Time')
     ax_levelIce_daily.set_ylabel('Ice draft [m]')
+    ax_levelIce_daily.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
     ax_levelIce_daily, line_draftLI_daily = initialize_plot_draft(
-        ax_levelIce_daily, np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24 +day:week*constants.level_ice_statistic_days*24 +day+1]), 
-        np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24 +day:week*constants.level_ice_statistic_days*24 +day+1]), {'color':'tab:blue', 'linewidth':0.5}, ylim=[-0.1, 5.1],
-        x_ticks=dateNum[newHourIndex[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]], 
-        x_ticklabels=dateTicks_hours[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day])
-    currentHourPatch = mpatches.Rectangle((dateNum[newHourIndex[week*constants.level_ice_statistic_days*constants.hours_day +day*constants.hours_day]], 0), 1, 30, edgecolor='None', facecolor='red', alpha=0.3, zorder=4)
+        ax_levelIce_daily, 
+        np.concatenate(dateNum_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
+        np.concatenate(draft_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
+        {'color':'tab:blue', 'linewidth':0.5}, ylim=[-0.1, 5.1],
+        x_ticks=dateNum[newHourIndex[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4]], 
+        x_ticklabels=dateTicks_hours[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4])
+    currentHourPatch = mpatches.Rectangle(
+        (dateNum[newHourIndex[week*constants.level_ice_statistic_days*constants.hours_day +day*constants.hours_day]], 0), 1/24, 30, 
+        edgecolor='None', facecolor='tab:blue', alpha=0.3, zorder=4)
     line_levelIce_daily_currentHourPatch = ax_levelIce_daily.add_patch(currentHourPatch)
 
+
+    ### reserve the space for the legend at grid position (3,2)
+    h, l = ax_iceDraft_overview.get_legend_handles_labels() 
+    ax_legend_patches = figure_LI_statistics.add_subplot(gridspec_LI_statistics[6:8, 3:4])
+    ax_legend_patches.axis('off')
+    ax_legend_patches.add_patch(mpatches.Rectangle((0, 0), 0, 0, edgecolor='None', facecolor='red', alpha=0.3, zorder=4, label='Selected week'))
+    ax_legend_patches.add_patch(mpatches.Rectangle((0, 0), 0, 0, edgecolor='None', facecolor='tab:green', alpha=0.3, zorder=4, label='Selected day'))
+    ax_legend_patches.add_patch(mpatches.Rectangle((0, 0), 0, 0, edgecolor='None', facecolor='tab:blue', alpha=0.3, zorder=4, label='Selected hour'))
+    h_patches, l_patches = ax_legend_patches.get_legend_handles_labels()
+    ax_legend_patches.legend(h+h_patches, l+l_patches)
 
 
     while True:
@@ -238,7 +266,9 @@ def level_ice_statistics(year=None, loc=None):
             raise ValueError("Invalid success value.")
         line_levelIce_current_mode[0].set_xdata(np.ones(2)*level_ice_deepest_mode[week])
         ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = plot_histogram(ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week])
-        ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = update_plot_distribution(ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly, np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), interpolated_histBins_array)
+        ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = update_plot_distribution(
+            ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly, 
+            np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), interpolated_histBins_array)
         currentPoint_marker = update_plot_spectrum(ax_iceDraft_spectrum, currentPoint_marker, dateNum_hist_levelIce_weekly[week], level_ice_deepest_mode[week])
         currentWeekPatch.set_xy([dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0])
         ax_levelIce_weekly, line_draftLI_weekly = plot_draft(
@@ -247,10 +277,12 @@ def level_ice_statistics(year=None, loc=None):
             x_ticks=dateNum[newDayIndex[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days:2]], 
             x_ticklabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days:2])
         ax_levelIce_weekly, line_LI_DM_weekly = plot_straightLine(
-            ax_levelIce_weekly, line_LI_DM_weekly, [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24][0], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24][0]], 
+            ax_levelIce_weekly, line_LI_DM_weekly, 
+            [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24][0], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24][0]], 
             level_ice_deepest_mode[week])
         ax_levelIce_weekly, line_LI_Dm_expect_weekly = plot_straightLine(
-            ax_levelIce_weekly, line_LI_Dm_expect_weekly, [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24][0], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24][0]], 
+            ax_levelIce_weekly, line_LI_Dm_expect_weekly, 
+            [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24][0], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24][0]], 
             level_ice_expect_deepest_mode[week])
         currentDayPatch.set_xy([dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0])
         
@@ -259,7 +291,25 @@ def level_ice_statistics(year=None, loc=None):
             # loop through the days of the week
             print("Press 'f' for next day, 'd' for this day and 's' for last day and 'x' to exit the program. You can also enter the day directly. In all cases, press enter afterwards.")
             success, day = user_input_iteration.get_user_input_iteration(day, constants.level_ice_statistic_days)
-            currentHourPatch.set_xy([dateNum[newHourIndex[week*constants.level_ice_statistic_days*constants.hours_day +day*constants.hours_day]], 0])
+            if success == -1:
+                break
+            elif success == 0:
+                continue
+            elif success == 1:
+                pass
+            else:
+                raise ValueError("Invalid success value.")
+            currentDayPatch.set_xy([dateNum[newDayIndex[week*constants.level_ice_statistic_days + day]], 0])
+            # currentHourPatch.set_xy([dateNum[newHourIndex[week*constants.level_ice_statistic_days*constants.hours_day +day*constants.hours_day]], 0])
+
+            ax_levelIce_daily.set_title(f"Daily LI draft {dateTicks_days[week*constants.level_ice_statistic_days+day]}")
+            ax_levelIce_daily, line_draftLI_daily = plot_draft(
+                ax_levelIce_daily, line_draftLI_daily, 
+                np.concatenate(dateNum_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
+                np.concatenate(draft_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
+                x_ticks=dateNum[newHourIndex[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4]], 
+                x_ticklabels=dateTicks_hours[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4])
+
     print('done')
 
 
@@ -287,7 +337,7 @@ def initialize_plot_draft(ax, dateNum_data, draft_data, draft_properties={}, xli
     if x_ticks is not None:
         ax.set_xticks(x_ticks)
         if x_ticklabels is not None:
-            ax.set_xticklabels(x_ticklabels, rotation=45)
+            ax.set_xticklabels(x_ticklabels) #, rotation=45)
     ax.set_xlim([min(dateNum_data), max(dateNum_data)])
     return ax, draft_line[0]
 
@@ -299,7 +349,7 @@ def plot_draft(ax, draft_line, dateNum_data, draft_data, x_ticks=None, x_ticklab
     if x_ticks is not None:
         ax.set_xticks(x_ticks)
         if x_ticklabels is not None:
-            ax.set_xticklabels(x_ticklabels, rotation=45)
+            ax.set_xticklabels(x_ticklabels) #, rotation=45)
     ax.set_xlim([min(dateNum_data), max(dateNum_data)])
     return ax, draft_line
 
@@ -353,7 +403,10 @@ def update_plot_distribution(ax, dist_line, hist_data, line_x):
     dist_line.set_ydata(line_y)
     return ax, dist_line
 
-def plot_spectrum(ax, colorMesh, scatter1_line, scatter2_line, CP, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter2_x, scatter2_y, currentPoint_x, currentPoint_y):
+def plot_spectrum(
+        ax, colorMesh, scatter1_line, scatter2_line, CP, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, 
+        scatter2_x, scatter2_y, currentPoint_x, currentPoint_y
+        ):
     """plot a spectrum of the data in x and y on the axis ax with the properties specified in spectrum_properties
     """
     colorMesh.remove()
@@ -369,7 +422,10 @@ def plot_spectrum(ax, colorMesh, scatter1_line, scatter2_line, CP, spec_x, spec_
     return ax, colorMesh, scatter1_line, scatter2_line, CP
 
 
-def initialize_plot_spectrum(ax, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter1_properties, scatter2_x, scatter2_y, scatter2_properties, currentPoint_x, currentPoint_y, xlim=None, ylim=None, xticks=None):
+def initialize_plot_spectrum(
+        ax, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter1_properties, 
+        scatter2_x, scatter2_y, scatter2_properties, currentPoint_x, currentPoint_y, xlim=None, ylim=None, xticks=None
+        ):
     if xlim is not None:
         ax.set_xlim(xlim)
     if ylim is not None:
@@ -378,8 +434,10 @@ def initialize_plot_spectrum(ax, spec_x, spec_y, spec_z, spec_properties, scatte
         ax.set_xticks(xticks)
     colorMesh = ax.pcolormesh(spec_x, spec_y, spec_z, shading=spec_properties.get('shading', 'nearest'))
 
-    scatter1_line = ax.scatter(scatter1_x, scatter1_y, c=scatter1_properties.get('color','r'), s=scatter1_properties.get('size', 10), marker=scatter1_properties.get('marker','o'), zorder=2) # scatter shape: circles
-    scatter2_line = ax.scatter(scatter2_x, scatter2_y, c=scatter2_properties.get('color','b'), s=scatter2_properties.get('size', 10), marker=scatter2_properties.get('marker','^'), zorder=3) # scatter shape: triangles
+    scatter1_line = ax.scatter(scatter1_x, scatter1_y, c=scatter1_properties.get('color','tab:red'), s=scatter1_properties.get('size', 10), 
+                               marker=scatter1_properties.get('marker','o'), zorder=2) # scatter shape: circles
+    scatter2_line = ax.scatter(scatter2_x, scatter2_y, c=scatter2_properties.get('color','tab:olive'), s=scatter2_properties.get('size', 10), 
+                               marker=scatter2_properties.get('marker','^'), zorder=3) # scatter shape: triangles
     lrs1x = (ax.get_xlim()[1]-ax.get_xlim()[0])/20
     lrs1y = (ax.get_ylim()[1]-ax.get_ylim()[0])/20
     CP = mpatches.Rectangle((currentPoint_x-lrs1x/2, currentPoint_y-lrs1y/2), lrs1x, lrs1y, edgecolor='r', facecolor='none', zorder=4) # time_mean[week]

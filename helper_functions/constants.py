@@ -10,6 +10,7 @@ level_ice_statistic_days = 7 # duration of sample of estimated level ice for lev
 level_ice_time = 1 # duration of sample for level ice estimate (in hours)
 seconds_hour = 3600 # seconds per hour
 hours_day = 24 # hours per day
+sampling_rate = 0.5 # sampling rate of the data in Hz
 machine_precision = np.finfo(float).eps # machine precision
 
 threshold_draft=2.5 # threshold for the rayleigh criterion

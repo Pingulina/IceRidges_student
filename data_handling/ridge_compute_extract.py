@@ -39,7 +39,7 @@ def extract_weekly_data_draft(dateNum:np.ndarray, draft:np.ndarray):
 
     return dateNum_reshape, draft_reshape
 
-def extract_hourly_data_draft(dateNum:np.ndarray, draft:np.ndarray):
+def extract_hourly_data_draft(dateNum:np.ndarray, draft:np.ndarray, start_at_midnight:bool=False, end_at_midnight:bool=False):
     """Extract the hourly data from the input data
     :param dateNum: np.array, date number of the data
     :param draft: np.array, draft of the data
@@ -53,6 +53,15 @@ def extract_hourly_data_draft(dateNum:np.ndarray, draft:np.ndarray):
     dt = np.round(dt_days * constants.hours_day * constants.seconds_hour) # convert the time difference to seconds
     mean_dateNum_rc = 3600  # seconds per hour unit 
     mean_points_rc = mean_dateNum_rc / dt # data points per level_ice_statistics_days unit
+    if start_at_midnight: # a new day starts at midnight, means 24 hours for every day, also for the first one
+        points_to_fill = int((dateNum[0] - int(dateNum[0]))*constants.hours_day*constants.seconds_hour*constants.sampling_rate) # hours to fill between last midnight and the first data point
+        # add points_to_fill zeros to the beginning of the draft array
+        draft = np.concatenate((np.zeros(points_to_fill), draft))
+        dateNum = np.concatenate((np.linspace(dateNum[0]-points_to_fill/constants.hours_day/constants.seconds_hour/constants.sampling_rate, dateNum[0] - 1/constants.hours_day/constants.seconds_hour/constants.sampling_rate, points_to_fill), dateNum))
+    if end_at_midnight: # a new day ends at midnight, means 24 hours for every day, also for the last one
+        points_to_fill = int((1-(dateNum[-1] - int(dateNum[-1])))*constants.hours_day*constants.seconds_hour*constants.sampling_rate)
+        draft = np.concatenate((draft, np.zeros(points_to_fill)))
+        dateNum = np.concatenate((dateNum, np.linspace(dateNum[-1]+1/constants.hours_day/constants.seconds_hour/constants.sampling_rate, int(dateNum[-1])+1, points_to_fill)))
     no_e_rc = int(np.floor(len(dateNum)/mean_points_rc) * mean_points_rc) # number of elements to take in, so ti is dividable with number of 'mean_points' per specified 'lecel_ice_time'
     dateNum_reshape = dateNum[:no_e_rc] # take only the first 'no_e' elements (meaning ignore a few last ones, such that it is reshapable)
     dateNum_reshape = dateNum_reshape.reshape(int(len(dateNum)/mean_points_rc), int(mean_points_rc))

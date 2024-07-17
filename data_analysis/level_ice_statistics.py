@@ -71,7 +71,7 @@ def level_ice_statistics(year=None, loc=None):
                                                                                              year=year, loc=loc, skip_nonexistent_locs=True)
     
 
-    dateNum_reshape_hourly, draft_reshape_hourly = rce.extract_hourly_data_draft(dateNum, draft)
+    dateNum_reshape_hourly, draft_reshape_hourly = rce.extract_hourly_data_draft(dateNum, draft) #, start_at_midnight=True, end_at_midnight=True)
 
     draft_reshape_rounded = np.round(draft_reshape_hourly*1000)
     level_ice_deepest_mode_hourly = [max(set(hourly_data), key=hourly_data.tolist().count) / 1000 for hourly_data in draft_reshape_rounded]
@@ -93,7 +93,7 @@ def level_ice_statistics(year=None, loc=None):
     plt.ion()
     figure_LI_statistics = plt.figure(layout='constrained', figsize=(8,8)) # 4/5 aspect ratio
     gridspec_LI_statistics = figure_LI_statistics.add_gridspec(8,4)
-    figure_LI_statistics.suptitle(f"Level ice statistics", fontsize=16)
+    figure_LI_statistics.suptitle(f"Level ice statistics {season}", fontsize=16)
 
 
 
@@ -204,8 +204,7 @@ def level_ice_statistics(year=None, loc=None):
     ax_levelIce_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[4:6, 0:3])
     ax_levelIce_weekly.set_title('Weekly level ice draft')
     ax_levelIce_weekly.set_xlabel('Date')
-    ax_levelIce_weekly.set_ylabel('Ice draft [m]')
-    ax_levelIce_weekly.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
+    ax_levelIce_weekly.set_ylabel('Ice draft [m]') 
     ax_levelIce_weekly, line_draftLI_weekly = initialize_plot_draft(
         ax_levelIce_weekly, np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
         np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
@@ -220,6 +219,7 @@ def level_ice_statistics(year=None, loc=None):
         level_ice_expect_deepest_mode[week], {'color':'tab:olive', 'linestyle':'--'})
     currentDayPatch = mpatches.Rectangle((dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0), 1, 30, edgecolor='None', facecolor='tab:green', alpha=0.3, zorder=4)
     line_levelIce_weekly_currentDayPatch = ax_levelIce_weekly.add_patch(currentDayPatch)
+    ax_levelIce_weekly.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
 
 
     ### plot daily level ice thickness
@@ -227,7 +227,6 @@ def level_ice_statistics(year=None, loc=None):
     ax_levelIce_daily.set_title(f"Daily LI draft {dateTicks_days[week*constants.level_ice_statistic_days+day]}")
     ax_levelIce_daily.set_xlabel('Time')
     ax_levelIce_daily.set_ylabel('Ice draft [m]')
-    ax_levelIce_daily.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
     ax_levelIce_daily, line_draftLI_daily = initialize_plot_draft(
         ax_levelIce_daily, 
         np.concatenate(dateNum_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
@@ -239,6 +238,7 @@ def level_ice_statistics(year=None, loc=None):
         (dateNum[newHourIndex[week*constants.level_ice_statistic_days*constants.hours_day +day*constants.hours_day]], 0), 1/24, 30, 
         edgecolor='None', facecolor='tab:blue', alpha=0.3, zorder=4)
     line_levelIce_daily_currentHourPatch = ax_levelIce_daily.add_patch(currentHourPatch)
+    ax_levelIce_daily.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
 
 
     ### reserve the space for the legend at grid position (3,2)
@@ -254,7 +254,7 @@ def level_ice_statistics(year=None, loc=None):
 
     while True:
         # loop through the weeks
-        print("Press 'f' for next week, 'd' for this week and 's' for last week and 'x' to exit the program. You can also enter the week directly. In all cases, press enter afterwards.")
+        print("Press 'f' for next WEEK, 'd' for this week and 's' for last week and 'x' to exit the program. You can also enter the week directly. In all cases, press enter afterwards.")
         success, week = user_input_iteration.get_user_input_iteration(week, len(level_ice_deepest_mode))
         if success == -1:
             break
@@ -287,10 +287,12 @@ def level_ice_statistics(year=None, loc=None):
         currentDayPatch.set_xy([dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0])
         
         day = 0
+        ax_levelIce_daily.set_title(f"Daily LI draft {dateTicks_days[week*constants.level_ice_statistic_days+day]}")
         while True:
             # loop through the days of the week
-            print("Press 'f' for next day, 'd' for this day and 's' for last day and 'x' to exit the program. You can also enter the day directly. In all cases, press enter afterwards.")
-            success, day = user_input_iteration.get_user_input_iteration(day, constants.level_ice_statistic_days)
+            print("Press 'f' for next DAY, 'd' for this day and 's' for last day and 'x' to exit the program. You can also enter the day directly. In all cases, press enter afterwards.")
+            success, day = user_input_iteration.get_user_input_iteration(day, constants.level_ice_statistic_days+1) 
+            # allow one day more than the level_ice_statistic_days, since the first and last day are half days both, otherwise, it would break before the week is over
             if success == -1:
                 break
             elif success == 0:
@@ -301,14 +303,14 @@ def level_ice_statistics(year=None, loc=None):
                 raise ValueError("Invalid success value.")
             currentDayPatch.set_xy([dateNum[newDayIndex[week*constants.level_ice_statistic_days + day]], 0])
             # currentHourPatch.set_xy([dateNum[newHourIndex[week*constants.level_ice_statistic_days*constants.hours_day +day*constants.hours_day]], 0])
-
+            nearest_hourStart = np.argmin([np.abs(dateNum[newDayIndex[week*constants.level_ice_statistic_days + day]] - dateNum_hour[0]) for dateNum_hour in dateNum_reshape_hourly])
             ax_levelIce_daily.set_title(f"Daily LI draft {dateTicks_days[week*constants.level_ice_statistic_days+day]}")
             ax_levelIce_daily, line_draftLI_daily = plot_draft(
                 ax_levelIce_daily, line_draftLI_daily, 
-                np.concatenate(dateNum_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
-                np.concatenate(draft_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
-                x_ticks=dateNum[newHourIndex[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4]], 
-                x_ticklabels=dateTicks_hours[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4])
+                np.concatenate(dateNum_reshape_hourly[nearest_hourStart:nearest_hourStart + constants.hours_day]), 
+                np.concatenate(draft_reshape_hourly[nearest_hourStart:nearest_hourStart + constants.hours_day]), 
+                x_ticks=dateNum[newHourIndex[nearest_hourStart:nearest_hourStart + constants.hours_day][1::4]], 
+                x_ticklabels=dateTicks_hours[nearest_hourStart:nearest_hourStart + constants.hours_day][1::4])
 
     print('done')
 

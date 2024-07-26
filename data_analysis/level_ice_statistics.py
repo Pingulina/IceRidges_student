@@ -27,10 +27,11 @@ dts = import_module('date_time_stuff', 'helper_functions')
 
 
 
-def level_ice_statistics(year=None, loc=None):
+def level_ice_statistics(year=None, loc=None, dict_mooring_locations=None):
     """Analysing the level ice data, determine the level ice mode for each week
     """
-    dict_mooring_locations = mooring_locs.mooring_locations(storage_path='Data') # dictionary with the mooring locations
+    if dict_mooring_locations is None:
+        dict_mooring_locations = mooring_locs.mooring_locations(storage_path='Data') # dictionary with the mooring locations
 
 
     # get the year and location from the user, if they are not provided
@@ -76,7 +77,6 @@ def level_ice_statistics(year=None, loc=None):
     draft_reshape_rounded = np.round(draft_reshape_hourly*1000)
     level_ice_deepest_mode_hourly = [max(set(hourly_data), key=hourly_data.tolist().count) / 1000 for hourly_data in draft_reshape_rounded]
 
-    level_ice_deepest_mode = dict_ridge_statistics[loc]['level_ice_deepest_mode']
     mean_dateNum = dict_ridge_statistics[loc]['mean_dateNum']
     mean_keel_draft = dict_ridge_statistics[loc]['mean_keel_draft']
     level_ice_deepest_mode = dict_ridge_statistics[loc]['level_ice_deepest_mode']
@@ -93,7 +93,7 @@ def level_ice_statistics(year=None, loc=None):
     plt.ion()
     figure_LI_statistics = plt.figure(layout='constrained', figsize=(8,8)) # 4/5 aspect ratio
     gridspec_LI_statistics = figure_LI_statistics.add_gridspec(8,4)
-    figure_LI_statistics.suptitle(f"Level ice statistics {season}", fontsize=16)
+    figure_LI_statistics.suptitle(f"Level ice statistics {season} {loc}", fontsize=16)
 
 
 

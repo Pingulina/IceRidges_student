@@ -19,6 +19,8 @@ def main():
     import data_analysis.weekly_manual_correction as wmc
     import data_analysis.preliminary_analysis_simulation as pas
     import data_analysis.level_ice_statistics as lis
+    import data_analysis.level_ice_statistics_multiYear as lisMY
+    import data_analysis.mode_threshold_analysis as mta
     # d2j.example() # store the .dat files as .json files for the mooring data
 
     # rs.ridge_statistics()
@@ -40,7 +42,13 @@ def main():
     # pas.prelim_analysis_simulation([2004, 2006], ['a', 'b', 'c', 'd'])
 
     ### uncomment the following line to run the level_ice_statistics.py file
-    lis.level_ice_statistics(year=2004, loc='a')
+    # lis.level_ice_statistics(year=2004, loc='a')
+
+    ### uncomment the following line to run the level_ice_statistics_multiYear.py file
+    # lisMY.level_ice_statistics_multiYear()
+
+    ### uncomment the following line to run the mode_threshold_analysis.py file
+    mta.mode_threshold_analysis()
 
     return None
 

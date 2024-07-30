@@ -57,6 +57,7 @@ def mode_threshold_analysis(year=None, loc=None, dict_mooring_locations=None):
     peaks_location = dict_ridge_statistics[loc]['peaks_location']
 
     # initialize the plot
+    plt.ion() # interactive mode on to see updates of plot
     figure_modeThreshold = plt.figure(figsize=(10, 6))
     # initialize grid for the plot
     grid_modeThreshold = figure_modeThreshold.add_gridspec(2, 2)
@@ -71,7 +72,7 @@ def mode_threshold_analysis(year=None, loc=None, dict_mooring_locations=None):
     ax1.plot(x, 7.55+4.83*x, 'g', label='7.55+4.83*x')
     ax1.set_xlabel('level ice thickness [m]')
     ax1.set_ylabel('deepest mode keel draft [m]')
-    ax1.set_title(f'Deepest mode keel draft over LI expected deepest mode for {loc} in {year}')
+    ax1.set_title(f'LI expected deepest mode for {loc} in {year}')
 
     # plot with the maximum ridge keel draft over the level ice deepst mode
     ax2 = figure_modeThreshold.add_subplot(grid_modeThreshold[0, 1])
@@ -80,7 +81,7 @@ def mode_threshold_analysis(year=None, loc=None, dict_mooring_locations=None):
     ax2.plot(x, 7.55+4.83*x, 'g', label='7.55+4.83*x')
     ax2.set_xlabel('level ice thickness [m]')
     ax2.set_ylabel('deepest mode keel draft [m]')
-    ax2.set_title(f'Deepest mode keel draft over LI deepest mode for {loc} in {year}')
+    ax2.set_title(f'Threshold used before; {loc} in {year}')
 
     # plot with the maximum ridge keel draft over the level ice deepst mode; in this plot the threshold will be adjusted in the while loop
     ax3 = figure_modeThreshold.add_subplot(grid_modeThreshold[1, 1])
@@ -89,14 +90,16 @@ def mode_threshold_analysis(year=None, loc=None, dict_mooring_locations=None):
     ax3.plot(x, 7.55+4.83*x, 'g', label='7.55+4.83*x')
     ax3.set_xlabel('level ice thickness [m]')
     ax3.set_ylabel('deepest mode keel draft [m]')
-    ax3.set_title(f'Deepest mode keel draft over LI deepest mode for {loc} in {year}')
+    ax3.set_title(f'New Threshold; {loc} in {year}')
+
+    
 
 
 
 
     # change threshold for peaks intensity (haven't understood yet what and why)
 
-    intensity_threshold = 0.2
+    intensity_threshold = 0.25
     Dt = np.zeros(np.shape(draft_deeply_weekest_ridge))
     while True:
         # let the user change the threshold for the peaks intensity
@@ -116,18 +119,19 @@ def mode_threshold_analysis(year=None, loc=None, dict_mooring_locations=None):
             # makt to nan all values from peaks_location_filtered, that are either larger than 3 or that are at positions where peaks_intensity is smaller than intensity_threshold
             peaks_location_filtered = peaks_location.copy()
             for i in range(len(peaks_location_filtered)):
-                peaks_location_filtered[i] = peaks_location_filtered[i][np.logical_or(peaks_location_filtered[i] > 3, peaks_intensity[i] < intensity_threshold)]
+                peaks_location_filtered[i] = peaks_location_filtered[i][np.logical_and(peaks_location_filtered[i] < 3, peaks_intensity[i] > intensity_threshold)]
                 # if there are no peaks left, set the maximum value of the peaks_location_filtered to Dt[i] = 0
                 if len(peaks_location_filtered[i]) == 0:
                     Dt[i] = 0
-                    color_array[i] = 'w'
+                    color_array[i] = 'r'
                 else:
-                    Dt[i] = max(peaks_location_filtered[i])
+                    Dt[i] = np.max(peaks_location_filtered[i])
                     color_array[i] = 'b'
             # set the x-values of scatter3 to Dt
             scatter3.set_offsets(np.c_[Dt, draft_deeply_weekest_ridge])
             # update the colors of the scatter3 according to the color_array
             scatter3.set_color(color_array)
+            print('plot updated')
         elif change == '0':
             break
         else:

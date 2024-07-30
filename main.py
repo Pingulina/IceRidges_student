@@ -30,7 +30,7 @@ def main():
     # ewd.extract_ridge_LI_data(overwrite=True)
 
     ### uncomment the following line to run the ridge_statistics.py file
-    # rs.ridge_statistics(years=[2005, 2006], poss_mooring_locs=['a', 'b', 'c', 'd'], saveAsJson=True) # , 2005, 2006
+    rs.ridge_statistics(years=[2004, 2005, 2006], poss_mooring_locs=['a','b','c','d'], saveAsJson=True) # , 2005, 2006
 
     ### uncomment the following line to run the weekly_visual_analysis.py file
     # wva.weekly_visual_analysis()
@@ -48,7 +48,7 @@ def main():
     # lisMY.level_ice_statistics_multiYear()
 
     ### uncomment the following line to run the mode_threshold_analysis.py file
-    mta.mode_threshold_analysis()
+    # mta.mode_threshold_analysis()
 
     return None
 

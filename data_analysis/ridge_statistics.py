@@ -114,6 +114,8 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
                     )]
                 # if there are too few ridge data points, skip the week
                 if len(dateNum_rc_reshape[week_num]) <= 5 or draft_subset.size == 0:
+                    intensities_all[f"week_{week_num}"] = np.empty(0)
+                    locs_all[f"week_{week_num}"] = np.empty(0)
                     continue
 
                 week_to_keep[week_num] = True
@@ -134,14 +136,16 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
                 # locations and intensities of all peaks
                 locs = xi[locs_idx]
                 intensities = f[locs_idx]
-
+                print(f"locs: {locs}")
                 # find the mode with the deepest draft
                 if not len(locs) == 0:
                     mode_loc_idx = np.argmax(locs)
-                    mode_idx = np.max(np.where(intensities > 0.25))
-                    # mode_idx = np.argmax(intensities)
-                    mode = locs[mode_idx]
+                    # mode_idx = np.max(np.where(intensities > 0.25))
+                    # # mode_idx = np.argmax(intensities)
+                    # mode = locs[mode_idx]
+                    mode = np.max(locs[np.logical_and(locs < 3, intensities > 0.25)])
                     deepest_mode_weekly[week_num] = mode
+                    print(f"mode: {mode}")
                 else:
                     deepest_mode_weekly[week_num] = 0
                     week_to_keep[week_num] = False
@@ -222,6 +226,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
                 os.makedirs(pathName_thisData)
             for loc in dict_yearly.keys():
                 dict2json.dict2json(dict_yearly[loc], os.path.join(pathName_thisData, f"ridge_statistics_{year}{loc}.json"))
+            print(f"Data for year {year} extracted and saved at {pathName_thisData}.")
             
         # plot the data of all mooring locations from this year
         if constants.make_plots:
@@ -235,10 +240,7 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             # close the plot
             plt.close(figure_ridge_statistics)
 
-        if constants.make_plots:
-            print(f"Data for year {year} extracted and plots saved at {pathName_thisPlot}.")
-        else:
-            print(f"Data for year {year} extracted.")
+            print(f"Plots saved at {pathName_thisPlot}.")
 
     return None
     # return dict_ridge_statistics

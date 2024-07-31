@@ -21,6 +21,7 @@ def main():
     import data_analysis.level_ice_statistics as lis
     import data_analysis.level_ice_statistics_multiYear as lisMY
     import data_analysis.mode_threshold_analysis as mta
+    import simulation_functions.simulation_deepest_ridge as sdr
     # d2j.example() # store the .dat files as .json files for the mooring data
 
     # rs.ridge_statistics()
@@ -30,7 +31,7 @@ def main():
     # ewd.extract_ridge_LI_data(overwrite=True)
 
     ### uncomment the following line to run the ridge_statistics.py file
-    rs.ridge_statistics(years=[2004, 2005, 2006], poss_mooring_locs=['a','b','c','d'], saveAsJson=True) # , 2005, 2006
+    # rs.ridge_statistics(years=[2004, 2005, 2006], poss_mooring_locs=['a','b','c','d'], saveAsJson=True) # , 2005, 2006
 
     ### uncomment the following line to run the weekly_visual_analysis.py file
     # wva.weekly_visual_analysis()
@@ -49,6 +50,9 @@ def main():
 
     ### uncomment the following line to run the mode_threshold_analysis.py file
     # mta.mode_threshold_analysis()
+
+    ### uncomment the following line to run the simulation_deepest_ridge.py file
+    sdr.simulate_deepest_ridge()
 
     return None
 

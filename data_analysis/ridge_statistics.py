@@ -136,7 +136,6 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
                 # locations and intensities of all peaks
                 locs = xi[locs_idx]
                 intensities = f[locs_idx]
-                print(f"locs: {locs}")
                 # find the mode with the deepest draft
                 if not len(locs) == 0:
                     mode_loc_idx = np.argmax(locs)
@@ -145,7 +144,6 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
                     # mode = locs[mode_idx]
                     mode = np.max(locs[np.logical_and(locs < 3, intensities > 0.25)])
                     deepest_mode_weekly[week_num] = mode
-                    print(f"mode: {mode}")
                 else:
                     deepest_mode_weekly[week_num] = 0
                     week_to_keep[week_num] = False

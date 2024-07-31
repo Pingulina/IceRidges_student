@@ -16,4 +16,6 @@ machine_precision = np.finfo(float).eps # machine precision
 threshold_draft=2.5 # threshold for the rayleigh criterion
 min_draft=5.0 # minimum draft for the rayleigh criterion
 
+threshold_ridges=15 # threshold for the number of ridges per week
+
 make_plots = True

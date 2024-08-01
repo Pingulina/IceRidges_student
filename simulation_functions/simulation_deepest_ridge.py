@@ -1,8 +1,10 @@
 # functions to simulate the deepest ridge
 import numpy as np
+import numpy.matlib
 import matplotlib.pyplot as plt
 import os
 import sys
+import scipy.stats
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 # Get the current working directory
@@ -16,6 +18,7 @@ from import_module import import_module
 constants = import_module('constants', 'helper_functions')
 load_data = import_module('load_data', 'data_handling')
 mooring_locs = import_module('mooring_locations', 'helper_functions')
+preliminary_analysis_plot = import_module('preliminary_analysis_plot', 'plot_functions')
 
 def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     """simulate the deepest ridge
@@ -56,16 +59,145 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     
     level_ice_deepest_mode = dict_ridge_statistics[loc]['level_ice_deepest_mode']
     level_ice_expect_deepest_mode = dict_ridge_statistics[loc]['level_ice_expect_deepest_mode']
-    level_ice_mode = dict_ridge_statistics[loc]['level_ice_mode'] # needs to be done
+    level_ice_mode = level_ice_deepest_mode # dict_ridge_statistics[loc]['level_ice_mode'] # needs to be done
     draft_deeply_weekest_ridge = dict_ridge_statistics[loc]['draft_weekly_deepest_ridge']
     number_ridges = dict_ridge_statistics[loc]['number_ridges']
     mean_keel_draft = dict_ridge_statistics[loc]['mean_keel_draft']
 
+    # calculations
+    LI_linear_regression = np.polyfit(level_ice_deepest_mode, draft_deeply_weekest_ridge, 1)
+    LI_linear_regression_fn = np.poly1d(LI_linear_regression)
+    normalized_weekly_draft = draft_deeply_weekest_ridge / LI_linear_regression_fn(level_ice_mode)
+
+    # simulate the deepest ridge
+    prob_distri_normalized_weekly_draft = scipy.stats.norm.fit(normalized_weekly_draft)
+    draft_deeply_weekest_ridge_simulated = LI_linear_regression_fn(level_ice_mode) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft, size=len(level_ice_mode))
+
+    # repeat the simulated deepest ridge for 100 times and vary it with the distribution computed above (probabilistic approach)
+    N_repeat = 100
+    draft_deeply_weekest_ridge_simulated_rep = np.concatenate(numpy.matlib.repmat(LI_linear_regression_fn(level_ice_mode), 1, N_repeat)) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft, size=len(level_ice_mode)* N_repeat)
+
+    # determine the return period of ridges
+    N_repeat = 100000
+    draft_deeply_weekest_ridge_simulated_repYears = np.concatenate(numpy.matlib.repmat(LI_linear_regression_fn(level_ice_mode), 1, N_repeat)) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft, size=len(level_ice_mode)* N_repeat)
+    draft_deeply_weekest_ridge_simulated_repYears_sorted, exceedence_probability_simulated_repYears = exceedence_probability(draft_deeply_weekest_ridge_simulated_repYears)
+    exceedence_probability_simulated_repYears = (1- exceedence_probability_simulated_repYears) ** 42
+
+    # keep every 10000th value of the exceedence probability and the draft
+    draft_deeply_weekest_ridge_simulated_repYears_sorted = draft_deeply_weekest_ridge_simulated_repYears_sorted[::10000]
+    exceedence_probability_simulated_repYears = exceedence_probability_simulated_repYears[::10000]
+
+
+    #### vizualization
+
     # initialize the plot for tracking steps of calculations
     plt.ion() # interactive mode on to see updates of plot
-    fig_overview = plt.figure(figsize=(10, 6))
-    grid_spec = fig_overview.add_gridspec(3, 2)
+    fig_overview = plt.figure(figsize=(9, 9))
+    grid_spec = fig_overview.add_gridspec(3, 3)
 
     # plot level ice draft and weekly deepest ridge draft
+    ax1 = fig_overview.add_subplot(grid_spec[0, 0])
+    ax1.set_xlabel('Level ice draft [m]')
+    ax1.set_ylabel('Weekly deepest keel draft [m]')
+    ax1.set_xlim([0, 3])
+    ax1.set_ylim([5, 30])
+    ax1.scatter(level_ice_mode, draft_deeply_weekest_ridge, color='tab:blue', alpha=0.2, label='deepest ridge')
+    ax1.plot(level_ice_deepest_mode, LI_linear_regression_fn(level_ice_deepest_mode), color='k', label='linear regression')
+    sqrt_line_x = np.linspace(0, 3, 100)
+    sqrt_line_y = 20*np.sqrt(sqrt_line_x)
+    ax1.plot(sqrt_line_x, sqrt_line_y, color='k', linestyle='--')
 
+
+    # plot the normalized weekly keel draft over the level ice draft
+    ax2 = fig_overview.add_subplot(grid_spec[0, 1])
+    ax2.set_xlabel('Level ice draft [m]')
+    ax2.set_ylabel('Normalized weekly deepest keel draft [-]')
+    ax2.set_xlim([0, 2])
+    ax2.set_ylim([0, 2.5])
+    ax2.scatter(level_ice_mode, normalized_weekly_draft, color='tab:blue', alpha=0.2, label='deepest ridge')
+
+    # histogram of normalized weekly keel draft
+    ax3 = fig_overview.add_subplot(grid_spec[0, 2])
+    line_x = np.linspace(0, 2, 100)
+    ax3, hist_line, plot_line, prob_distri = preliminary_analysis_plot.plot_histogram_with_line(
+        ax3, normalized_weekly_draft, {'bins':20, 'color':'tab:blue', 'alpha':0.5, 'label':'deepest ridge'},
+        line_x, {'distribution':'norm', 'color':'tab:blue', 'alpha':0.5, 'label':'deepest ridge'},
+        'Normalized weekly deepest keel draft [-]', 'Probability density [-]', xlim=[0, 2], ylim=[0, 2.5]
+        )
+
+    # plot simulated deepest ridge over the level ice draft
+    ax4 = fig_overview.add_subplot(grid_spec[1, 0])
+    ax4.set_xlabel('Level ice draft [m]')
+    ax4.set_ylabel('Weekly deepest keel draft [m]')
+    ax4.set_xlim([0, 3])
+    ax4.set_ylim([5, 30])
+    ax4.set_title('Simulated deepest ridge')
+    ax4.scatter(level_ice_mode, draft_deeply_weekest_ridge_simulated, color='tab:blue', alpha=0.2, label='deepest ridge')
+    ax4.plot(np.linspace(0, 3, 100), LI_linear_regression_fn(np.linspace(0, 3, 100)), color='k', label='linear regression')
+    sqrt_line_x = np.linspace(0, 3, 100)
+    sqrt_line_y = 20*np.sqrt(sqrt_line_x)
+    ax4.plot(sqrt_line_x, sqrt_line_y, color='k', linestyle='--')
+
+    # plot exceedence probabilty of the simulated deepest ridge
+    ax5 = fig_overview.add_subplot(grid_spec[1, 1])
+    sorted_x_data, exceedence_probability_data = exceedence_probability(draft_deeply_weekest_ridge)
+    sorted_x_simulated_rep, exceedence_probability_simulated_rep = exceedence_probability(draft_deeply_weekest_ridge_simulated_rep)
+    # make scatter plots
+    ax5.set_xlabel('Weekly deepest keel draft [m]')
+    ax5.set_ylabel('Exceedence probability [-]')
+    ax5.set_xlim([0, 40])
+    ax5.set_ylim([1e-5, 1])
+    # log scale for y-axis
+    ax5.set_yscale('log')
+    ax5.scatter(sorted_x_data, exceedence_probability_data, color='tab:blue', s=1, label='deepest ridge')
+    ax5.scatter(sorted_x_simulated_rep, exceedence_probability_simulated_rep, color='tab:orange', s=1, label='simulated deepest ridge')
+    ax5.legend()
+
+    # make a q-q plot of the deepest ridge and the simulated deepest ridge
+    ax6 = fig_overview.add_subplot(grid_spec[1, 2])
+    x, y = quantil_quantil_plotData(draft_deeply_weekest_ridge, draft_deeply_weekest_ridge_simulated)
+    ax6.set_xlabel('Weekly deepest keel draft [m]')
+    ax6.set_ylabel('Simulated weekly deepest keel draft [m]')
+    ax6.set_xlim([0, 40])
+    ax6.set_ylim([0, 40])
+    ax6.plot(x, y, '+', color='tab:blue', label='deepest ridge')
+    ax6.plot(x, x, color='k', label='y=x')
+    # ax6.legend()
+
+    # plot the probabiltiy (every which year a ridge of this depth is expected)
+    ax7 = fig_overview.add_subplot(grid_spec[2, 0])
+    ax7.set_xlabel('Weekly deepest keel draft [m]')
+    ax7.set_ylabel('Return period [years]')
+    ax7.set_xlim([10, 50])
+    ax7.set_ylim([1e-5, 1])
+    ax7.set_yscale('log')
+    ax7.set_yticks([1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1])
+    ax7.set_yticklabels(['100000', '10000', '1000', '100', '10', '1'])
+    ax7.plot(draft_deeply_weekest_ridge_simulated_repYears_sorted, exceedence_probability_simulated_repYears, color='tab:blue')
+
+
+
+def exceedence_probability(data):
+    """simple computation of the exceedence probability
+    param data: np.array, the data to compute the exceedence probability
+    return sorted_x: np.array, the sorted data
+    return exceedence_probability: np.array, the exceedence probability of the data
+    """
+    sorted_x = np.sort(data)
+    exceedence_probability = np.linspace(len(data), 1, len(data)) / len(data)
+    return sorted_x, exceedence_probability
+
+
+def quantil_quantil_plotData(values1, values2):
+    """returns the values needed to plot the q-q plot
+    param values1: np.array, the values of the first distribution
+    param values2: np.array, the values of the second distribution
+    return x: np.array, the values for the x-axis
+    return y: np.array, the values for the y-axis
+    """
+    # sort the values of the distributions
+    values1_sorted = np.sort(values1)
+    values2_sorted = np.sort(values2)
+
+    return values1_sorted, values2_sorted
 

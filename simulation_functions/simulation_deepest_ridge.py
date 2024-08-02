@@ -60,18 +60,18 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     level_ice_deepest_mode = dict_ridge_statistics[loc]['level_ice_deepest_mode']
     level_ice_expect_deepest_mode = dict_ridge_statistics[loc]['level_ice_expect_deepest_mode']
     level_ice_mode = level_ice_deepest_mode # dict_ridge_statistics[loc]['level_ice_mode'] # needs to be done
-    draft_deeply_weekest_ridge = dict_ridge_statistics[loc]['draft_weekly_deepest_ridge']
+    draft_deepest_weekly_ridge = dict_ridge_statistics[loc]['draft_weekly_deepest_ridge']
     number_ridges = dict_ridge_statistics[loc]['number_ridges']
     mean_keel_draft = dict_ridge_statistics[loc]['mean_keel_draft']
 
     # calculations
-    LI_linear_regression = np.polyfit(level_ice_deepest_mode, draft_deeply_weekest_ridge, 1)
+    LI_linear_regression = np.polyfit(level_ice_mode, draft_deepest_weekly_ridge, 1)
     LI_linear_regression_fn = np.poly1d(LI_linear_regression)
-    normalized_weekly_draft = draft_deeply_weekest_ridge / LI_linear_regression_fn(level_ice_mode)
+    normalized_weekly_draft = draft_deepest_weekly_ridge / LI_linear_regression_fn(level_ice_mode)
 
     # simulate the deepest ridge
     prob_distri_normalized_weekly_draft = scipy.stats.norm.fit(normalized_weekly_draft)
-    draft_deeply_weekest_ridge_simulated = LI_linear_regression_fn(level_ice_mode) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft, size=len(level_ice_mode))
+    draft_deepest_weekly_ridge_simulated = LI_linear_regression_fn(level_ice_mode) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft, size=len(level_ice_mode))
 
     # repeat the simulated deepest ridge for 100 times and vary it with the distribution computed above (probabilistic approach)
     N_repeat = 100
@@ -79,20 +79,52 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
 
     # determine the return period of ridges
     N_repeat = 100000
-    draft_deeply_weekest_ridge_simulated_repYears = np.concatenate(numpy.matlib.repmat(LI_linear_regression_fn(level_ice_mode), 1, N_repeat)) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft, size=len(level_ice_mode)* N_repeat)
-    draft_deeply_weekest_ridge_simulated_repYears_sorted, exceedence_probability_simulated_repYears = exceedence_probability(draft_deeply_weekest_ridge_simulated_repYears)
-    exceedence_probability_simulated_repYears = (1- exceedence_probability_simulated_repYears) ** 42
+    draft_deepest_weekly_ridge_simulated_repYears = np.concatenate(numpy.matlib.repmat(LI_linear_regression_fn(level_ice_mode), 1, N_repeat)) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft, size=len(level_ice_mode)* N_repeat)
+    draft_deepest_weekly_ridge_simulated_repYears_sorted, exceedence_probability_simulated_repYears = exceedence_probability(draft_deepest_weekly_ridge_simulated_repYears)
+    exceedence_probability_simulated_repYears = 1 - (1- exceedence_probability_simulated_repYears) ** 42
 
-    # keep every 10000th value of the exceedence probability and the draft
-    draft_deeply_weekest_ridge_simulated_repYears_sorted = draft_deeply_weekest_ridge_simulated_repYears_sorted[::10000]
-    exceedence_probability_simulated_repYears = exceedence_probability_simulated_repYears[::10000]
+    # remove points such that minimum distance between points is 0.001
+    diff_ridgeDepth = np.diff(draft_deepest_weekly_ridge_simulated_repYears_sorted)
+    sum_diff = 0
+    useThisPoints = []
+    i = 0
+    for i, thisDiff in enumerate(diff_ridgeDepth):
+        sum_diff += thisDiff
+        if sum_diff < 0.001:
+            pass
+        else:
+            sum_diff = 0
+            useThisPoints.append(i)
+            
+
+
+
+    draft_deepest_weekly_ridge_simulated_repYears_sorted = draft_deepest_weekly_ridge_simulated_repYears_sorted[useThisPoints]
+    exceedence_probability_simulated_repYears = exceedence_probability_simulated_repYears[useThisPoints]
+
+    draft_deepest_weekly_ridge_sorted, exceedence_probability_draft = exceedence_probability(draft_deepest_weekly_ridge)
+    draft_deeply_weekest_ridge_simulated_rep_sorted, exceedence_probability_simulated_rep = exceedence_probability(draft_deeply_weekest_ridge_simulated_rep)
+    ## compute the confidence intervals of the simulated deepest ridge
+    # compute the percentiles of the simulated deepest ridge
+    percentile_x = np.arange(len(level_ice_mode), 1, -1) / len(level_ice_mode)
+    percentile_number_steps = 100000
+    # repeat draft_deepest_weekly_ridge_simulated_repYears_sorted for 100000 times (make a matrix)
+    draft_deepest_weekly_ridge_simulated_sorted = np.sort(draft_deepest_weekly_ridge_simulated)
+    percentile_y = np.tile(draft_deepest_weekly_ridge_simulated_sorted, (percentile_number_steps, 1))
+
+    # compute the percentiles (percentile for every week in this season)
+    percentile_1 = np.percentile(percentile_y, 1, axis=0)
+    percentile_5 = np.percentile(percentile_y, 5, axis=0)
+    percentile_50 = np.percentile(percentile_y, 50, axis=0)
+    percentile_95 = np.percentile(percentile_y, 95, axis=0)
+    percentile_99 = np.percentile(percentile_y, 99, axis=0)
 
 
     #### vizualization
 
     # initialize the plot for tracking steps of calculations
     plt.ion() # interactive mode on to see updates of plot
-    fig_overview = plt.figure(figsize=(9, 9))
+    fig_overview = plt.figure(figsize=(9, 8))
     grid_spec = fig_overview.add_gridspec(3, 3)
 
     # plot level ice draft and weekly deepest ridge draft
@@ -101,7 +133,7 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     ax1.set_ylabel('Weekly deepest keel draft [m]')
     ax1.set_xlim([0, 3])
     ax1.set_ylim([5, 30])
-    ax1.scatter(level_ice_mode, draft_deeply_weekest_ridge, color='tab:blue', alpha=0.2, label='deepest ridge')
+    ax1.scatter(level_ice_mode, draft_deepest_weekly_ridge, color='tab:blue', alpha=0.2, label='deepest ridge')
     ax1.plot(level_ice_deepest_mode, LI_linear_regression_fn(level_ice_deepest_mode), color='k', label='linear regression')
     sqrt_line_x = np.linspace(0, 3, 100)
     sqrt_line_y = 20*np.sqrt(sqrt_line_x)
@@ -132,7 +164,7 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     ax4.set_xlim([0, 3])
     ax4.set_ylim([5, 30])
     ax4.set_title('Simulated deepest ridge')
-    ax4.scatter(level_ice_mode, draft_deeply_weekest_ridge_simulated, color='tab:blue', alpha=0.2, label='deepest ridge')
+    ax4.scatter(level_ice_mode, draft_deepest_weekly_ridge_simulated, color='tab:blue', alpha=0.2, label='deepest ridge')
     ax4.plot(np.linspace(0, 3, 100), LI_linear_regression_fn(np.linspace(0, 3, 100)), color='k', label='linear regression')
     sqrt_line_x = np.linspace(0, 3, 100)
     sqrt_line_y = 20*np.sqrt(sqrt_line_x)
@@ -140,8 +172,7 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
 
     # plot exceedence probabilty of the simulated deepest ridge
     ax5 = fig_overview.add_subplot(grid_spec[1, 1])
-    sorted_x_data, exceedence_probability_data = exceedence_probability(draft_deeply_weekest_ridge)
-    sorted_x_simulated_rep, exceedence_probability_simulated_rep = exceedence_probability(draft_deeply_weekest_ridge_simulated_rep)
+
     # make scatter plots
     ax5.set_xlabel('Weekly deepest keel draft [m]')
     ax5.set_ylabel('Exceedence probability [-]')
@@ -149,13 +180,13 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     ax5.set_ylim([1e-5, 1])
     # log scale for y-axis
     ax5.set_yscale('log')
-    ax5.scatter(sorted_x_data, exceedence_probability_data, color='tab:blue', s=1, label='deepest ridge')
-    ax5.scatter(sorted_x_simulated_rep, exceedence_probability_simulated_rep, color='tab:orange', s=1, label='simulated deepest ridge')
+    ax5.scatter(draft_deepest_weekly_ridge_sorted, exceedence_probability_draft, color='tab:blue', s=1, label='deepest ridge')
+    ax5.scatter(draft_deeply_weekest_ridge_simulated_rep_sorted, exceedence_probability_simulated_rep, color='tab:orange', s=1, label='simulated deepest ridge')
     ax5.legend()
 
     # make a q-q plot of the deepest ridge and the simulated deepest ridge
     ax6 = fig_overview.add_subplot(grid_spec[1, 2])
-    x, y = quantil_quantil_plotData(draft_deeply_weekest_ridge, draft_deeply_weekest_ridge_simulated)
+    x, y = quantil_quantil_plotData(draft_deepest_weekly_ridge, draft_deepest_weekly_ridge_simulated)
     ax6.set_xlabel('Weekly deepest keel draft [m]')
     ax6.set_ylabel('Simulated weekly deepest keel draft [m]')
     ax6.set_xlim([0, 40])
@@ -173,7 +204,18 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     ax7.set_yscale('log')
     ax7.set_yticks([1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1])
     ax7.set_yticklabels(['100000', '10000', '1000', '100', '10', '1'])
-    ax7.plot(draft_deeply_weekest_ridge_simulated_repYears_sorted, exceedence_probability_simulated_repYears, color='tab:blue')
+    ax7.plot(draft_deepest_weekly_ridge_simulated_repYears_sorted, exceedence_probability_simulated_repYears, color='tab:blue')
+
+    # plot confidence intervals of the simulated deepest ridge (percentiles)
+    ax8 = fig_overview.add_subplot(grid_spec[2, 1])
+    ax8.set_xlabel('Weekly maximum rigde keel draft [m]')
+    ax8.set_ylabel('Exceedence probability [-]')
+    ax8.set_xlim([5, 40])
+    
+    ax8.fill_between(level_ice_mode, percentile_1, percentile_99, color='tab:blue', alpha=0.2, label='98\%')
+    ax8.fill_between(level_ice_mode, percentile_5, percentile_95, color='tab:blue', alpha=0.4, label='90\%')
+    ax8.plot(level_ice_mode, percentile_50, color='tab:blue', label='50\%')
+
 
 
 

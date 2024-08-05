@@ -108,9 +108,14 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     # compute the percentiles of the simulated deepest ridge
     percentile_x = np.arange(len(level_ice_mode), 1, -1) / len(level_ice_mode)
     percentile_number_steps = 100000
-    # repeat draft_deepest_weekly_ridge_simulated_repYears_sorted for 100000 times (make a matrix)
-    draft_deepest_weekly_ridge_simulated_sorted = np.sort(draft_deepest_weekly_ridge_simulated)
-    percentile_y = np.tile(draft_deepest_weekly_ridge_simulated_sorted, (percentile_number_steps, 1))
+    # initialize percentile_y
+    percentile_y = np.zeros((percentile_number_steps, len(level_ice_mode)))
+    # repeat draft_deepest_weekly_ridge_simulated_repYears_sorted for 100000 times with randomized factor (make a matrix)
+    for i in range(percentile_number_steps):
+        draft_deepest_weekly_ridge_simulated_repYears_tmp = LI_linear_regression_fn(level_ice_mode) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft, size=len(level_ice_mode))
+        percentile_y[i, :] = np.sort(draft_deepest_weekly_ridge_simulated_repYears_tmp)
+    # draft_deepest_weekly_ridge_simulated_sorted = np.sort(draft_deepest_weekly_ridge_simulated)
+    # percentile_y = np.tile(draft_deepest_weekly_ridge_simulated_sorted, (percentile_number_steps, 1))
 
     # compute the percentiles (percentile for every week in this season)
     percentile_1 = np.percentile(percentile_y, 1, axis=0)
@@ -211,10 +216,17 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     ax8.set_xlabel('Weekly maximum rigde keel draft [m]')
     ax8.set_ylabel('Exceedence probability [-]')
     ax8.set_xlim([5, 40])
+    # log scale for y-axis
+    ax8.set_yscale('log')
+
+    counter_years = np.arange(len(level_ice_mode), 0, -1)/len(level_ice_mode)
+    counter_years_2 = np.concatenate([counter_years, counter_years[::-1]])
+    percentile_1_2 = np.concatenate([percentile_1, percentile_99[::-1]])
+    percentile_5_2 = np.concatenate([percentile_5, percentile_95[::-1]])
     
-    ax8.fill_between(level_ice_mode, percentile_1, percentile_99, color='tab:blue', alpha=0.2, label='98\%')
-    ax8.fill_between(level_ice_mode, percentile_5, percentile_95, color='tab:blue', alpha=0.4, label='90\%')
-    ax8.plot(level_ice_mode, percentile_50, color='tab:blue', label='50\%')
+    ax8.fill_betweenx(counter_years, percentile_1, percentile_99, color='tab:blue', alpha=0.2, label='98%')
+    ax8.fill_betweenx(counter_years, percentile_5, percentile_95, color='tab:blue', alpha=0.4, label='90%')
+    ax8.plot(percentile_50, counter_years, color='tab:blue', label='50\%')
 
 
 

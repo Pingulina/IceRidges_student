@@ -22,6 +22,7 @@ def main():
     import data_analysis.level_ice_statistics_multiYear as lisMY
     import data_analysis.mode_threshold_analysis as mta
     import simulation_functions.simulation_deepest_ridge as sdr
+    import simulation_functions.simulation_all_ridges as sar
     # d2j.example() # store the .dat files as .json files for the mooring data
 
     # rs.ridge_statistics()
@@ -52,7 +53,10 @@ def main():
     # mta.mode_threshold_analysis()
 
     ### uncomment the following line to run the simulation_deepest_ridge.py file
-    sdr.simulate_deepest_ridge()
+    # sdr.simulate_deepest_ridge()
+
+    ### uncomment the following line to run the simulation_all_ridges.py file
+    sar.simulate_all_ridges()
 
     return None
 

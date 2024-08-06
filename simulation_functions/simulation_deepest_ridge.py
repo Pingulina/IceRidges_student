@@ -19,6 +19,7 @@ constants = import_module('constants', 'helper_functions')
 load_data = import_module('load_data', 'data_handling')
 mooring_locs = import_module('mooring_locations', 'helper_functions')
 preliminary_analysis_plot = import_module('preliminary_analysis_plot', 'plot_functions')
+probabilistic_helper_functions = import_module('probabilistic_helper_functions', 'plot_functions')
 
 def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     """simulate the deepest ridge
@@ -80,7 +81,7 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     # determine the return period of ridges
     N_repeat = 100000
     draft_deepest_weekly_ridge_simulated_repYears = np.concatenate(numpy.matlib.repmat(LI_linear_regression_fn(level_ice_mode), 1, N_repeat)) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft, size=len(level_ice_mode)* N_repeat)
-    draft_deepest_weekly_ridge_simulated_repYears_sorted, exceedence_probability_simulated_repYears = exceedence_probability(draft_deepest_weekly_ridge_simulated_repYears)
+    draft_deepest_weekly_ridge_simulated_repYears_sorted, exceedence_probability_simulated_repYears = probabilistic_helper_functions.exceedence_probability(draft_deepest_weekly_ridge_simulated_repYears)
     exceedence_probability_simulated_repYears = 1 - (1- exceedence_probability_simulated_repYears) ** 42
 
     # remove points such that minimum distance between points is 0.001
@@ -102,8 +103,8 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     draft_deepest_weekly_ridge_simulated_repYears_sorted = draft_deepest_weekly_ridge_simulated_repYears_sorted[useThisPoints]
     exceedence_probability_simulated_repYears = exceedence_probability_simulated_repYears[useThisPoints]
 
-    draft_deepest_weekly_ridge_sorted, exceedence_probability_draft = exceedence_probability(draft_deepest_weekly_ridge)
-    draft_deeply_weekest_ridge_simulated_rep_sorted, exceedence_probability_simulated_rep = exceedence_probability(draft_deeply_weekest_ridge_simulated_rep)
+    draft_deepest_weekly_ridge_sorted, exceedence_probability_draft = probabilistic_helper_functions.exceedence_probability(draft_deepest_weekly_ridge)
+    draft_deeply_weekest_ridge_simulated_rep_sorted, exceedence_probability_simulated_rep = probabilistic_helper_functions.exceedence_probability(draft_deeply_weekest_ridge_simulated_rep)
     ## compute the confidence intervals of the simulated deepest ridge
     # compute the percentiles of the simulated deepest ridge
     percentile_x = np.arange(len(level_ice_mode), 1, -1) / len(level_ice_mode)
@@ -191,7 +192,7 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
 
     # make a q-q plot of the deepest ridge and the simulated deepest ridge
     ax6 = fig_overview.add_subplot(grid_spec[1, 2])
-    x, y = quantil_quantil_plotData(draft_deepest_weekly_ridge, draft_deepest_weekly_ridge_simulated)
+    x, y = probabilistic_helper_functions.quantil_quantil_plotData(draft_deepest_weekly_ridge, draft_deepest_weekly_ridge_simulated)
     ax6.set_xlabel('Weekly deepest keel draft [m]')
     ax6.set_ylabel('Simulated weekly deepest keel draft [m]')
     ax6.set_xlim([0, 40])
@@ -231,27 +232,8 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
 
 
 
-def exceedence_probability(data):
-    """simple computation of the exceedence probability
-    param data: np.array, the data to compute the exceedence probability
-    return sorted_x: np.array, the sorted data
-    return exceedence_probability: np.array, the exceedence probability of the data
-    """
-    sorted_x = np.sort(data)
-    exceedence_probability = np.linspace(len(data), 1, len(data)) / len(data)
-    return sorted_x, exceedence_probability
 
 
-def quantil_quantil_plotData(values1, values2):
-    """returns the values needed to plot the q-q plot
-    param values1: np.array, the values of the first distribution
-    param values2: np.array, the values of the second distribution
-    return x: np.array, the values for the x-axis
-    return y: np.array, the values for the y-axis
-    """
-    # sort the values of the distributions
-    values1_sorted = np.sort(values1)
-    values2_sorted = np.sort(values2)
 
-    return values1_sorted, values2_sorted
+
 

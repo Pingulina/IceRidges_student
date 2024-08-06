@@ -20,6 +20,7 @@ constants = import_module('constants', 'helper_functions')
 load_data = import_module('load_data', 'data_handling')
 mooring_locs = import_module('mooring_locations', 'helper_functions')
 preliminary_analysis_plot = import_module('preliminary_analysis_plot', 'plot_functions')
+probabilistic_helper_functions = import_module('probabilistic_helper_functions', 'plot_functions')
 
 def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
     """
@@ -84,8 +85,53 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
 
     # distribution function of normalized weekly deepest keel draft
     prob_distri_normalized_weekly_draft_mean = scipy.stats.norm.fit(normalized_weekly_draft_mean)
-    prob_distri_normalized_weekly_draft_mean_evaluate = scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft_mean, size=len(level_ice_mode))
+    prob_distri_normalized_weekly_draft_mean_evaluate = scipy.stats.norm.pdf(bin_edges_normalized_weekly_draft, *prob_distri_normalized_weekly_draft_mean)
+    prob_distri_normalized_weekly_draft_mean_random = scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft_mean, size=len(level_ice_mode))
     prob_distri_normalized_weekly_draft_mean_x = np.linspace(0, 2, len(level_ice_mode))
+
+    # some factors, described in Iljia's thesis (hopefully) (from plot 4)
+    a1 = 37.21
+    b1 = 2.16
+    normalized_number_ridges = number_ridges / (a1 * (mean_keel_draft-5)** b1 +1)
+
+    # Weibull distribution
+    # fit the Weibull distribution
+    prob_distri_normalized_number_ridges_x = np.linspace(0, 4, len(number_ridges))
+    prob_distri_normalized_number_ridges = scipy.stats.weibull_min.fit(normalized_number_ridges, floc=0)
+    prob_distri_normalized_number_ridges_evaluate = scipy.stats.weibull_min.pdf(prob_distri_normalized_number_ridges_x, *prob_distri_normalized_number_ridges)
+    prob_distri_normalized_number_ridges_random = scipy.stats.weibull_min.rvs(*prob_distri_normalized_number_ridges, size=len(number_ridges))
+
+    # histogram calculation for normalized number of ridges
+    number_bins_normalized_number_ridges = 23
+    hist_bins = np.linspace(0, 4, number_bins_normalized_number_ridges)
+    hist_normalized_number_ridges, bin_edges_normalized_number_ridges = np.histogram(normalized_number_ridges, bins=hist_bins, density=True)
+
+    # simulation of the weekly mean keel draft
+    mean_keel_draft_simulated = LI_linear_regression_fn(level_ice_mode) * prob_distri_normalized_weekly_draft_mean_random
+
+    # simulation of the number of ridges
+    number_ridges_simulated = a1 * (mean_keel_draft-5)** b1 * prob_distri_normalized_number_ridges_random
+
+    # main simulation
+    # Monte-Carlo simulation
+    mean_keel_draft_simulation = np.zeros((100, len(level_ice_mode))) # MALL (Matlab names)
+    number_ridges_simulation = np.zeros((100, len(level_ice_mode)), dtype=int) # NALL
+    draft_reshape_simulation = np.zeros((100, len(level_ice_mode))) # Dsimsim
+    for mc_index in range(100):
+        mean_keel_draft_simulation[mc_index] = LI_linear_regression_fn(level_ice_mode) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft_mean, size=len(level_ice_mode))
+
+        alpha = 3.444264940096133 # from matlab code
+        beta = 0.294520039217058 # from matlab code
+
+        # thickness-numberRidges relationship
+        thickness_numberRidges_distribution = scipy.stats.gamma.rvs(alpha, scale=1/beta, size=len(level_ice_mode))
+        a2 = 84.69
+        b2 = 1.318
+        number_ridges_simulation[mc_index] = np.round(a2 * (mean_keel_draft-5)** b2 * thickness_numberRidges_distribution).astype(int)
+        draft_reshape_simulation[mc_index] = np.concatenate([5 + np.random.exponential(scale = mean_keel_draft_simulation[mc_index][i] -5, size=number_ridges_simulation[mc_index][i]) for i in range(len(mean_keel_draft_simulation[mc_index]))])
+
+        # Matlab S010 lines 145-194
+
 
 
 
@@ -131,9 +177,6 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
     ax4.set_xlim([5, 9])
     ax4.set_ylim([0, 1200])
     ax4.scatter(mean_keel_draft, number_ridges, color='blue', alpha=0.2, label='number of ridges')
-    # some factors, described in Iljia's thesis (hopefully)
-    a1 = 37.21
-    b1 = 2.16
     x = np.arange(0, 9, 0.001)
     ax4.plot(x, a1 * (x-5)** b1, color='k')
 
@@ -144,9 +187,54 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
     ax5.set_xlabel('Weekly mean keel draft [m]')
     ax5.set_ylabel('Normalized weekly number of ridges [-]')
     ax5.set_title('Normalized number of ridges')
-    ax5.scatter(mean_keel_draft, number_ridges / (a1 * (mean_keel_draft-5)** b1 +1), color='blue', alpha=0.2, label='normalized number of ridges')
+    ax5.scatter(mean_keel_draft, normalized_number_ridges, color='blue', alpha=0.2, label='normalized number of ridges')
 
-    # continue with plot 6,3,6 (Weibull distribution)
+    # plot normalized number of ridges histogram and weibull distribution
+    ax6 = fig_overview.add_subplot(grid_spec[1, 2])
+    ax6.set_xlim([0, 4])
+    ax6.set_ylim([0, 1])
+    ax6.set_xlabel('Normalized weekly number of ridges [-]')
+    ax6.set_ylabel('Probability density [-]')
+    ax6.set_title('Normalized number of ridges')
+    ax6.bar(bin_edges_normalized_number_ridges[:-1], hist_normalized_number_ridges, align='edge', color='k', alpha=0.5, zorder=0, width=(max(bin_edges_normalized_number_ridges)-min(bin_edges_normalized_number_ridges))/number_bins_normalized_number_ridges)
+    # plot the distribution of the normalized weekly deepest keel draft
+    ax6.plot(prob_distri_normalized_number_ridges_x, prob_distri_normalized_number_ridges_evaluate, color='red', label='Weibull distribution') # plot the normal distribution
+
+    # plot the simulated weekly mean keel draft over level ice mode
+    ax7 = fig_overview.add_subplot(grid_spec[2, 0])
+    ax7.set_xlim([0, 3])
+    ax7.set_ylim([5, 9])
+    ax7.set_xlabel('Level ice draft [m]')
+    ax7.set_ylabel('Weekly mean keel draft [m]')
+    ax7.set_title('Simulated mean keel draft')
+    ax7.scatter(level_ice_mode, mean_keel_draft_simulated, color='blue', alpha=0.2, label='simulated mean keel draft')
+    ax7.plot(level_ice_mode, LI_linear_regression_fn(level_ice_mode), color='k', label='linear regression')
+
+    # plot the simulated weekly number of ridges over simulated weekly mean keel draft
+    ax8 = fig_overview.add_subplot(grid_spec[2, 1])
+    ax8.set_xlim([5, 9])
+    ax8.set_ylim([0, 1200])
+    ax8.set_xlabel('Weekly mean keel draft [m]')
+    ax8.set_ylabel('Weekly number of ridges [-]')
+    ax8.set_title('Simulated')
+    ax8.scatter(mean_keel_draft_simulated, number_ridges_simulated, color='blue', alpha=0.2, label='simulated number of ridges')
+    x = np.arange(0, 9, 0.001)
+    ax8.plot(x, a1 * (x-5)** b1, color='k')
+
+    # plot the simulated weekly mean keel draft over mean keel draft
+    ax10 = fig_overview.add_subplot(grid_spec[3, 0])
+    ax10.set_xlabel('Measured [m]')
+    ax10.set_ylabel('Simulated [m]')
+    ax10.set_title('Mean keel draft')
+    x, y = probabilistic_helper_functions.quantil_quantil_plotData(mean_keel_draft, mean_keel_draft_simulated)
+    ax10.plot(x, y, '+', color='tab:blue', label='mean keel draft')
+    ax10.plot(x, x, color='k', label='y=x')
+
+    # plot the simulated weekly number of ridges over the measured number of ridges
+    ax11 = fig_overview.add_subplot(grid_spec[3, 1])
+    ax11.set_xlabel('Measured [-]')
+    ax11.set_ylabel('Simulated [-]')
+    ax11.set_title('Number of ridges')
 
     print("done")
 

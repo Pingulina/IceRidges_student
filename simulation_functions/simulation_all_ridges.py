@@ -112,11 +112,14 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
     # simulation of the number of ridges
     number_ridges_simulated = a1 * (mean_keel_draft-5)** b1 * prob_distri_normalized_number_ridges_random
 
+    # normalized number of simulated ridges
+    number_ridges_simulated_normalized = number_ridges_simulated / (a1 * (mean_keel_draft_simulated-5)** b1 +1)
+
     # main simulation
     # Monte-Carlo simulation
     mean_keel_draft_simulation = np.zeros((100, len(level_ice_mode))) # MALL (Matlab names)
     number_ridges_simulation = np.zeros((100, len(level_ice_mode)), dtype=int) # NALL
-    draft_reshape_simulation = np.zeros((100, len(level_ice_mode))) # Dsimsim
+    draft_reshape_simulation = [] # Dsimsim
     for mc_index in range(100):
         mean_keel_draft_simulation[mc_index] = LI_linear_regression_fn(level_ice_mode) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft_mean, size=len(level_ice_mode))
 
@@ -124,13 +127,24 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
         beta = 0.294520039217058 # from matlab code
 
         # thickness-numberRidges relationship
-        thickness_numberRidges_distribution = scipy.stats.gamma.rvs(alpha, scale=1/beta, size=len(level_ice_mode))
+        thickness_numberRidges_distribution = scipy.stats.gamma.rvs(alpha, scale=beta, size=len(level_ice_mode)) # in Matlab: R_h2n_s
         a2 = 84.69
         b2 = 1.318
-        number_ridges_simulation[mc_index] = np.round(a2 * (mean_keel_draft-5)** b2 * thickness_numberRidges_distribution).astype(int)
-        draft_reshape_simulation[mc_index] = np.concatenate([5 + np.random.exponential(scale = mean_keel_draft_simulation[mc_index][i] -5, size=number_ridges_simulation[mc_index][i]) for i in range(len(mean_keel_draft_simulation[mc_index]))])
+        number_ridges_simulation[mc_index] = np.round(a2 * (level_ice_mode)** b2 * thickness_numberRidges_distribution).astype(int) # Nsimulated
+        draft_reshape_simulation.append(np.concatenate([5 + np.random.exponential(scale = mean_keel_draft_simulation[mc_index][i] -5, size=number_ridges_simulation[mc_index][i]) for i in range(len(mean_keel_draft_simulation[mc_index]))]))
+    draft_reshape_simulation = np.concatenate(draft_reshape_simulation)
 
-        # Matlab S010 lines 145-194
+
+    # histogram calculation for simulated ridge draft
+    number_bins_draft_reshape_simulation = 71
+    hist_bins = np.linspace(5, 40, number_bins_draft_reshape_simulation)
+    hist_draft_reshape_simulation, bin_edges_draft_reshape_simulation = np.histogram(draft_reshape_simulation, bins=hist_bins, density=True)
+
+    # histogram calculation for measured ridge draft
+    number_bins_draft_rc = 71
+    hist_bins = np.linspace(5, 40, number_bins_draft_rc)
+    hist_draft_rc, bin_edges_draft_rc = np.histogram(draft_rc, bins=hist_bins, density=True)
+
 
 
 
@@ -221,7 +235,19 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
     x = np.arange(0, 9, 0.001)
     ax8.plot(x, a1 * (x-5)** b1, color='k')
 
-    # plot the simulated weekly mean keel draft over mean keel draft
+    # plot the simulated weekly number of ridges over the measured number of ridges
+    ax9 = fig_overview.add_subplot(grid_spec[2, 2])
+    ax9.set_xlabel('Measured [-]')
+    ax9.set_ylabel('Simulated [-]')
+    ax9.set_title('Number of ridges')
+    ax9.set_yscale('log')
+    draft_reshape_simulation_epp_x, draft_reshape_simulation_epp_y = probabilistic_helper_functions.exceedence_probability(draft_reshape_simulation)
+    ax9.scatter(draft_reshape_simulation_epp_x, draft_reshape_simulation_epp_y, color='tab:red', label='simulated mean keel draft')
+    draft_ridge_epp_x, draft_ridge_epp_y = probabilistic_helper_functions.exceedence_probability(draft_rc)
+    ax9.scatter(draft_ridge_epp_x, draft_ridge_epp_y, color='tab:green', label='deepest weekly ridge')
+
+
+    # plot the qq-plot of simulated weekly mean keel draft over mean keel draft
     ax10 = fig_overview.add_subplot(grid_spec[3, 0])
     ax10.set_xlabel('Measured [m]')
     ax10.set_ylabel('Simulated [m]')
@@ -230,11 +256,49 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
     ax10.plot(x, y, '+', color='tab:blue', label='mean keel draft')
     ax10.plot(x, x, color='k', label='y=x')
 
-    # plot the simulated weekly number of ridges over the measured number of ridges
+
+    # plot the qq-plot simulated weekly number of ridges over the measured number of ridges
     ax11 = fig_overview.add_subplot(grid_spec[3, 1])
     ax11.set_xlabel('Measured [-]')
     ax11.set_ylabel('Simulated [-]')
-    ax11.set_title('Number of ridges')
+    ax11.set_title('Weekly number of ridges')
+    x, y = probabilistic_helper_functions.quantil_quantil_plotData(number_ridges, number_ridges_simulated)
+    ax11.plot(x, y, '+', color='tab:blue', label='number of ridges')
+    ax11.plot(x, x, color='k', label='y=x')
+
+
+    # plot the qq-plot of all ridges depth simulation vs. measured
+    ax12 = fig_overview.add_subplot(grid_spec[3, 2])
+    ax12.set_xlabel('Measured [m]')
+    ax12.set_ylabel('Simulated [m]')
+    ax12.set_title('Ridge draft')
+    x, y = probabilistic_helper_functions.quantil_quantil_plotData(draft_rc, draft_reshape_simulation)
+    ax12.plot(x, y, '+', color='tab:red', label='all ridges')
+    ax12.plot(x, x, color='k', label='y=x')
+
+
+    # plot the normalized weekly number of ridges over the weekly mean keel draft
+    ax13 = fig_overview.add_subplot(grid_spec[4, 0])
+    ax13.set_xlim([5, 9])
+    ax13.set_ylim([0, 4])
+    ax13.set_xlabel('Weekly mean keel draft [m]')
+    ax13.set_ylabel('Normalized weekly number of ridges [-]')
+    ax13.set_title('Simulated')
+    ax13.scatter(mean_keel_draft_simulated, number_ridges_simulated_normalized, color='blue', alpha=0.2, label='simulated number of ridges')
+
+
+    # plot the histogram of the draft of all ridges and the simulated draft of all ridges
+    ax14 = fig_overview.add_subplot(grid_spec[4, 1:3])
+    ax14.set_xlim([5, 40])
+    ax14.set_xlabel('Draft [m]')
+    ax14.set_ylabel('Probability density [-]')
+    ax14.set_title('Ridge draft')
+    ax14.set_yscale('log')
+    ax14.bar(bin_edges_draft_reshape_simulation[:-1], hist_draft_reshape_simulation, align='edge', color='k', alpha=0.5, zorder=0, width=(max(bin_edges_draft_reshape_simulation)-min(bin_edges_draft_reshape_simulation))/number_bins_draft_reshape_simulation, label='simulated')
+    ax14.bar(bin_edges_draft_rc[:-1], hist_draft_rc, align='edge', color='tab:green', alpha=0.5, zorder=0, width=(max(bin_edges_draft_rc)-min(bin_edges_draft_rc))/number_bins_draft_rc, label='measured')
+
+
+
 
     print("done")
 

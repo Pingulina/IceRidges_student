@@ -146,7 +146,21 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
     hist_draft_rc, bin_edges_draft_rc = np.histogram(draft_rc, bins=hist_bins, density=True)
 
 
+    # do the computations for the confidence intervals
+    percentile_number_steps = 100000
+    # initialize percentile_mean_y
+    percentile_mean_y = np.zeros((percentile_number_steps, len(level_ice_mode)))
+    # repeat draft_deepest_weekly_ridge_simulated_repYears_sorted for 100000 times with randomized factor (make a matrix)
+    for i in range(percentile_number_steps):
+        draft_mean_weekly_ridge_simulated_repYears_tmp = LI_linear_regression_fn(level_ice_mode) * scipy.stats.norm.rvs(*prob_distri_normalized_weekly_draft_mean, size=len(level_ice_mode))
+        percentile_mean_y[i, :] = np.sort(draft_mean_weekly_ridge_simulated_repYears_tmp)
 
+    # compute the percentiles (percentile for every week in this season)
+    percentile_mean_1 = np.percentile(percentile_mean_y, 1, axis=0)
+    percentile_mean_5 = np.percentile(percentile_mean_y, 5, axis=0)
+    percentile_mean_50 = np.percentile(percentile_mean_y, 50, axis=0)
+    percentile_mean_95 = np.percentile(percentile_mean_y, 95, axis=0)
+    percentile_mean_99 = np.percentile(percentile_mean_y, 99, axis=0)
 
 
 
@@ -288,7 +302,7 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
 
 
     # plot the histogram of the draft of all ridges and the simulated draft of all ridges
-    ax14 = fig_overview.add_subplot(grid_spec[4, 1:3])
+    ax14 = fig_overview.add_subplot(grid_spec[4, 1])
     ax14.set_xlim([5, 40])
     ax14.set_xlabel('Draft [m]')
     ax14.set_ylabel('Probability density [-]')
@@ -298,8 +312,21 @@ def simulate_all_ridges(year=None, loc=None, dict_mooring_locations=None):
     ax14.bar(bin_edges_draft_rc[:-1], hist_draft_rc, align='edge', color='tab:green', alpha=0.5, zorder=0, width=(max(bin_edges_draft_rc)-min(bin_edges_draft_rc))/number_bins_draft_rc, label='measured')
 
 
+    # plot confidence intervals of the mean simulated ridge (percentiles)
+    ax15 = fig_overview.add_subplot(grid_spec[4, 2])
+    ax15.set_xlabel('Weekly maximum rigde keel draft [m]')
+    ax15.set_ylabel('Exceedence probability [-]')
+    ax15.set_xlim([0, 10])
+    # log scale for y-axis
+    ax15.set_yscale('log')
+
+    counter_years = np.arange(len(level_ice_mode), 0, -1)/len(level_ice_mode)
+    
+    ax15.fill_betweenx(counter_years, percentile_mean_1, percentile_mean_99, color='tab:blue', alpha=0.2, label='98%')
+    ax15.fill_betweenx(counter_years, percentile_mean_5, percentile_mean_95, color='tab:blue', alpha=0.4, label='90%')
+    ax15.plot(percentile_mean_50, counter_years, color='tab:blue', label='50\%')
 
 
-    print("done")
+    input("Press any key to continue...")
 
 

@@ -56,7 +56,7 @@ def main():
     # sdr.simulate_deepest_ridge()
 
     ### uncomment the following line to run the simulation_all_ridges.py file
-    sar.simulate_all_ridges()
+    # sar.simulate_all_ridges()
 
     return None
 

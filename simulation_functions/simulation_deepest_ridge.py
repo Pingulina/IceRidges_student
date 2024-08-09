@@ -221,13 +221,12 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     ax8.set_yscale('log')
 
     counter_years = np.arange(len(level_ice_mode), 0, -1)/len(level_ice_mode)
-    counter_years_2 = np.concatenate([counter_years, counter_years[::-1]])
-    percentile_1_2 = np.concatenate([percentile_1, percentile_99[::-1]])
-    percentile_5_2 = np.concatenate([percentile_5, percentile_95[::-1]])
     
     ax8.fill_betweenx(counter_years, percentile_1, percentile_99, color='tab:blue', alpha=0.2, label='98%')
     ax8.fill_betweenx(counter_years, percentile_5, percentile_95, color='tab:blue', alpha=0.4, label='90%')
     ax8.plot(percentile_50, counter_years, color='tab:blue', label='50\%')
+
+    input("Press Enter to continue...")
 
 
 

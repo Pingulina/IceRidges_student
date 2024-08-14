@@ -14,4 +14,7 @@ def import_module(module_name, module_dir_relative_to_cwd):
     # Dynamically import the module using the built-in __import__ function
     module = __import__(module_name)
 
+    if module_name[0:9] == 'constants':
+        return module.constants
+
     return module

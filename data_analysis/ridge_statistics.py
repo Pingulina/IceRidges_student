@@ -25,14 +25,16 @@ intersections = import_module('intersections', 'helper_functions')
 constants = import_module('constants', 'helper_functions')
 cdf = import_module('cdf', 'helper_functions')
 ridge_statistics_plot = import_module('ridge_statistics_plot', 'plot_functions')
+ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
 dict2json = import_module('dict2json', 'data_handling')
 
-def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveAsJson=False):
+def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveAsJson=False, run_as_app=False):
     """Do some statistics; need to be more description
     
     """
     # years = list(range(years[0], years[1]+1))
     # load the preprocessed data from the weekly_data.json file from the folder weekly_data in Data
+    print("Extracting ridge statistics.")
     pathName = os.getcwd()
     path_to_json = os.path.join(pathName, 'Data', 'uls_data')
 
@@ -201,17 +203,21 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
                     
             # plot the data in different plots (one figure) (one figure per location and year)
             if constants.make_plots:
-                figure_ridge_statistics = ridge_statistics_plot.plot_per_location(dateNum, draft, dateNum_LI, draft_mode, dateNum_rc, draft_rc, dateNum_rc_pd, 
+                if not run_as_app:
+                    figure_ridge_statistics = ridge_statistics_plot.plot_per_location(dateNum, draft, dateNum_LI, draft_mode, dateNum_rc, draft_rc, dateNum_rc_pd, 
                                                                                   draft_deepest_ridge, deepest_mode_weekly, R_no, mean_keel_draft, draft_max_weekly, 
                                                                                   week_to_keep)
+                    # save the plot
+                    pathName_thisPlot = os.path.join(constants.pathName_plots, 'ridge_statistics')
+                    if not os.path.exists(pathName_thisPlot):
+                        os.makedirs(pathName_thisPlot)
+                    figure_ridge_statistics.savefig(os.path.join(pathName_thisPlot, f"ridge_statistics_{year}{loc}.png"))
+                    # close the plot
+                    plt.close(figure_ridge_statistics)
+                # else:
+                #     figure_ridge_statistics = ridge_statistics_plot_plotly.plot_per_location(dateNum, draft, dateNum_LI, draft_mode, dateNum_rc, draft_rc, dateNum_rc_pd, draft_deepest_ridge, deepest_mode_weekly, week_to_keep, R_no)
                 
-                # save the plot
-                pathName_thisPlot = os.path.join(constants.pathName_plots, 'ridge_statistics')
-                if not os.path.exists(pathName_thisPlot):
-                    os.makedirs(pathName_thisPlot)
-                figure_ridge_statistics.savefig(os.path.join(pathName_thisPlot, f"ridge_statistics_{year}{loc}.png"))
-                # close the plot
-                plt.close(figure_ridge_statistics)
+                
 
 
         # # store dict_yearly to dict_ridge_statistics
@@ -228,18 +234,21 @@ def ridge_statistics(poss_mooring_locs=['a', 'b', 'c', 'd'], years=[2004], saveA
             
         # plot the data of all mooring locations from this year
         if constants.make_plots:
-            figure_ridge_statistics = ridge_statistics_plot.plot_per_year(dict_yearly)
+            if not run_as_app:
+                figure_ridge_statistics = ridge_statistics_plot.plot_per_year(dict_yearly)
 
-            # save the plot
-            pathName_thisPlot = os.path.join(constants.pathName_plots, 'ridge_statistics')
-            if not os.path.exists(pathName_thisPlot):
-                os.makedirs(pathName_thisPlot)
-            figure_ridge_statistics.savefig(os.path.join(pathName_thisPlot, f"ridge_statistics_{year}_all.png"))
-            # close the plot
-            plt.close(figure_ridge_statistics)
+                # save the plot
+                pathName_thisPlot = os.path.join(constants.pathName_plots, 'ridge_statistics')
+                if not os.path.exists(pathName_thisPlot):
+                    os.makedirs(pathName_thisPlot)
+                figure_ridge_statistics.savefig(os.path.join(pathName_thisPlot, f"ridge_statistics_{year}_all.png"))
+                # close the plot
+                plt.close(figure_ridge_statistics)
 
-            print(f"Plots saved at {pathName_thisPlot}.")
+                print(f"Plots saved at {pathName_thisPlot}.")
 
+    if run_as_app:
+        return figure_ridge_statistics
     return None
     # return dict_ridge_statistics
 

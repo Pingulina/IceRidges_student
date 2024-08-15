@@ -2,7 +2,7 @@
 import os
 import json
 
-def mooring_locations(storage_path = None):
+def mooring_locations(storage_path = None, use_existing = None):
     """Return the mooring locations (lat and lon) for the measurements for all measured years
     :param storage_path: (optional), str, path to the folder where the mooring_locations.json file should be stored
     :return: dictionary with the mooring locations
@@ -12,17 +12,25 @@ def mooring_locations(storage_path = None):
     if storage_path is not None:
         file_storage = os.path.join(storage_path, 'mooring_locations.json')
         if os.path.exists(file_storage):
-            while True: # loop until the user gives a valid input
-                use_existing = input(f"The file {file_storage} already exists. Do you want to use the existing file (Y/y) or create a new one (N/n)?")
-                if use_existing == 'Y' or use_existing == 'y':
-                    with open(file_storage, 'r') as file:
-                        mooring_dict = json.load(file)
-                    print(f"Mooring locations loaded from {file_storage}")
-                    return mooring_dict
-                elif use_existing == 'N' or use_existing == 'n':
-                    break
-                else:
-                    print("Invalid input. Please enter Y/y or N/n")
+            if use_existing is None:
+                while True: # loop until the user gives a valid input
+                    use_existing = input(f"The file {file_storage} already exists. Do you want to use the existing file (Y/y) or create a new one (N/n)?")
+                    if use_existing == 'Y' or use_existing == 'y':
+                        with open(file_storage, 'r') as file:
+                            mooring_dict = json.load(file)
+                        print(f"Mooring locations loaded from {file_storage}")
+                        return mooring_dict
+                    elif use_existing == 'N' or use_existing == 'n':
+                        break
+                    else:
+                        print("Invalid input. Please enter Y/y or N/n")
+            elif use_existing == True:
+                with open(file_storage, 'r') as file:
+                    mooring_dict = json.load(file)
+                print(f"Mooring locations loaded from {file_storage}")
+                return mooring_dict
+            else:
+                raise ValueError("Invalid input for use_existing. Use True or False or None")
         
     path_name = r"C:\Users\cls8575\Documents\NTNU\IceRidges-main\Data_Beaufort_Gyre_Exploration_Project"
     mooring_dict = {}

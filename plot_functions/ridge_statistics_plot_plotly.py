@@ -18,10 +18,10 @@ def plot_per_location(json_data, year=2004, loc='a'):
     :param R_no: numpy array, number of ridges
     :return: fig: plotly figure, figure with the ridge statistics
     """
+    print('plot_per_location plotly')
     ### idea: plot function independent of the ridge_statistics function (load json file to get the data)
     # get the data from the json file (it contains a dict)
-    dateNum = json_data[loc]['dateNum']
-    draft = json_data[loc]['draft']
+
     dateNum_LI = json_data[loc]['dateNum_LI']
     draft_mode = json_data[loc]['draft_mode']
     dateNum_rc = json_data[loc]['dateNum_rc']
@@ -31,6 +31,9 @@ def plot_per_location(json_data, year=2004, loc='a'):
     deepest_mode_weekly = json_data[loc]['deepest_mode_weekly']
     week_to_keep = json_data[loc]['week_to_keep']
     number_ridges = json_data[loc]['number_ridges']
+
+    dateNum = np.concatenate(json_data[loc]['keel_dateNum'])
+    draft = np.concatenate(json_data[loc]['keel_draft'])
 
 
     # Create a subplot figure with 2 rows and 2 columns

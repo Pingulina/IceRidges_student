@@ -1,0 +1,10 @@
+/* assets/styles.css */
+.button-default {
+    background-color: #f0f0f0;
+    color: #000;
+}
+
+.button-active {
+    background-color: #007bff;
+    color: #fff;
+}

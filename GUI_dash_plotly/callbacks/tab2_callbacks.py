@@ -1,4 +1,4 @@
-from dash import Output, Input
+from dash import Output, Input, State, dcc, html
 import json
 import os
 import sys
@@ -17,25 +17,29 @@ ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'pl
 def register_tab2_callbacks(app):
     # Callback to handle the button click for extract ridge levelIce data in Tab 2
     @app.callback(
-        Output('simulation-output', 'children', allow_duplicate=True),
+        Output('simulation-progress-output', 'children', allow_duplicate=True),
         Input('run-extract_ridge_LI_data-button', 'n_clicks'),
+        State('selected-years-locations-store', 'data'),
         prevent_initial_call=True
     )
-    def run_extract_ridge_LI_data(n_clicks):
+    def run_extract_ridge_LI_data(n_clicks, years_locs):
         if n_clicks > 0:
-            extract_ridge_LI_data.extract_ridge_LI_data(terminal_use=False, change_seasons=['2004-2005'], new_locations=['a', 'b'], overwrite=True, use_existing_mooringLocs=True)
-            return 'Simulation has been run. Check the console for output.'
+            feedback_message = 'Simulation is running...'
+            extract_ridge_LI_data.extract_ridge_LI_data(terminal_use=False, dict_mooring_locations=years_locs)
+            feedback_message = 'Simulation has been run. Check the console for output.'
+            return feedback_message
         return ''
 
     # Callback to handle the button click for ridge statistics in Tab 2
     @app.callback(
-        Output('simulation-output', 'children', allow_duplicate=True),
+        Output('ridge_statistics-output', 'children', allow_duplicate=True),
         Input('run-ridge_statistics-button', 'n_clicks'),
+        State('selected-years-locations-store', 'data'),
         prevent_initial_call=True
     )
-    def run_ridge_statistics(n_clicks):
+    def run_ridge_statistics(n_clicks, years_locs):
         if n_clicks > 0:
-            ridge_statistics.ridge_statistics(years=[2004], poss_mooring_locs=['a'], saveAsJson=True, run_as_app=True)
+            ridge_statistics.ridge_statistics(years_locs_dict=years_locs, saveAsJson=True, run_as_app=True)
             with open(os.path.join(constants.pathName_dataResults, 'ridge_statistics', f"ridge_statistics_{2004}{'a'}.json"), 'r') as f:
                 json_data = json.load(f)
             return 'Simulation has been run. Check the console for output.', json_data

@@ -22,65 +22,53 @@ d2d = import_module('data2dict', 'initialization_preparation')
 constants = import_module('constants', 'helper_functions')
 
 
-def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0.5, terminal_use=True, change_seasons=None, new_locations=None, use_existing_mooringLocs=None):
+def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0.5, terminal_use=True, use_existing_mooringLocs=None, dict_mooring_locations=None):
     """sort the data from the json file into weekly data and store it back to json file
     :param estimate_hourly: bool, optional, if True, the hourly data is estimated from the available data
     :param years: list, optional, list of years to be processed
     :param mooring_locations: list, optional, list of mooring locations to be processed
     :param overwrite: bool, optional, if True, the existing files are overwritten, if False, the existing files are skipped
     :param sample_rate: float, optional, sample rate of the data in Hz
+    :param terminal_use: bool, optional, if True, the user can choose the years and locations in the terminal. Set to false, if run by GUI.
+    :param use_existing_mooringLocs: bool, optional, if True, the existing mooring locations are used, if False, the new mooring locations are used
+    :param dict_mooring_locations: dict, optional, dictionary with the mooring locations
     :return: None
     """
     
-    dict_mooring_locations = mooring_locs.mooring_locations(storage_path='Data', use_existing=use_existing_mooringLocs) # dictionary with the mooring locations
-    if terminal_use:
-        # choose, which locations from which years should be processed 
-        # TODO: choosing locations and years should be done via the GUI (table with tickboxes)
-        print(f"Data from the following seasons was found and will be processed by default: {dict_mooring_locations.keys()}")
-        change_default_seasons = input("Do you want to change the default seasons? - Y/y, N/n:")
-        if change_default_seasons == 'Y' or change_default_seasons == 'y':
-            change_seasons = input("Enter the seasons to be processed (separated by a comma), format: start_year-end_year: ").split(',')
-            for season in change_seasons:
-                if season not in dict_mooring_locations:
-                    print(f"Season {season} not found in the data.")
-                    change_seasons.remove(season)
-                    if len(change_seasons)==0:
-                        print("No season to evaluate. This need to be catched!!!")
+    if dict_mooring_locations is None and terminal_use:
+        dict_mooring_locations = mooring_locs.mooring_locations(storage_path='Data', use_existing=use_existing_mooringLocs) # dictionary with the mooring locations
+        if terminal_use:
+            # choose, which locations from which years should be processed 
+            # TODO: choosing locations and years should be done via the GUI (table with tickboxes)
+            print(f"Data from the following seasons was found and will be processed by default: {dict_mooring_locations.keys()}")
+            change_default_seasons = input("Do you want to change the default seasons? - Y/y, N/n:")
+            if change_default_seasons == 'Y' or change_default_seasons == 'y':
+                change_seasons = input("Enter the seasons to be processed (separated by a comma), format: start_year-end_year: ").split(',')
+                for season in change_seasons:
+                    if season not in dict_mooring_locations:
+                        print(f"Season {season} not found in the data.")
+                        change_seasons.remove(season)
+                        if len(change_seasons)==0:
+                            print("No season to evaluate. This need to be catched!!!")
 
-                print(f"For the season {season}, the following locations will be processed by default: {dict_mooring_locations[season].keys()}")
-                change_default_locations = input("Do you want to change the default locations? - Y/y, N/n:")
-                if change_default_locations == 'Y' or change_default_locations == 'y':
-                    new_locations = input(f"Enter the locations to be processed for the season {season} (separated by a comma): ").split(',')
-                    for loc in new_locations:
-                        if loc not in dict_mooring_locations[season]:
-                            print(f"Location {loc} not found in the data.")
-                            new_locations.remove(loc)
-                    # remove all locations from the season, that are not in new_locations
-                    dict_mooring_locations[season] = {loc: dict_mooring_locations[season][loc] for loc in new_locations}
-                # remove all seasons from the dict, that are not in change_seasons
-            dict_mooring_locations = {season: dict_mooring_locations[season] for season in change_seasons}
-            newLine = '\n'
-            print(f"The following seasons will be processed: \n{newLine.join([f'{year}: {list(dict_mooring_locations[year].keys())}' for year in dict_mooring_locations.keys()])}")
-    else:
-        # check, if the seasons and locations are in the dict_mooring_locations
-        if change_seasons is not None:
-            for season in change_seasons:
-                if season not in dict_mooring_locations:
-                    change_seasons.remove(season)
-                    if len(change_seasons)==0:
-                        print("No season to evaluate. This need to be catched!!!")
-                if new_locations is not None:
-                    for loc in new_locations:
-                        if loc not in dict_mooring_locations[season]:
-                            new_locations.remove(loc)
-                    # remove all locations from the season, that are not in new_locations
-                    dict_mooring_locations[season] = {loc: dict_mooring_locations[season][loc] for loc in new_locations}
-                else:
-                    raise ValueError("new_locations must be specified, if terminal_use is False")
-            # remove all seasons from the dict, that are not in change_seasons
-            dict_mooring_locations = {season: dict_mooring_locations[season] for season in change_seasons}
+                    print(f"For the season {season}, the following locations will be processed by default: {dict_mooring_locations[season].keys()}")
+                    change_default_locations = input("Do you want to change the default locations? - Y/y, N/n:")
+                    if change_default_locations == 'Y' or change_default_locations == 'y':
+                        new_locations = input(f"Enter the locations to be processed for the season {season} (separated by a comma): ").split(',')
+                        for loc in new_locations:
+                            if loc not in dict_mooring_locations[season]:
+                                print(f"Location {loc} not found in the data.")
+                                new_locations.remove(loc)
+                        # remove all locations from the season, that are not in new_locations
+                        dict_mooring_locations[season] = {loc: dict_mooring_locations[season][loc] for loc in new_locations}
+                    # remove all seasons from the dict, that are not in change_seasons
+                dict_mooring_locations = {season: dict_mooring_locations[season] for season in change_seasons}
+                newLine = '\n'
+                print(f"The following seasons will be processed: \n{newLine.join([f'{year}: {list(dict_mooring_locations[year].keys())}' for year in dict_mooring_locations.keys()])}")
+            else:
+                raise ValueError("If terminal_use is false, the dict_mooring_locations must be provided.")
         else:
-            raise ValueError("change_seasons must be specified, if terminal_use is False")
+            pass
 
     storage_path = os.path.join(os.getcwd(), 'Data', 'uls_data')
     for mooring_period in dict_mooring_locations:

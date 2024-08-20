@@ -1,4 +1,12 @@
 from dash import Input, Output, State, dcc, html
+import os
+import sys
+
+### import_module.py is a helper function to import modules from different directories, it is located in the base directory
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+from import_module import import_module
+constants = import_module('constants', 'helper_functions')
 
 
 #### Callbacks for Tab 1  
@@ -84,4 +92,7 @@ def register_tab1_callbacks(app):
             for row in rows:
                 stored_constants[row['Parameter']] = row['New Value']
             print(stored_constants)
+            # save the new constants to the global variable constants
+            for key, value in stored_constants.items():
+                constants[key] = value
         return stored_constants

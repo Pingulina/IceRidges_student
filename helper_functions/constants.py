@@ -25,3 +25,9 @@ constants['min_draft'] = 5.0 # minimum draft for the rayleigh criterion
 constants['threshold_ridges'] = 15 # threshold for the number of ridges per week
 
 constants['make_plots'] = True
+
+
+def update_constants(new_constants):
+    for key, value in new_constants.items():
+        constants[key] = value
+    return constants

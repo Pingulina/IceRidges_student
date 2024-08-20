@@ -16,6 +16,12 @@ def handle_dict(d):
         # if out[k] doesn't exist, create it
         if k not in out:
             out[k] = {}
+        try:
+            v['type']
+        except KeyError:
+            print(f"key: {k}, keys: {v.keys()}")
+        except TypeError:
+            print(f"key: {k}, value: {v}")
         if v['type'] == 'dict':
             out[k] = handle_dict(v)
         elif v['type'] == np.ndarray.__name__: # 'numpy.ndarray'
@@ -34,12 +40,29 @@ def handle_dict(d):
             out[k] = v['data']
     return out
 
-def jsonified2dict(dict_data:dict):
+def jsonified2dict(dict_data:dict, get_success:bool=False):
     """Converting numpy stuff back to numpy
     :param dict_data: dictionary to store in the json file
     :type dict_data: dict
     :type file_path: str
     """
-    dict_withNp = handle_dict(dict_data)
+    if get_success:
+        try:
+            dict_withNp = handle_dict(dict_data)
+        except FileNotFoundError:
+            return False, None
+        return True, dict_withNp
+    else:
+        dict_withNp = handle_dict(dict_data)
 
     return dict_withNp
+
+def json2dict(file_path:str, get_success:bool=False):
+    """Converting a json file to a dictionary
+    :param file_path: path to the json file
+    :type file_path: str
+    """
+    with open(file_path, 'r') as file:
+        dict_data = json.load(file)
+    dict_data = jsonified2dict(dict_data, get_success=get_success)
+    return dict_data

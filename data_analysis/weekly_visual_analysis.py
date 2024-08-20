@@ -21,7 +21,7 @@ from import_module import import_module
 # import the date_time_stuff module from the helper_functions directory
 j2np = import_module('json2numpy', 'data_handling')
 constants = import_module('constants', 'helper_functions')
-j2d = import_module('jsonified2dict', 'initialization_preparation')
+j2d = import_module('jsonified2dict', 'data_handling')
 date_time_stuff = import_module('date_time_stuff', 'helper_functions')
 load_data = import_module('load_data', 'data_handling')
 data_analysis_plot = import_module('data_analysis_plot', 'plot_functions')

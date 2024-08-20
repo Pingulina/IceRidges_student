@@ -68,6 +68,7 @@ app.layout = html.Div([
     dcc.Store(id='selected-years-locations-store', storage_type='local'), # store component to hold the selected years and locations
     dcc.Store(id='constants-store', data=constants), # store the constants in a hidden div
     dcc.Store(id='json-data-store', data=mooring_data), # store the JSON data
+    dcc.Store(id='ridge_statistics-output', data={}) # store the ridge statistics output
 ])
 
 ### Import the callback files
@@ -169,6 +170,16 @@ def render_content(tab):
         ])
     elif tab == 'tab-3':
         return html.Div([
+            html.P('Ridge Statistics Visualization:'),
+            html.P('Select the year and location for the plot:'),
+            dcc.Dropdown(
+                id='season-plot-dropdown',
+                placeholder="Select a season"
+            ),
+            dcc.Dropdown(
+                id='location-plot-dropdown',
+                placeholder="Select a location"
+            ),
             dcc.Graph(id='plot-output'),
             html.Button('Load JSON Data', id='load-json-data-button', n_clicks=0, className='button-default'),
             html.Button('Render Plot', id='render-plot-button', n_clicks=0, className='button-default'),

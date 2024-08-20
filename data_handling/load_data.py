@@ -16,7 +16,7 @@ from import_module import import_module
 ### imports using the helper function import_module
 j2np = import_module('json2numpy', 'data_handling')
 constants = import_module('constants', 'helper_functions')
-j2d = import_module('jsonified2dict', 'initialization_preparation')
+j2d = import_module('jsonified2dict', 'data_handling')
 
 
 def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_json_mooring=None, load_dict_ridge_statistics=True, skip_nonexistent_locs=False, robustOption=True):

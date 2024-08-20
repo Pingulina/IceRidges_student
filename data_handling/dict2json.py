@@ -18,6 +18,8 @@ def dict2jsonable(d):
             out[k] = {}
         if isinstance(v, dict):
             out[k] = dict2jsonable(v)
+            # out[k]['data'] = dict2jsonable(v)
+            # out[k]['type'] = type(v).__name__ # get the type of the variable as string
         elif isinstance(v, np.ndarray):
             out[k]['data'] = v.tolist()
             out[k]['type'] = type(v).__name__ # get the type of the variable as string # 'numpy.ndarray'

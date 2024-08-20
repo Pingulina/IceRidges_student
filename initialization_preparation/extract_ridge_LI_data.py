@@ -20,6 +20,7 @@ rc = import_module('rayleigh_criterion', 'helper_functions')
 mooring_locs = import_module('mooring_locations', 'helper_functions')
 d2d = import_module('data2dict', 'initialization_preparation')
 constants = import_module('constants', 'helper_functions')
+d2j = import_module('dict2json', 'data_handling')
 
 
 def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0.5, terminal_use=True, use_existing_mooringLocs=None, dict_mooring_locations=None):
@@ -160,19 +161,26 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
 
 
             # store the data in the dictionarys (to store as json afterwards) 
-            dict_draft[loc_mooring] = {'dateNum': deepcopy(dateNum.tolist()), 'draft': deepcopy(draft.tolist())}
-            dict_draft_ridge[loc_mooring] = {'dateNum': deepcopy(dateNum_rc.tolist()), 'draft': deepcopy(draft_rc.tolist())}
-            dict_draft_LI[loc_mooring] = {'dateNum': deepcopy(dateNum_LI.tolist()), 'draft': deepcopy(draft_LI.tolist()), 'draft_mode': deepcopy(draft_mode.tolist())}
-        
-            # store the dict in the json files (store the raw data for every location separately)
-            with open(os.path.join(storage_path, f"mooring_{yr}-{yr+1}_{loc_mooring}_draft.json"), 'w') as file:
-                json.dump(dict_draft, file)
-        # store the dict in the json files (store the ridge and level ice data for all locations together)
-        with open(os.path.join(storage_path, f"mooring_{yr}-{yr+1}_ridge.json"), 'w') as file:
-            json.dump(dict_draft_ridge, file)
+            # dict_draft[loc_mooring] = {'dateNum': deepcopy(dateNum.tolist()), 'draft': deepcopy(draft.tolist())}
+            # dict_draft_ridge[loc_mooring] = {'dateNum': deepcopy(dateNum_rc.tolist()), 'draft': deepcopy(draft_rc.tolist())}
+            # dict_draft_LI[loc_mooring] = {'dateNum': deepcopy(dateNum_LI.tolist()), 'draft': deepcopy(draft_LI.tolist()), 'draft_mode': deepcopy(draft_mode.tolist())}
 
-        with open(os.path.join(storage_path, f"mooring_{yr}-{yr+1}_LI.json"), 'w') as file:
-            json.dump(dict_draft_LI, file)
+            dict_draft[loc_mooring] = {'dateNum': deepcopy(dateNum), 'draft': deepcopy(draft)}
+            dict_draft_ridge[loc_mooring] = {'dateNum': deepcopy(dateNum_rc), 'draft': deepcopy(draft_rc)}
+            dict_draft_LI[loc_mooring] = {'dateNum': deepcopy(dateNum_LI), 'draft': deepcopy(draft_LI), 'draft_mode': deepcopy(draft_mode)}
+        
+
+            # store the dict in the json files (store the raw data for every location separately)
+            d2j.dict2json(dict_draft, os.path.join(storage_path, f"mooring_{yr}-{yr+1}_{loc_mooring}_draft.json"))
+            # with open(os.path.join(storage_path, f"mooring_{yr}-{yr+1}_{loc_mooring}_draft.json"), 'w') as file:
+            #     json.dump(dict_draft, file)
+        # store the dict in the json files (store the ridge and level ice data for all locations together)
+        d2j.dict2json(dict_draft_ridge, os.path.join(storage_path, f"mooring_{yr}-{yr+1}_ridge.json"))
+        # with open(os.path.join(storage_path, f"mooring_{yr}-{yr+1}_ridge.json"), 'w') as file:
+        #     json.dump(dict_draft_ridge, file)
+        d2j.dict2json(dict_draft_LI, os.path.join(storage_path, f"mooring_{yr}-{yr+1}_LI.json"))
+        # with open(os.path.join(storage_path, f"mooring_{yr}-{yr+1}_LI.json"), 'w') as file:
+        #     json.dump(dict_draft_LI, file)
 
 
     print(f"Data for draft, ridge draft and level ice draft stored in {storage_path}")

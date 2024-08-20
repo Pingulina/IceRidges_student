@@ -27,6 +27,7 @@ cdf = import_module('cdf', 'helper_functions')
 ridge_statistics_plot = import_module('ridge_statistics_plot', 'plot_functions')
 ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
 dict2json = import_module('dict2json', 'data_handling')
+j2d = import_module('jsonified2dict', 'data_handling')
 
 def ridge_statistics(poss_mooring_locs=None, years=None, years_locs_dict=None, saveAsJson=False, run_as_app=False):
     """Do some statistics; need to be more description
@@ -37,22 +38,34 @@ def ridge_statistics(poss_mooring_locs=None, years=None, years_locs_dict=None, s
     print("Extracting ridge statistics.")
     pathName = os.getcwd()
     path_to_json = os.path.join(pathName, 'Data', 'uls_data')
-
     # preallocate the dict for all years
     # dict_ridge_statistics = dict()
     if years_locs_dict is not None:
         years = [int(year.split('-')[0]) for year in list(years_locs_dict.keys())]
         seasons = list(years_locs_dict.keys())
-
+        print(f"Years: {years}, Seasons: {seasons}")
     # loop over mooring locations and years, if they are existing in the data, do calculations
     for year_index, year in enumerate(years):
         dict_yearly = dict()
         if years_locs_dict is not None:
             poss_mooring_locs = years_locs_dict[seasons[year_index]]
         for loc in poss_mooring_locs:
-            sucess1, dateNum, draft, _ = j2np.json2numpy(os.path.join(path_to_json, f"mooring_{year}-{year+1}_{loc}_draft.json"), loc)
-            sucess2, dateNum_rc, draft_rc, _ = j2np.json2numpy(os.path.join(path_to_json, f"mooring_{year}-{year+1}_ridge.json"), loc)
-            sucess3, dateNum_LI, draft_LI, draft_mode = j2np.json2numpy(os.path.join(path_to_json, f"mooring_{year}-{year+1}_LI.json"), loc)
+            sucess1, dict_draft = j2d.json2dict(os.path.join(path_to_json, f"mooring_{year}-{year+1}_{loc}_draft.json"), get_success=True)
+            sucess2, dict_ridge = j2d.json2dict(os.path.join(path_to_json, f"mooring_{year}-{year+1}_ridge.json"), get_success=True)
+            dict_ridge = dict_ridge[loc]
+            sucess3, dict_LI = j2d.json2dict(os.path.join(path_to_json, f"mooring_{year}-{year+1}_LI.json"), get_success=True)
+            dict_LI = dict_LI[loc]
+            if sucess1 and sucess2 and sucess3:
+                dateNum = dict_draft['dateNum']
+                draft = dict_draft['draft']
+                dateNum_rc = dict_ridge['dateNum']
+                draft_rc = dict_ridge['draft']
+                dateNum_LI = dict_LI['dateNum']
+                draft_LI = dict_LI['draft']
+                draft_mode = dict_LI['draft_mode']
+            # sucess1, dateNum, draft, _ = j2np.json2numpy(os.path.join(path_to_json, f"mooring_{year}-{year+1}_{loc}_draft.json"), loc)
+            # sucess2, dateNum_rc, draft_rc, _ = j2np.json2numpy(os.path.join(path_to_json, f"mooring_{year}-{year+1}_ridge.json"), loc)
+            # sucess3, dateNum_LI, draft_LI, draft_mode = j2np.json2numpy(os.path.join(path_to_json, f"mooring_{year}-{year+1}_LI.json"), loc)
             if not (sucess1 and sucess2 and sucess3):
                 print(f"Data for {loc} in {year} not found.")
                 continue
@@ -252,7 +265,7 @@ def ridge_statistics(poss_mooring_locs=None, years=None, years_locs_dict=None, s
 
     if not run_as_app and constants.make_plots:
         return figure_ridge_statistics
-    return None
+    return
     # return dict_ridge_statistics
 
     

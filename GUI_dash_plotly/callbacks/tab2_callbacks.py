@@ -32,7 +32,8 @@ def register_tab2_callbacks(app):
 
     # Callback to handle the button click for ridge statistics in Tab 2
     @app.callback(
-        Output('ridge_statistics-output', 'children', allow_duplicate=True),
+        Output('simulation-progress-output', 'children', allow_duplicate=True),
+        Output('ridge_statistics-output', 'data'),
         Input('run-ridge_statistics-button', 'n_clicks'),
         State('selected-years-locations-store', 'data'),
         prevent_initial_call=True
@@ -40,7 +41,15 @@ def register_tab2_callbacks(app):
     def run_ridge_statistics(n_clicks, years_locs):
         if n_clicks > 0:
             ridge_statistics.ridge_statistics(years_locs_dict=years_locs, saveAsJson=True, run_as_app=True)
-            with open(os.path.join(constants.pathName_dataResults, 'ridge_statistics', f"ridge_statistics_{2004}{'a'}.json"), 'r') as f:
-                json_data = json.load(f)
+            print('Simulation has been run. Check the console for output.')
+            json_data = {}
+            for season in years_locs.keys():
+                year = season.split('-')[0] # get the year, which is the first part of the season
+                json_data[season] = {}
+                for location in years_locs[season]:
+                    with open(os.path.join(constants.pathName_dataResults, 'ridge_statistics', f"ridge_statistics_{year}{location}.json"), 'r') as f:
+                        json_data[season][location] = json.load(f)
             return 'Simulation has been run. Check the console for output.', json_data
         return '', {}
+    
+

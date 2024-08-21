@@ -88,10 +88,10 @@ def register_tab3_callbacks(app):
 
     @app.callback(
         Output('season-plot-dropdown', 'options'),
-        [Input('ridge_statistics-output', 'data'),
-         Input('tabs-all', 'value')],
+        #[Input('ridge_statistics-output', 'data'),
+         Input('tabs-all', 'value'),
     )
-    def update_seasons_dropdown(data, tab):
+    def update_seasons_dropdown(tab):
             if tab == 'tab-3':
                 # list all files in data_analysis/ridge_statistics
                 files = os.listdir(os.path.join(constants.pathName_dataResults, 'ridge_statistics'))
@@ -113,10 +113,9 @@ def register_tab3_callbacks(app):
     @app.callback(
         Output('location-plot-dropdown', 'options'),
         Input('season-plot-dropdown', 'value'),
-        State('ridge_statistics-output', 'data'),
         prevent_initial_call=True
     )
-    def update_location_dropdown(season, data):
+    def update_location_dropdown(season):
         files = os.listdir(os.path.join(constants.pathName_dataResults, 'ridge_statistics'))
         locations = []
         year = season.split('-')[0]

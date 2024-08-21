@@ -11,49 +11,39 @@ constants = import_module('constants', 'helper_functions')
 
 #### Callbacks for Tab 1  
 def register_tab1_callbacks(app):
-    # # Callback to store the selected values for years and locations  
-    # @app.callback(
-    #     Output('selected-years-locations-store', 'data'),
-    #     [Input('store-selected-years-locations-button', 'n_clicks'),
-    #     Input('year-location-checklist', 'value')],
-    #     prevent_initial_call=True
-    # )
-    # def store_selected_values(n_clicks, selected_values):
-    #     print(f"selected_values {selected_values}, n_clicks {n_clicks}")
-    #     return selected_values
-    
-    # # Callback to restore the selected values for years and locations if the tab is chosen again
-    # @app.callback(
-    #     Output('year-location-selection-checklist', 'value'),
-    #     Input('tabs-all', 'value'),
-    #     State('selected-years-locations-store', 'data')
-    # )
-    # def restore_selected_values(tab_click, stored_values):
-    #     if stored_values is None:
-    #         return []
-    #     return stored_values
-
+    # Callback to update the location checklist
     @app.callback(
         Output('location-checklist', 'options'),
+        Output('location-checklist', 'value'),
         [Input('year-dropdown', 'value')],
-        [State('json-data-store', 'data')]
+        [State('json-data-store', 'data'),
+         State('selected-years-locations-store', 'data')]
     )
-    def update_location_checklist(selected_year, mooring_data):
+    def update_location_checklist(selected_year, mooring_data, current_data):
         if selected_year:
-            return [{'label': location, 'value': f"{selected_year}-{location}"} for location in mooring_data[selected_year]]
-        return []
+            if selected_year in current_data:
+                selected_locations = [f"{selected_year}-{location}" for location in current_data[selected_year]]
+            else:
+                selected_locations = []
+            return [{'label': location, 'value': f"{selected_year}-{location}"} for location in mooring_data[selected_year]], selected_locations
+        return [],[]
 
+    # Callback to update the selected values
     @app.callback(
-        Output('selected-values-display', 'children'),
         Output('selected-years-locations-store', 'data'),
-        [Input('add-button', 'n_clicks')],
+        [Input('add-button-yearLoc', 'n_clicks')],
         [State('year-dropdown', 'value'),
         State('location-checklist', 'value'),
-        State('selected-years-locations-store', 'data')]
+        State('selected-years-locations-store', 'data')],
+        prevent_initial_call=True,
     )
     def update_selected_values(n_clicks, selected_year, selected_locations, current_data):
         if n_clicks > 0 and selected_year and selected_locations:
-            if n_clicks == 1 or current_data is None:
+            print(f"n_clicks: {n_clicks}")
+            print(f"current_data: {current_data}")
+            print(f"selected_year: {selected_year}")
+            print(f"selected_locations: {selected_locations}")
+            if n_clicks == 1 and current_data is None:
                 current_data = {}
             
             current_data[selected_year] = [loc[10:] for loc in selected_locations if loc[0:9] == selected_year]
@@ -67,8 +57,21 @@ def register_tab1_callbacks(app):
             if not current_data[selected_year]:
                 del current_data[selected_year]
             display_list = [html.Li(f"Year: {year}, Locations: {', '.join(locations)}") for year, locations in current_data.items()]
-            return html.Ul(display_list), current_data # Return the list of selected values
-        return html.Ul(), current_data # Return an empty list if no values are selected
+            return current_data # Return the updated current data
+        return current_data # Return the current data if no new values are added
+    
+    # Callback to display the selected values
+    @app.callback(
+        Output('selected-values-display', 'children'), 
+        Input('tabs-all', 'value'),
+        Input('selected-years-locations-store', 'data'),
+        prevent_initial_call=True
+    )
+    def display_selected_values(tab, current_data):
+        if tab == 'tab-1':
+            display_list = [html.Li(f"Year: {year}, Locations: {', '.join(locations)}") for year, locations in current_data.items()]
+            return html.Ul(display_list)
+        return html.Ul()
     
     # Callback to update the table data
     @app.callback(

@@ -32,27 +32,6 @@ with open(json_file_path, 'r') as file:
 # Generate the options for the dropdown of the years
 year_options = [{'label': year, 'value': year} for year in mooring_data.keys()]
 
-
-# # Generate the options for the checklist
-# year_options = []
-# for year, locations in mooring_data.items():
-#     year_options.append(
-#     html.Div([
-#         html.Label(year, style={'margin-right': '10px'}),
-#         dcc.Checklist(
-#             options=[[{'label': location, 'value': f"{year}-{location}"} for location in locations] for year, locations in mooring_data.items()],
-#             value=[],  # No checkboxes marked initially
-#             labelStyle={'display': 'inline-block', 'margin-right': '10px'}
-#         )
-#     ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'}
-#     ))
-
-# year_options = html.Div(year_options, id='year-location-selection-checklist')
-
-# for year, locations in mooring_data.items():
-#     year_options.append({'label': location, 'value': f"{year}-{location}"} for location in locations)
-
-
 ### Initialize the Dash app
 app = dash.Dash(__name__, suppress_callback_exceptions=True) # suppress_callback_exceptions=True is needed to suppress the error message when clicking on the tabs
 
@@ -65,7 +44,7 @@ app.layout = html.Div([
     ]),
     html.Div(id='tabs-content'), # this is where the content of the tabs will be rendered
     html.Div(id='selected-values-display'),
-    dcc.Store(id='selected-years-locations-store', storage_type='local'), # store component to hold the selected years and locations
+    dcc.Store(id='selected-years-locations-store', data={}), # , storage_type='local' # store component to hold the selected years and locations; initialized as empty dictionary
     dcc.Store(id='constants-store', data=constants), # store the constants in a hidden div
     dcc.Store(id='json-data-store', data=mooring_data), # store the JSON data
     dcc.Store(id='ridge_statistics-output', data={}) # store the ridge statistics output
@@ -90,12 +69,6 @@ register_tab3_callbacks(app)
 def render_content(tab):
     if tab == 'tab-1':
         return html.Div([
-            # html.P('Select Seasons and Locations for Analysis:'),
-            # # html.Div(year_options),
-            # year_options,
-            # html.Button('Store Selected Values', id='store-selected-years-locations-button'),
-            # html.Div(id='year-options-container'),  # Placeholder for year options
-
             html.Div([
                 html.Label('Select Year:'),
                 dcc.Dropdown(
@@ -116,7 +89,8 @@ def render_content(tab):
                     ),
                 ], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'top'}
             ),
-            html.Button('Add selected year and location(s)', id='add-button', n_clicks=0, className='button-default'),
+            html.Button('Add selected year and location(s)', id='add-button-yearLoc', n_clicks=0, className='button-default'),
+            # html.Button('Reset selected year(s) and location(s)', id='reset-button-yearLoc', n_clicks=0, className='button-default'),
             html.Div(id='selected-values-display'),
 
             dash_table.DataTable(

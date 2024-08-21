@@ -22,8 +22,10 @@ def register_tab1_callbacks(app):
     def update_location_checklist(selected_year, mooring_data, current_data):
         if selected_year:
             if selected_year in current_data:
+                print(f"selected_year: {selected_year} in current_data")
                 selected_locations = [f"{selected_year}-{location}" for location in current_data[selected_year]]
             else:
+                print(f"selected_year: {selected_year} not in current_data")
                 selected_locations = []
             return [{'label': location, 'value': f"{selected_year}-{location}"} for location in mooring_data[selected_year]], selected_locations
         return [],[]
@@ -38,7 +40,8 @@ def register_tab1_callbacks(app):
         prevent_initial_call=True,
     )
     def update_selected_values(n_clicks, selected_year, selected_locations, current_data):
-        if n_clicks > 0 and selected_year and selected_locations:
+        print(f"n_clicks: {n_clicks}")
+        if n_clicks > 0 and selected_year:
             print(f"n_clicks: {n_clicks}")
             print(f"current_data: {current_data}")
             print(f"selected_year: {selected_year}")
@@ -53,10 +56,10 @@ def register_tab1_callbacks(app):
             current_data[selected_year].sort()
             # sort by year (key)
             current_data = dict(sorted(current_data.items()))
+            print(f"current_data: {current_data}")
             # Remove key, if the list is empty
             if not current_data[selected_year]:
                 del current_data[selected_year]
-            display_list = [html.Li(f"Year: {year}, Locations: {', '.join(locations)}") for year, locations in current_data.items()]
             return current_data # Return the updated current data
         return current_data # Return the current data if no new values are added
     

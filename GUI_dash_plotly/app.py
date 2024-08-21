@@ -46,6 +46,10 @@ app.layout = html.Div([
     html.Div(id='selected-values-display'),
     dcc.Store(id='selected-years-locations-store', data={}), # , storage_type='local' # store component to hold the selected years and locations; initialized as empty dictionary
     dcc.Store(id='constants-store', data=constants), # store the constants in a hidden div
+    dcc.ConfirmDialog(
+        id='confirm',
+        message='',
+    ), # confirm dialog to show the extracted data
     dcc.Store(id='json-data-store', data=mooring_data), # store the JSON data
     dcc.Store(id='ridge_statistics-output', data={}) # store the ridge statistics output
 ])
@@ -124,12 +128,14 @@ def render_content(tab):
     elif tab == 'tab-2':
         return html.Div([
             html.Div([
-                html.P('Extract data:'),
-                html.Button('Extract data', id='run-extract_ridge_LI_data-button', n_clicks=0, className='button-default')
+                html.P('Extract data (might take multiple minutes per location and year):'),
+                html.Button('Extract data', id='run-extract_ridge_LI_data-button', n_clicks=0, className='button-default'),
+                html.Button('Show extracted data', id='show-extracted-data-button', n_clicks=0, className='button-default')
             ]),
             html.Div([
                 html.P('Run Simulation:'),
-                html.Button('Find ridges', id='run-ridge_statistics-button', n_clicks=0, className='button-default')
+                html.Button('Find ridges', id='run-ridge_statistics-button', n_clicks=0, className='button-default'),
+                html.Button('Show computed ridge data', id='show-ridge-data-button', n_clicks=0, className='button-default')
             ]),
             html.Div([
                 html.P('Generate Report:'),

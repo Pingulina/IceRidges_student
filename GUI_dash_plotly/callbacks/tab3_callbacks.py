@@ -63,7 +63,7 @@ def register_tab3_callbacks(app):
             json_data[year][loc]['dateNum_rc'] = deepcopy(np.array(data_tmp[loc]['dateNum']))
             json_data[year][loc]['draft_rc'] = deepcopy(np.array(data_tmp[loc]['draft']))
             print('Ridge data loaded from raw data')
-
+            # print(json_data)
             return json_data
         return {}
 

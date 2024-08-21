@@ -51,11 +51,13 @@ def ridge_statistics(poss_mooring_locs=None, years=None, years_locs_dict=None, s
             poss_mooring_locs = years_locs_dict[seasons[year_index]]
         for loc in poss_mooring_locs:
             sucess1, dict_draft = j2d.json2dict(os.path.join(path_to_json, f"mooring_{year}-{year+1}_{loc}_draft.json"), get_success=True)
+            dict_draft = dict_draft[loc]
             sucess2, dict_ridge = j2d.json2dict(os.path.join(path_to_json, f"mooring_{year}-{year+1}_ridge.json"), get_success=True)
             dict_ridge = dict_ridge[loc]
             sucess3, dict_LI = j2d.json2dict(os.path.join(path_to_json, f"mooring_{year}-{year+1}_LI.json"), get_success=True)
             dict_LI = dict_LI[loc]
             if sucess1 and sucess2 and sucess3:
+                print(dict_draft.keys())
                 dateNum = dict_draft['dateNum']
                 draft = dict_draft['draft']
                 dateNum_rc = dict_ridge['dateNum']

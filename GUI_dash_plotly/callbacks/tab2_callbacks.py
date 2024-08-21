@@ -2,6 +2,7 @@ from dash import Output, Input, State, dcc, html
 import json
 import os
 import sys
+import datetime
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -12,6 +13,7 @@ constants = import_module('constants', 'helper_functions')
 extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_preparation')
 ridge_statistics = import_module('ridge_statistics', 'data_analysis')
 ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
+helping_functions = import_module('helping_functions', 'GUI_dash_plotly')
 
 ### Callbacks for Tab 2
 def register_tab2_callbacks(app):
@@ -29,6 +31,19 @@ def register_tab2_callbacks(app):
             feedback_message = 'Simulation has been run. Check the console for output.'
             return feedback_message
         return ''
+    
+
+    # Callback to handle the button click for showing the extracted data in Tab 2
+    @app.callback(
+        Output('confirm', 'message', allow_duplicate=True),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Input('show-extracted-data-button', 'n_clicks'),
+        prevent_initial_call=True
+    )
+    def show_extracted_data(n_clicks):
+        if n_clicks:
+            return helping_functions.find_data_in_folder(os.path.join(constants.pathName_dataRaw, 'uls_data'))
+        return "", False
 
     # Callback to handle the button click for ridge statistics in Tab 2
     @app.callback(
@@ -53,3 +68,16 @@ def register_tab2_callbacks(app):
         return '', {}
     
 
+
+    
+
+    @app.callback(
+        Output('confirm', 'message', allow_duplicate=True),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Input('show-ridge-data-button', 'n_clicks'),
+        prevent_initial_call=True
+    )
+    def show_extracted_data(n_clicks):
+        if n_clicks:
+            return helping_functions.find_data_in_folder(os.path.join(constants.pathName_dataResults, 'ridge_statistics'))
+        return "", False

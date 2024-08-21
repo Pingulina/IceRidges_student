@@ -22,7 +22,7 @@ def handle_dict(d):
             print(f"key: {k}, keys: {v.keys()}")
         except TypeError:
             print(f"key: {k}, value: {v}")
-        if v['type'] == 'dict':
+        if isinstance(v, dict) and not 'type' in v: #v['type'] == 'dict':
             out[k] = handle_dict(v)
         elif v['type'] == np.ndarray.__name__: # 'numpy.ndarray'
             out[k] = np.array(v['data'])

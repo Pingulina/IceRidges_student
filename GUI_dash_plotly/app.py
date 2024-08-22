@@ -3,6 +3,7 @@
 import dash
 from dash import dcc, html, Input, Output, State, dash_table, callback_context, dash_table
 import plotly.graph_objs as go
+import plotly.io as pio
 import pandas as pd
 import os
 import sys
@@ -51,7 +52,8 @@ app.layout = html.Div([
         message='',
     ), # confirm dialog to show the extracted data
     dcc.Store(id='json-data-store', data=mooring_data), # store the JSON data
-    dcc.Store(id='ridge_statistics-output', data={}) # store the ridge statistics output
+    dcc.Store(id='ridge_statistics-output', data={}), # store the ridge statistics output
+    dcc.Store(id='plot-json-ridges-store', data=go.Figure().to_json()), # store the plot data for the ridges
 ])
 
 ### Import the callback files
@@ -69,8 +71,9 @@ register_tab3_callbacks(app)
 @app.callback(
     Output('tabs-content', 'children'),
     Input('tabs-all', 'value'),
+    State('plot-json-ridges-store', 'data'),
 )
-def render_content(tab):
+def render_content(tab, fig_json_ridges):
     if tab == 'tab-1':
         return html.Div([
             html.Div([
@@ -133,12 +136,12 @@ def render_content(tab):
                 html.Button('Show extracted data', id='show-extracted-data-button', n_clicks=0, className='button-default')
             ]),
             html.Div([
-                html.P('Run Simulation:'),
+                html.P('Find ridges (might take multiple minutes per location and year):'),
                 html.Button('Find ridges', id='run-ridge_statistics-button', n_clicks=0, className='button-default'),
                 html.Button('Show computed ridge data', id='show-ridge-data-button', n_clicks=0, className='button-default')
             ]),
             html.Div([
-                html.P('Generate Report:'),
+                html.P('Weekly visual analysis:'),
                 html.Button('Generate Report', id='generate-report-button', n_clicks=0, className='button-default')
             ]),
             html.Div(id='ridge_statistics-output'),
@@ -149,6 +152,12 @@ def render_content(tab):
             ),
         ])
     elif tab == 'tab-3':
+        # print('in tab 3')
+        # if fig_json_ridges:
+        #     fig_ridges = pio.from_json(fig_json_ridges)
+        # else:
+        #     fig_ridges = go.Figure()
+        # print(f"fig_ridges: {fig_ridges}")
         return html.Div([
             html.P('Ridge Statistics Visualization:'),
             html.P('Select the year and location for the plot:'),
@@ -160,7 +169,8 @@ def render_content(tab):
                 id='location-plot-dropdown',
                 placeholder="Select a location"
             ),
-            dcc.Graph(id='plot-output'),
+            dcc.Graph(id='plot-ridges'),
+            # dcc.Graph(figure=fig_ridges),
             html.Button('Load JSON Data', id='load-json-data-button', n_clicks=0, className='button-default'),
             html.Button('Render Plot', id='render-plot-button', n_clicks=0, className='button-default'),
         ])

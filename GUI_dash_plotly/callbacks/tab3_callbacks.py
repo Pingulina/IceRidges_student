@@ -42,47 +42,54 @@ def register_tab3_callbacks(app):
             # add the current loaded data to the json_data dict; json_data contains data from ridge_statistics, LI_statistics, raw data etc.
             for key in data_tmp:
                 json_data[year][loc][key] = deepcopy(data_tmp[key])
-            print('Data loaded from ridge statistics')
+            # print('Data loaded from ridge statistics')
             # load the dateNum and draft data
             with open(os.path.join(constants.pathName_dataRaw, 'uls_data', f"mooring_{season}_{loc}_draft.json"), 'r') as f:
                 data_tmp = json.load(f)
-            print(data_tmp.keys())
+            # print(data_tmp.keys())
             json_data[year][loc]['dateNum'] = deepcopy(np.array(data_tmp[loc]['dateNum']))
             json_data[year][loc]['draft'] = deepcopy(np.array(data_tmp[loc]['draft']))
-            print('Data loaded from raw data')
+            # print('Data loaded from raw data')
             # load the dateNum_LI and draft_mode data
             with open(os.path.join(constants.pathName_dataRaw, 'uls_data', f"mooring_{season}_LI.json"), 'r') as f:
                 data_tmp = json.load(f)
             json_data[year][loc]['dateNum_LI'] = deepcopy(np.array(data_tmp[loc]['dateNum']))
             json_data[year][loc]['draft_mode'] = deepcopy(np.array(data_tmp[loc]['draft']))
             json_data[year][loc]['draft_LI'] = deepcopy(np.array(data_tmp[loc]['draft']))
-            print('LI data loaded from raw data')
+            # print('LI data loaded from raw data')
             # load the dateNum_rc and draft_rc data
             with open(os.path.join(constants.pathName_dataRaw, 'uls_data', f"mooring_{season}_ridge.json"), 'r') as f:
                 data_tmp = json.load(f)
             json_data[year][loc]['dateNum_rc'] = deepcopy(np.array(data_tmp[loc]['dateNum']))
             json_data[year][loc]['draft_rc'] = deepcopy(np.array(data_tmp[loc]['draft']))
-            print('Ridge data loaded from raw data')
+            # print('Ridge data loaded from raw data')
             # print(json_data)
             return json_data
         return {}
 
     # Callback to update the plot for ridge statistics
     @app.callback(
-        Output('plot-output', 'figure'),
+        Output('plot-ridges', 'figure'),
+        # Output('plot-json-ridges-store', 'data'),
         Input('render-plot-button', 'n_clicks'),
         State('json-data-store', 'data'),
         State('season-plot-dropdown', 'value'),
         State('location-plot-dropdown', 'value'),
         prevent_initial_call=True
     )
-    def update_plot(n_clicks, json_data, season, loc):
-        if json_data:
+    def update_plot_ridges(n_clicks, json_data, season, loc):
+        if json_data and n_clicks > 0:
             print('update_plot')
+            print(season)
             year = season.split('-')[0]
             fig = ridge_statistics_plot_plotly.plot_per_location(json_data[year], year=year, loc=loc)
+            fig_json = fig.to_json()
             return fig
+            # return fig_json
+        print('no data')
         return go.Figure()
+        # return go.Figure().to_json()
+    
     
 
 

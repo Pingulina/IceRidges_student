@@ -61,6 +61,9 @@ def register_tab1_callbacks(app):
             if not current_data[selected_year]:
                 del current_data[selected_year]
             return current_data # Return the updated current data
+        else:
+            print("selected year not found")
+            print(f"current_data: {current_data}")
         return current_data # Return the current data if no new values are added
     
     # Callback to display the selected values
@@ -97,7 +100,7 @@ def register_tab1_callbacks(app):
         if n_clicks > 0:
             for row in rows:
                 stored_constants[row['Parameter']] = row['New Value']
-            print(stored_constants)
+            # print(stored_constants)
             # save the new constants to the global variable constants
             for key, value in stored_constants.items():
                 constants[key] = value

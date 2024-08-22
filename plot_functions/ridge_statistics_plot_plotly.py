@@ -29,10 +29,8 @@ def plot_per_location(json_data, year=2004, loc='a'):
     print('plot_per_location plotly')
     ### idea: plot function independent of the ridge_statistics function (load json file to get the data)
     # get the data from the json file (it contains a dict)
-    print(json_data)
     json_data = j2d.jsonified2dict(json_data[loc]) # this is to convert the jsonified data to a dict with its original data types
     dateNum_LI = np.array(json_data['dateNum_LI'])
-    print(dateNum_LI)
     draft_mode = np.array(json_data['draft_mode'])
     dateNum_rc = np.array(json_data['dateNum_rc'])
     draft_rc = np.array(json_data['draft_rc'])
@@ -40,7 +38,6 @@ def plot_per_location(json_data, year=2004, loc='a'):
     draft_deepest_ridge = np.array(json_data['expect_deepest_ridge'])
     deepest_mode_weekly = np.array(json_data['level_ice_deepest_mode'])
     week_to_keep = np.array(json_data['week_to_keep']) #, dtype=int) # must be int
-    print(week_to_keep)
     number_ridges = np.array(json_data['number_ridges'])
     mean_keel_draft = np.array(json_data['mean_keel_draft'])
     draft_max_weekly = np.array('draft_weekly_deepest_ridge')

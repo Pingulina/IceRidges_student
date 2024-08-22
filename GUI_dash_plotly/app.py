@@ -141,8 +141,8 @@ def render_content(tab, fig_json_ridges):
                 html.Button('Show computed ridge data', id='show-ridge-data-button', n_clicks=0, className='button-default')
             ]),
             html.Div([
-                html.P('Weekly visual analysis:'),
-                html.Button('Generate Report', id='generate-report-button', n_clicks=0, className='button-default')
+                html.P('Weekly visual analysis and correction:'),
+                html.Button('button text', id='generate-report-button', n_clicks=0, className='button-default')
             ]),
             html.Div(id='ridge_statistics-output'),
             dcc.Loading(
@@ -159,8 +159,12 @@ def render_content(tab, fig_json_ridges):
         #     fig_ridges = go.Figure()
         # print(f"fig_ridges: {fig_ridges}")
         return html.Div([
-            html.P('Ridge Statistics Visualization:'),
-            html.P('Select the year and location for the plot:'),
+            # Dropdowns for the season and location
+            dcc.Markdown('''
+                ## Location and Season Selection
+                Select a season and location to display the ridge statistics.
+                This has to be done before any plots can be rendered.
+                '''),
             dcc.Dropdown(
                 id='season-plot-dropdown',
                 placeholder="Select a season"
@@ -169,10 +173,32 @@ def render_content(tab, fig_json_ridges):
                 id='location-plot-dropdown',
                 placeholder="Select a location"
             ),
-            dcc.Graph(id='plot-ridges'),
-            # dcc.Graph(figure=fig_ridges),
+             # Ridge statistics
+            dcc.Markdown('''
+                ## Ridge Statistics Visualization
+                Click the 'Load JSON Data' button to load the data. 
+                Afterwards, click the 'Render Plot' button to render the plot.
+                '''),
             html.Button('Load JSON Data', id='load-json-data-button', n_clicks=0, className='button-default'),
             html.Button('Render Plot', id='render-plot-button', n_clicks=0, className='button-default'),
+            dcc.Graph(id='plot-ridges'),
+            #
+            # Weekly visual analysis and correction
+            dcc.Markdown('''
+                ## Weekly visual analysis and correction
+                Description for weekly visual analysis and correction
+                '''),
+            html.Button('Run weekly analysis and correction', id='weekly-analysis-button', n_clicks=0, className='button-default'),
+            dcc.Slider(
+                id='week-slider',
+                min=1,
+                max=52,
+                step=1,
+                value=1,
+                marks={i: f'{i}' for i in range(1, 53)},
+                tooltip={"placement": "bottom", "always_visible": True}
+            ),
+            dcc.Graph(id='plot-weekly-analysis'),
         ])
 
 

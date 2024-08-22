@@ -20,9 +20,50 @@ ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'pl
 ### Callbacks for Tab 3
 def register_tab3_callbacks(app):
     # here come the callbacks for the visualization tab
+    # Callback to update the season dropdown
+    @app.callback(
+        Output('season-plot-dropdown', 'options'),
+        #[Input('ridge_statistics-output', 'data'),
+         Input('tabs-all', 'value'),
+    )
+    def update_seasons_dropdown(tab):
+            if tab == 'tab-3':
+                # list all files in data_analysis/ridge_statistics
+                files = os.listdir(os.path.join(constants.pathName_dataResults, 'ridge_statistics'))
+                # load the data/mooring_locations.json file, then get the corresponding season to the year
+                with open(os.path.join(constants.pathName_dataRaw, 'mooring_locations.json'), 'r') as f:
+                    mooring_locs = json.load(f)
+                seasons = []
+                all_seasons = list(mooring_locs.keys())
+                for file in files:
+                    if file.endswith('.json'):
+                        year = file.split('_')[2][:4]
+                        season = all_seasons[np.where([year == this_season.split('-')[0] for this_season in all_seasons])[0][0]]
+                        seasons.append(season)
+                seasons = list(set(seasons))
+                seasons.sort()
+                return [{'label': season, 'value': season} for season in seasons]
+            return []
+    # Callback to update the location dropdown based on the selected season
+    @app.callback(
+        Output('location-plot-dropdown', 'options'),
+        Input('season-plot-dropdown', 'value'),
+        prevent_initial_call=True
+    )
+    def update_location_dropdown(season):
+        files = os.listdir(os.path.join(constants.pathName_dataResults, 'ridge_statistics'))
+        locations = []
+        year = season.split('-')[0]
+        for file in files:
+            if file.endswith('.json') and file.split('_')[2][:4] == year:
+                locations.append(file.split('_')[2][4])
+        return [{'label': location, 'value': location} for location in locations]
+
     # Callback to load the data from the JSON files
     @app.callback(
         Output('json-data-store', 'data'),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
         Input('load-json-data-button', 'n_clicks'),
         State('json-data-store', 'data'),
         State('season-plot-dropdown', 'value'),
@@ -31,6 +72,8 @@ def register_tab3_callbacks(app):
     )
     def load_json_data(n_clicks, json_data, season, loc):
         if n_clicks > 0:
+            if season is None or loc is None:
+                return {}, True, 'Please select a season and a location'
             year = season.split('-')[0]
             if not year in json_data:
                 json_data[year] = {}
@@ -64,13 +107,15 @@ def register_tab3_callbacks(app):
             json_data[year][loc]['draft_rc'] = deepcopy(np.array(data_tmp[loc]['draft']))
             # print('Ridge data loaded from raw data')
             # print(json_data)
-            return json_data
-        return {}
+            return json_data, False, ''
+        return {}, False, ''
 
     # Callback to update the plot for ridge statistics
     @app.callback(
         Output('plot-ridges', 'figure'),
         # Output('plot-json-ridges-store', 'data'),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
         Input('render-plot-button', 'n_clicks'),
         State('json-data-store', 'data'),
         State('season-plot-dropdown', 'value'),
@@ -78,55 +123,38 @@ def register_tab3_callbacks(app):
         prevent_initial_call=True
     )
     def update_plot_ridges(n_clicks, json_data, season, loc):
-        if json_data and n_clicks > 0:
+        if n_clicks > 0:
+            if not json_data:
+                return go.Figure(), True, 'No data loaded. Please load the data first'
+            if season is None or loc is None:
+                return go.Figure(), True, 'Please select a season and a location'
             print('update_plot')
             print(season)
             year = season.split('-')[0]
             fig = ridge_statistics_plot_plotly.plot_per_location(json_data[year], year=year, loc=loc)
             fig_json = fig.to_json()
-            return fig
+            return fig, False, ''
             # return fig_json
         print('no data')
-        return go.Figure()
+        return go.Figure(), False, ''
         # return go.Figure().to_json()
-    
-    
 
 
+    # Callback to update the plot for weekly analysis and correction
+
     @app.callback(
-        Output('season-plot-dropdown', 'options'),
-        #[Input('ridge_statistics-output', 'data'),
-         Input('tabs-all', 'value'),
+        Output('plot-weekly-analysis', 'figure'),
+        Input('week-slider', 'value'),
+        State('json-data-store', 'data'),
+        State('season-plot-dropdown', 'value'),
+        State('location-plot-dropdown', 'value')
     )
-    def update_seasons_dropdown(tab):
-            if tab == 'tab-3':
-                # list all files in data_analysis/ridge_statistics
-                files = os.listdir(os.path.join(constants.pathName_dataResults, 'ridge_statistics'))
-                # load the data/mooring_locations.json file, then get the corresponding season to the year
-                with open(os.path.join(constants.pathName_dataRaw, 'mooring_locations.json'), 'r') as f:
-                    mooring_locs = json.load(f)
-                seasons = []
-                all_seasons = list(mooring_locs.keys())
-                for file in files:
-                    if file.endswith('.json'):
-                        year = file.split('_')[2][:4]
-                        season = all_seasons[np.where([year == this_season.split('-')[0] for this_season in all_seasons])[0][0]]
-                        seasons.append(season)
-                seasons = list(set(seasons))
-                seasons.sort()
-                return [{'label': season, 'value': season} for season in seasons]
-            return []
+    def update_weekly_analysis_plot(week, json_data, season, loc):
+        if json_data and season and loc:
+            year = season.split('-')[0]
+            # Assuming you have a function to generate the weekly analysis plot
+            fig = weekly_analysis_plot(json_data[year], year=year, loc=loc, week=week)
+            return fig
+        return go.Figure()
     
-    @app.callback(
-        Output('location-plot-dropdown', 'options'),
-        Input('season-plot-dropdown', 'value'),
-        prevent_initial_call=True
-    )
-    def update_location_dropdown(season):
-        files = os.listdir(os.path.join(constants.pathName_dataResults, 'ridge_statistics'))
-        locations = []
-        year = season.split('-')[0]
-        for file in files:
-            if file.endswith('.json') and file.split('_')[2][:4] == year:
-                locations.append(file.split('_')[2][4])
-        return [{'label': location, 'value': location} for location in locations]
+

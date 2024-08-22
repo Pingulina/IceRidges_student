@@ -29,7 +29,7 @@ def main():
     # d2d.example()
 
     ### uncomment the following line to run the extract_ridge_LI_data.py file
-    ewd.extract_ridge_LI_data(overwrite=True)
+    # ewd.extract_ridge_LI_data(overwrite=True)
 
     ### uncomment the following line to run the ridge_statistics.py file
     # rs.ridge_statistics(years=[2004, 2005, 2006], poss_mooring_locs=['a','b','c','d'], saveAsJson=True) # , 2005, 2006
@@ -38,7 +38,7 @@ def main():
     # wva.weekly_visual_analysis()
 
     ### uncomment the following line to run the weekly_manual_correction.py file
-    # wmc.weekly_manual_correction()
+    wmc.weekly_manual_correction()
 
     ### uncomment the following line to run the preliminary_analysis_simulation.py file
     # pas.prelim_analysis_simulation([2004, 2006], ['a', 'b', 'c', 'd'])

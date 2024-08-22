@@ -137,8 +137,8 @@ def weekly_manual_correction(number_ridges_threshold=15):
     ax_number_of_ridges = figure_weekly_analysis.add_subplot(gridspec_weekly_analysis[3,4:6])
 
     # initialize the plots
-    dummy_loc = 'a'
-    dummy_year = 2004
+    dummy_loc = loc_user #'b'
+    dummy_year = year_user # 2005
     dummy_week = 0
     # figure ice data
     ax_ice_data, patch_current_week_ice_data, ULS_draft_signal, RidgePeaks, LI_thickness = data_analysis_plot.initialize_plot_data_draft(

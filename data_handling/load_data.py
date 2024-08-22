@@ -95,7 +95,11 @@ def load_data_oneYear(year=None, loc=None, path_to_json_processed=None, path_to_
         break # end the while loop (this is only reached, if the year and location are valid)
     
     # get the raw data for the year and location
-    _, dateNum, draft, _ = j2np.json2numpy(os.path.join(path_to_json_mooring, f"mooring_{year}-{year+1}_{loc}_draft.json"), loc)
+    with open(os.path.join(path_to_json_mooring, f"mooring_{year}-{year+1}_{loc}_draft.json"), 'r') as file:
+        mooring_draft_dict = j2d.jsonified2dict(json.load(file))
+    # _, dateNum, draft, _ = j2np.json2numpy(os.path.join(path_to_json_mooring, f"mooring_{year}-{year+1}_{loc}_draft.json"), loc)
+    dateNum = mooring_draft_dict[loc]['dateNum']
+    draft = mooring_draft_dict[loc]['draft']
 
     return dateNum, draft, dict_ridge_statistics, year, loc
     

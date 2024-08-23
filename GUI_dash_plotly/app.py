@@ -52,6 +52,7 @@ app.layout = html.Div([
         message='',
     ), # confirm dialog to show the extracted data
     dcc.Store(id='json-data-store', data=mooring_data), # store the JSON data
+    dcc.Store(id='json-data-allRidges_allYears-store', data={}), # store the JSON data for all ridges from all years and locations
     dcc.Store(id='ridge_statistics-output', data={}), # store the ridge statistics output
     dcc.Store(id='plot-json-ridges-store', data=go.Figure().to_json()), # store the plot data for the ridges
 ])
@@ -173,22 +174,31 @@ def render_content(tab, fig_json_ridges):
                 id='location-plot-dropdown',
                 placeholder="Select a location"
             ),
+            dcc.Markdown('''
+                        To load the data for the selected season and location, click the 'Load JSON Data' button. Loading the data once for all plots is sufficient.
+                        
+                        **Every time data is loaded, it make take up to a few minutes, depending on the size of the data set(s). So be patient, don't switch the tabs or click the buttons multiple times.**
+                         '''),
+            html.Button('Load JSON Data', id='load-json-data-button', n_clicks=0, className='button-default'),
+            ########
              # Ridge statistics
             dcc.Markdown('''
                 ## Ridge Statistics Visualization
                 Click the 'Load JSON Data' button to load the data. 
                 Afterwards, click the 'Render Plot' button to render the plot.
                 '''),
-            html.Button('Load JSON Data', id='load-json-data-button', n_clicks=0, className='button-default'),
             html.Button('Render Plot', id='render-plot-button', n_clicks=0, className='button-default'),
             dcc.Graph(id='plot-ridges'),
-            #
+            ########
             # Weekly visual analysis and correction
             dcc.Markdown('''
                 ## Weekly visual analysis and correction
-                Description for weekly visual analysis and correction
+                In the following, the ridges per week can be analyzed in relation to all other ridges from the whole dataset of all years and locations. 
+                This data needs to be loaded additionally to the data loaded in the beginning. To do so, click the 'Load additional data' button.
                 '''),
-            html.Button('Run weekly analysis and correction', id='weekly-analysis-button', n_clicks=0, className='button-default'),
+            html.Button('Load additional data', id='load-weekly-analysis-button', n_clicks=0, className='button-default'),
+            html.Button('Render plot', id='render-weekly-analysis-button', n_clicks=0, className='button-default'),
+            dcc.Markdown('''Select the week to analyze:'''),
             dcc.Slider(
                 id='week-slider',
                 min=1,

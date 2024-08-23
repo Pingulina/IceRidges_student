@@ -33,6 +33,8 @@ def register_tab1_callbacks(app):
     # Callback to update the selected values
     @app.callback(
         Output('selected-years-locations-store', 'data'),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
         [Input('add-button-yearLoc', 'n_clicks')],
         [State('year-dropdown', 'value'),
         State('location-checklist', 'value'),
@@ -40,8 +42,9 @@ def register_tab1_callbacks(app):
         prevent_initial_call=True,
     )
     def update_selected_values(n_clicks, selected_year, selected_locations, current_data):
-        print(f"n_clicks: {n_clicks}")
         if n_clicks > 0 and selected_year:
+            if not selected_year:
+                return current_data, True, "Please select a year."
             print(f"n_clicks: {n_clicks}")
             print(f"current_data: {current_data}")
             print(f"selected_year: {selected_year}")
@@ -60,11 +63,8 @@ def register_tab1_callbacks(app):
             # Remove key, if the list is empty
             if not current_data[selected_year]:
                 del current_data[selected_year]
-            return current_data # Return the updated current data
-        else:
-            print("selected year not found")
-            print(f"current_data: {current_data}")
-        return current_data # Return the current data if no new values are added
+            return current_data, False, '' # Return the updated current data
+        return current_data, False, '' # Return the current data if no new values are added
     
     # Callback to display the selected values
     @app.callback(

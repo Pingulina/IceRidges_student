@@ -53,9 +53,13 @@ def initialize_plot_data_draft(fig, row, col, time, draft, time_ridge, draft_rid
 
     # Update x-axis ticks and labels
     dateNum_every_day = time[np.where(np.diff(time.astype(int)))[0] + 1]
+    tickvals = dateNum_every_day[::every_nth_xTick]
+    ticktext = xTickLabels[::every_nth_xTick] if xTickLabels is not None else None
+    print('tickvals data all: ', tickvals)
+    print('ticktext data all: ', ticktext)
     fig.update_xaxes(
-        tickvals=dateNum_every_day[::every_nth_xTick],
-        ticktext=xTickLabels[::every_nth_xTick] if xTickLabels is not None else None,
+        tickvals=tickvals,
+        ticktext=ticktext,
         range=[time[0], time[-1]],
         automargin=True,
         row=row, col=col
@@ -69,8 +73,6 @@ def initialize_plot_weekly_data_draft(fig, row, col, time, draft, time_ridge, dr
 
     # Convert time to np.array
     time = np.array(time)
-    print(f"time: {time}")
-    print(f"time[week]: {time[week]}")
     dateNum_every_day = time[week][np.where(np.diff(time[week].astype(int)))[0] + 1]
 
     # Add the Raw ULS draft signal line plot
@@ -102,24 +104,25 @@ def initialize_plot_weekly_data_draft(fig, row, col, time, draft, time_ridge, dr
         line_shape='hv'
     ), row=row, col=col)
 
-    # Update layout
-    fig.update_xaxes(title_text=xlabel, row=row, col=col)
-    fig.update_yaxes(title_text=ylabel, range=[ylim[0], ylim[1]], row=row, col=col)
-    
-
-    # Update x-axis ticks and labels
+    # Update layout, ticks and labels
+    tickvals = dateNum_every_day[:7:dateTickDistance]
+    ticktext = xTickLabels[week*7:(week+1)*7:dateTickDistance] if xTickLabels is not None else None
+    print('tickvals data week: ', tickvals)
+    print('ticktext data week: ', ticktext)
     fig.update_xaxes(
-        tickvals=dateNum_every_day[:7:dateTickDistance],
-        ticktext=xTickLabels[week*7:(week+1)*7:dateTickDistance] if xTickLabels is not None else None,
+        tickvals=tickvals,
+        ticktext=ticktext,
         row=row, col=col,
         automargin=True,
-        range=[time[week][0], time[week][-1]]
+        range=[time[week][0], time[week][-1]],
+        title_text=xlabel
     )
+    fig.update_yaxes(title_text=ylabel, range=[ylim[0], ylim[1]], row=row, col=col)
 
     return fig
 
 
-def initialize_plot_spectrum(fig, row, col, HHi_plot, X_spectogram, Y_spectogram, draft, time_mean, LI_deepestMode, LI_deepestMode_expect, week_starts, week_ends, week, xlabel, ylabel):
+def initialize_plot_spectrum(fig, row, col, HHi_plot, X_spectogram, Y_spectogram, time, draft, time_mean, LI_deepestMode, LI_deepestMode_expect, week_starts, week_ends, week, xlabel, ylabel, xTickLabels):
 
 
     # Add the color mesh (pcolormesh equivalent)
@@ -173,7 +176,27 @@ def initialize_plot_spectrum(fig, row, col, HHi_plot, X_spectogram, Y_spectogram
     
 
      # Update layout
-    fig.update_xaxes(title_text=xlabel, range=[time_mean[0]+3.5, time_mean[-1]-10.5], row=row, col=col)
+    time = np.array(time)
+    dateNum_every_day = np.concatenate(time)[np.where(np.diff(np.concatenate(time).astype(int)))[0] + 1]
+    dateTickDistance = 1
+    every_nth_xTick = 50
+    tickvals = dateNum_every_day[::every_nth_xTick]
+    ticktext = xTickLabels[::every_nth_xTick] if xTickLabels is not None else None
+    if len(ticktext) > len(tickvals):
+        ticktext = ticktext[:-1]
+    print('tickvals specto: ', tickvals)
+    print('ticktext specto: ', ticktext)
+    fig.update_xaxes(
+        # tickvals=dateNum_every_day[:7:dateTickDistance],
+        # ticktext=xTickLabels[week*7:(week+1)*7:dateTickDistance] if xTickLabels is not None else None,
+        tickmode='array',
+        tickvals=tickvals,
+        ticktext=ticktext,
+        title_text=xlabel, 
+        automargin=True,
+        range=[np.concatenate(time)[0], np.concatenate(time)[-1]],
+        # range=[time_mean[0]+3.5, time_mean[-1]-10.5], 
+        row=row, col=col)
     fig.update_yaxes(title_text=ylabel, range=[0, 4], row=row, col=col)
 
     # fig.update_xaxes(

@@ -130,16 +130,16 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
     mean_time = 3600 * constants.level_ice_time
     mean_points = mean_time / d_t
     numberElements = int(np.floor(len(dateNum)/mean_points) * mean_points)
-    # dateNum_reshape = dateNum[:numberElements]
-    # dateNum_reshape = dateNum_reshape.reshape(int(len(dateNum)/mean_points), int(mean_points))
-    # draft_reshape = draft[:numberElements]
-    # draft_reshape = draft_reshape.reshape(int(len(draft)/mean_points), int(mean_points))
+    dateNum_reshape_hourly = dateNum[:numberElements]
+    dateNum_reshape_hourly = dateNum_reshape_hourly.reshape(int(len(dateNum)/mean_points), int(mean_points))
+    draft_reshape_hourly = draft[:numberElements]
+    draft_reshape_hourly = draft_reshape_hourly.reshape(int(len(draft)/mean_points), int(mean_points))
 
-    hi = compute_mode(np.array(np.round(np.array(draft_reshape)*1000, 0))) / 1000
-    hi_1 = scipy.stats.mode(np.round(np.array(draft_reshape)*1000, 0), axis=1).mode / 1000
+    hi = compute_mode(np.array(np.round(np.array(draft_reshape_hourly)*1000, 0))) / 1000
+    hi_1 = scipy.stats.mode(np.round(np.array(draft_reshape_hourly)*1000, 0), axis=1).mode / 1000
     # max(dict_ridge_statistics[loc]['keel_draft'], key=dict_ridge_statistics[loc]['keel_draft'].count)
     # dateNum_LI = dict_ridge_statistics[loc]['keel_dateNum'][dict_ridge_statistics[loc]['keel_draft'].index(hi)]
-    dateNum_LI = np.mean(dateNum_reshape, axis=1)
+    dateNum_LI = np.mean(dateNum_reshape_hourly, axis=1)
 
     # numberElements = len(hi)//period
     # number_weeks = int(np.floor(numberElements * (1/(3600/dt)) / 168))
@@ -156,6 +156,8 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
     # plot the data
     # the figure should contain a spectogram and some lines on top of it (all in one plot)
     HHi_plot = HHi / (period+1)
+    print('dateNum_hist: ', dateNum_hist)
+    print('hh: ', hh)
     
 
 
@@ -209,9 +211,9 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
         fig, row=3, col=3, 
         HHi_plot=HHi_plot, X_spectogram=X_spectogram, Y_spectogram=Y_spectogram,
         # HHi_plot=np.zeros((len(dateNum_rc_pd), len(deepest_mode_weekly)), dtype=float), X_spectogram=np.arange(len(dateNum_rc_pd)), Y_spectogram=np.arange(len(deepest_mode_weekly)),
-        draft=draft, time_mean=dateNum_rc_pd, LI_deepestMode=deepest_mode_weekly, 
+        time=dateNum_reshape, draft=draft, time_mean=dateNum_rc_pd, LI_deepestMode=deepest_mode_weekly, 
         LI_deepestMode_expect=deepest_mode_expect_weekly, week_starts=week_starts, week_ends=week_ends, 
-        week=week, xlabel='Date specto', ylabel='Draft [m]')
+        week=week, xlabel='Date specto', ylabel='Draft [m]', xTickLabels=xTickLabels)
 
     # Mean Ridge Keel Depth
     fig.add_trace(

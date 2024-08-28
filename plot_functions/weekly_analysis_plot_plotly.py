@@ -98,7 +98,7 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
     week_to_keep = dict_ridge_statistics['week_to_keep']  # must be int
     number_ridges = dict_ridge_statistics['number_ridges']
     mean_keel_draft = dict_ridge_statistics['mean_keel_draft']
-    draft_max_weekly = 'draft_weekly_deepest_ridge'
+    draft_max_weekly = dict_ridge_statistics['draft_weekly_deepest_ridge']
     dateNum_reshape = dict_ridge_statistics['keel_dateNum']
     draft_reshape = dict_ridge_statistics['keel_draft']
     draft_ridge = dict_ridge_statistics['keel_draft_ridge']
@@ -106,6 +106,9 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
 
     week_starts = dict_ridge_statistics['week_start']
     week_ends = dict_ridge_statistics['week_end']
+
+    peaks_location = dict_ridge_statistics['peaks_location']
+    peaks_intensity = dict_ridge_statistics['peaks_intensity']
 
     dateNum = dict_ridge_statistics['dateNum']
     draft = dict_ridge_statistics['draft']
@@ -168,21 +171,23 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
         specs=[
             [{"colspan": 4}, None, None, None, {"colspan": 2}, None],
             [{"colspan": 4}, None, None, None, {"colspan": 2}, None],
-            [{"colspan": 2}, None, {"colspan": 2}, None, {"colspan": 2}, None],
-            [{"colspan": 2}, None, {"colspan": 2}, None, {"colspan": 2}, None]
+            [{"colspan": 4, "rowspan":2}, None, None, None, {"colspan": 2}, None],
+            [None, None, None, None, {"colspan": 2}, None]
         ],
         # subplot_titles=(
         #     "Ice Data", "", "", "", "Mean Ridge Keel Depth",
         #     "", "", "", "", "Kernel Estimate",
         #     "Current Week Ice Data", "", "Spectogram", "", "Weekly Deepest Ridge",
         #     "", "", "", "", "Number of Ridges"
-        # )
+        # ),
+    	horizontal_spacing=0.05,
     )
 
     fig.update_layout(
         title_text=f"Year {year}, location {loc}, week {week}",
         height=800,
-        width=1200
+        width=1200,
+        showlegend=False
     )
 
     # Example of adding traces to the subplots
@@ -202,13 +207,13 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
     #     row=3, col=1
     # )
     fig = data_analysis_plot_plotly.initialize_plot_weekly_data_draft(
-        fig, row=3, col=1, time=dateNum_reshape, draft=draft_reshape, time_ridge=dateNum_ridge, draft_ridge=draft_ridge, 
+        fig, row=2, col=1, time=dateNum_reshape, draft=draft_reshape, time_ridge=dateNum_ridge, draft_ridge=draft_ridge, 
         time_LI=dateNum_reshape, draft_LI=deepest_mode_weekly, week=week, xlabel='Date weekly', ylabel='Draft [m]', ylim=[0, 30], 
         xTickLabels=xTickLabels, dateTickDistance=2)
 
     # Spectogram
     fig = data_analysis_plot_plotly.initialize_plot_spectrum(
-        fig, row=3, col=3, 
+        fig, row=3, col=1, 
         HHi_plot=HHi_plot, X_spectogram=X_spectogram, Y_spectogram=Y_spectogram,
         # HHi_plot=np.zeros((len(dateNum_rc_pd), len(deepest_mode_weekly)), dtype=float), X_spectogram=np.arange(len(dateNum_rc_pd)), Y_spectogram=np.arange(len(deepest_mode_weekly)),
         time=dateNum_reshape, draft=draft, time_mean=dateNum_rc_pd, LI_deepestMode=deepest_mode_weekly, 
@@ -216,31 +221,41 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
         week=week, xlabel='Date specto', ylabel='Draft [m]', xTickLabels=xTickLabels)
 
     # Mean Ridge Keel Depth
-    fig.add_trace(
-        go.Scatter(x=all_LIDM, y=all_MKD, mode='markers', name='Mean Keel Draft'),
-        row=1, col=5
-    )
+    fig = data_analysis_plot_plotly.initialize_plot_weekly_data_scatter(
+        fig, row=1, col=5, xData_all=all_LIDM, yData_all=all_MKD, xData_thisYear=deepest_mode_weekly, yData_thisYear=mean_keel_draft, 
+        week=week, xlabel='Level ice deepest mode [m]', ylabel='Mean keel draft [m]')
+    # fig.add_trace(
+    #     go.Scatter(x=all_LIDM, y=all_MKD, mode='markers', name='Mean Keel Draft'),
+    #     row=1, col=5
+    # )
 
     # Kernel Estimate
-    fig.add_trace(
-        go.Scatter(x=dateNum, y=draft, mode='lines', name='Kernel Estimate'),
-        row=2, col=5
-    )
+    fig = data_analysis_plot_plotly.initialize_plot_kernelEstimation(
+        fig, row=2, col=5, time=dateNum, draft=draft, week_starts=week_starts, week_ends=week_ends, week=week, 
+        LI_deepestMode_expect=deepest_mode_expect_weekly, LI_deepestMode=deepest_mode_weekly, 
+        peaks_location=peaks_location, peaks_intensity=peaks_intensity, xlabel='Draft [m]', ylabel='Kernel estimate [-]')
+    # fig.add_trace(
+    #     go.Scatter(x=dateNum, y=draft, mode='lines', name='Kernel Estimate'),
+    #     row=2, col=5
+    # )
 
     # Weekly Deepest Ridge
-    fig.add_trace(
-        go.Scatter(x=all_LIDM, y=all_Dmax, mode='markers', name='Max Weekly Draft'),
-        row=3, col=5
-    )
+    fig = data_analysis_plot_plotly.initialize_plot_weekly_data_scatter(
+        fig, row=3, col=5, xData_all=all_LIDM, yData_all=all_Dmax, xData_thisYear=deepest_mode_weekly, yData_thisYear=draft_max_weekly, 
+        week=week, xlabel='Level ice deepest mode [m]', ylabel='Deepest keel draft [m]')
+    # fig.add_trace(
+    #     go.Scatter(x=all_LIDM, y=all_Dmax, mode='markers', name='Max Weekly Draft'),
+    #     row=3, col=5
+    # )
 
     # Number of Ridges
-    fig.add_trace(
-        go.Scatter(x=all_LIDM, y=all_number_of_ridges, mode='markers', name='Number of Ridges'),
-        row=4, col=5
-    )
-
-    # Update layout for better spacing
-    fig.update_layout(showlegend=False, title_text="Season , location , week")
+    fig = data_analysis_plot_plotly.initialize_plot_weekly_data_scatter(
+        fig, row=4, col=5, xData_all=all_LIDM, yData_all=all_number_of_ridges, xData_thisYear=deepest_mode_weekly, yData_thisYear=number_ridges, 
+        week=week, xlabel='Level ice deepest mode [m]', ylabel='Number of ridges [-]')
+    # fig.add_trace(
+    #     go.Scatter(x=all_LIDM, y=all_number_of_ridges, mode='markers', name='Number of Ridges'),
+    #     row=4, col=5
+    # )
 
     return fig
 

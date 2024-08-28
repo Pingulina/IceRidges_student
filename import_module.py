@@ -16,5 +16,7 @@ def import_module(module_name, module_dir_relative_to_cwd):
 
     if module_name[0:9] == 'constants':
         return module.constants
+    elif module_name == 'myColor':
+        return module.myColor
 
     return module

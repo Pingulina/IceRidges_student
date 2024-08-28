@@ -177,7 +177,7 @@ def render_content(tab, fig_json_ridges):
             dcc.Markdown('''
                         To load the data for the selected season and location, click the 'Load JSON Data' button. Loading the data once for all plots is sufficient.
                         
-                        **Every time data is loaded, it make take up to a few minutes, depending on the size of the data set(s). So be patient, don't switch the tabs or click the buttons multiple times.**
+                        **Every time data is loaded, it may take up to a few minutes, depending on the size of the data set(s). So be patient, don't switch the tabs or click the buttons multiple times.**
                          '''),
             html.Button('Load JSON Data', id='load-json-data-button', n_clicks=0, className='button-default'),
             ########

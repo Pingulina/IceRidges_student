@@ -1,15 +1,26 @@
 import plotly.graph_objects as go
 import numpy as np
+import os
+import sys
+import scipy.stats
+
+### import_module.py is a helper function to import modules from different directories, it is located in the base directory
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+from import_module import import_module
+
+myColor = import_module('myColor', 'helper_functions')
+
 
 def initialize_plot_data_draft(fig, row, col, time, draft, time_ridge, draft_ridge, time_LI, draft_LI, week_starts, week_ends, week, every_nth_xTick, 
                                xlabel: str, ylabel: str, ylim, xTickLabels=None, legend=True):
     # Add the fill_between equivalent
     fig.add_trace(go.Scatter(
         x=[week_starts[week], week_ends[week], week_ends[week], week_starts[week]],
-        y=[0, 0, max(draft), max(draft)],
+        y=[ylim[0], ylim[0], ylim[1], ylim[1]],
         fill='toself',
-        fillcolor='lightblue',
-        line=dict(color='lightblue'),
+        fillcolor=myColor.mid_blue(0.4),
+        line=dict(color=myColor.mid_blue(0.4)),
         name='Current week ice data',
         mode='none'
     ), row=row, col=col)
@@ -19,20 +30,19 @@ def initialize_plot_data_draft(fig, row, col, time, draft, time_ridge, draft_rid
         x=time,
         y=draft,
         mode='lines',
-        line=dict(color='blue'),
+        line=dict(color=myColor.dark_blue(1)),
         name='Raw ULS draft signal'
     ), row=row, col=col)
 
     # Add the Ridge Peaks scatter plot
     keel_draft_flat = [x for xs in draft_ridge for x in xs]
     keel_dateNum_flat = [x for xs in time_ridge for x in xs]
-    # print(f"keel_dateNum_flat: {keel_dateNum_flat}")
-    # print(f"keel_draft_flat: {keel_draft_flat}")
+
     fig.add_trace(go.Scatter(
         x=keel_dateNum_flat,
         y=keel_draft_flat,
         mode='markers',
-        marker=dict(color='red', size=3),
+        marker=dict(color=myColor.dark_red(1), size=3),
         name='Individual ridge peaks'
     ), row=row, col=col)
 
@@ -42,28 +52,30 @@ def initialize_plot_data_draft(fig, row, col, time, draft, time_ridge, draft_rid
         x=keel_dateNum_weekStart,
         y=draft_LI,
         mode='lines',
-        line=dict(color='black'),
+        line=dict(color=myColor.black(1)),
         name='Level ice draft estimate',
         line_shape='hv'
     ), row=row, col=col)
 
-    # Update layout
-    fig.update_xaxes(title_text=xlabel, row=row, col=col)
-    fig.update_yaxes(title_text=ylabel, range=[ylim[0], ylim[1]], row=row, col=col)
 
     # Update x-axis ticks and labels
     dateNum_every_day = time[np.where(np.diff(time.astype(int)))[0] + 1]
     tickvals = dateNum_every_day[::every_nth_xTick]
     ticktext = xTickLabels[::every_nth_xTick] if xTickLabels is not None else None
-    print('tickvals data all: ', tickvals)
-    print('ticktext data all: ', ticktext)
+
+    # Update layout
     fig.update_xaxes(
+        title_text=xlabel,
         tickvals=tickvals,
         ticktext=ticktext,
         range=[time[0], time[-1]],
         automargin=True,
         row=row, col=col
     )
+    fig.update_yaxes(
+        title_text=ylabel, 
+        range=[ylim[0], ylim[1]], 
+        row=row, col=col)
 
     return fig
 
@@ -80,7 +92,7 @@ def initialize_plot_weekly_data_draft(fig, row, col, time, draft, time_ridge, dr
         x=time[week],
         y=draft[week],
         mode='lines',
-        line=dict(color='blue'),
+        line=dict(color=myColor.dark_blue(1)),
         name='Raw ULS draft signal'
     ), row=row, col=col)
 
@@ -89,7 +101,7 @@ def initialize_plot_weekly_data_draft(fig, row, col, time, draft, time_ridge, dr
         x=time_ridge[week],
         y=draft_ridge[week],
         mode='markers',
-        marker=dict(color='red', size=2),
+        marker=dict(color=myColor.dark_red(1), size=2),
         name='Individual ridge peaks'
     ), row=row, col=col)
 
@@ -107,8 +119,7 @@ def initialize_plot_weekly_data_draft(fig, row, col, time, draft, time_ridge, dr
     # Update layout, ticks and labels
     tickvals = dateNum_every_day[:7:dateTickDistance]
     ticktext = xTickLabels[week*7:(week+1)*7:dateTickDistance] if xTickLabels is not None else None
-    print('tickvals data week: ', tickvals)
-    print('ticktext data week: ', ticktext)
+
     fig.update_xaxes(
         tickvals=tickvals,
         ticktext=ticktext,
@@ -124,55 +135,54 @@ def initialize_plot_weekly_data_draft(fig, row, col, time, draft, time_ridge, dr
 
 def initialize_plot_spectrum(fig, row, col, HHi_plot, X_spectogram, Y_spectogram, time, draft, time_mean, LI_deepestMode, LI_deepestMode_expect, week_starts, week_ends, week, xlabel, ylabel, xTickLabels):
 
-
     # Add the color mesh (pcolormesh equivalent)
     fig.add_trace(go.Heatmap(
-        z=HHi_plot,
-        x=X_spectogram,
-        y=Y_spectogram,
+        z=HHi_plot.transpose(),
+        y=Y_spectogram[:, 0], # first column of Y_spectogram (possible draft values) #draft,
+        x=X_spectogram[0], # first row of X_spectogram (time values) #time_mean,
         colorscale='Viridis',
         showscale=True,
     ), row=row, col=col)
 
-    # # Add the current week ice data patch
-    # fig.add_trace(go.Scatter(
-    #     x=[week_starts[week], week_ends[week], week_ends[week], week_starts[week], week_starts[week]],
-    #     y=[0, 0, max(draft), max(draft), 0],
-    #     fill='toself',
-    #     fillcolor='lightblue',
-    #     line=dict(color='lightblue'),
-    #     name='Current week ice data',
-    #     mode='lines',
-    # ), row=row, col=col)
+    # Add the current week ice data patch
+    fig.add_trace(go.Scatter(
+        x=[week_starts[week], week_ends[week], week_ends[week], week_starts[week], week_starts[week]],
+        y=[0, 0, max(draft), max(draft), 0],
+        fill='toself',
+        fillcolor=myColor.mid_blue(0.4),
+        line=dict(color=myColor.mid_blue(0.4)),
+        name='Current week ice data',
+        mode='lines',
+    ), row=row, col=col)
 
-    # # Add the scatter plot for LI_deepestMode
-    # fig.add_trace(go.Scatter(
-    #     x=time_mean,
-    #     y=LI_deepestMode,
-    #     mode='markers',
-    #     marker=dict(color='red', size=10, symbol='circle'),
-    #     name='LI deepest mode',
-    # ), row=row, col=col)
+    # Add the scatter plot for LI_deepestMode
+    fig.add_trace(go.Scatter(
+        x=time_mean,
+        y=LI_deepestMode,
+        mode='markers',
+        marker=dict(color=myColor.dark_red(1), size=10, symbol='circle'),
+        name='LI deepest mode',
+    ), row=row, col=col)
 
-    # # Add the scatter plot for LI_deepestMode_expect
-    # fig.add_trace(go.Scatter(
-    #     x=time_mean,
-    #     y=LI_deepestMode_expect,
-    #     mode='markers',
-    #     marker=dict(color='blue', size=10, symbol='triangle-up'),
-    #     name='LI deepest mode expected',
-    # ), row=row, col=col)
+    # Add the scatter plot for LI_deepestMode_expect
+    fig.add_trace(go.Scatter(
+        x=time_mean,
+        y=LI_deepestMode_expect,
+        mode='markers',
+        marker=dict(color=myColor.dark_blue(1), size=10, symbol='triangle-up'),
+        name='LI deepest mode expected',
+    ), row=row, col=col)
 
-    # # Add the rectangle patch for the current week
-    # lrs1x = (time_mean[-1] - time_mean[0]) / 20
-    # lrs1y = 4 / 20
-    # fig.add_shape(type='rect',
-    #               x0=time_mean[week] - lrs1x / 2, y0=LI_deepestMode[week] - lrs1y / 2,
-    #               x1=time_mean[week] + lrs1x / 2, y1=LI_deepestMode[week] + lrs1y / 2,
-    #               line=dict(color='red'),
-    #               fillcolor='rgba(0,0,0,0)',
-    #               layer='above',
-    #               )
+    # Add the rectangle patch for the current week
+    lrs1x = (time_mean[-1] - time_mean[0]) / 20
+    lrs1y = 4 / 20
+    fig.add_shape(type='rect',
+                  x0=time_mean[week] - lrs1x / 2, y0=LI_deepestMode[week] - lrs1y / 2,
+                  x1=time_mean[week] + lrs1x / 2, y1=LI_deepestMode[week] + lrs1y / 2,
+                  line=dict(color=myColor.dark_red(1)),
+                  fillcolor=myColor.black(1),
+                  layer='above',
+                  )
     
 
      # Update layout
@@ -184,8 +194,6 @@ def initialize_plot_spectrum(fig, row, col, HHi_plot, X_spectogram, Y_spectogram
     ticktext = xTickLabels[::every_nth_xTick] if xTickLabels is not None else None
     if len(ticktext) > len(tickvals):
         ticktext = ticktext[:-1]
-    print('tickvals specto: ', tickvals)
-    print('ticktext specto: ', ticktext)
     fig.update_xaxes(
         # tickvals=dateNum_every_day[:7:dateTickDistance],
         # ticktext=xTickLabels[week*7:(week+1)*7:dateTickDistance] if xTickLabels is not None else None,
@@ -199,10 +207,124 @@ def initialize_plot_spectrum(fig, row, col, HHi_plot, X_spectogram, Y_spectogram
         row=row, col=col)
     fig.update_yaxes(title_text=ylabel, range=[0, 4], row=row, col=col)
 
-    # fig.update_xaxes(
-    #     row=row, col=col,
-    #     automargin=True,
-    #     range=[time_mean[0]+3.5, time_mean[-1]-10.5]
-    # )
+    return fig
+
+
+
+def initialize_plot_weekly_data_scatter(fig, row, col, xData_all, yData_all, xData_thisYear, yData_thisYear, week, xlabel: str, ylabel: str):
+    """Do the scatter plot of the weekly data using Plotly"""
+
+    # Calculate rectangle dimensions
+    lrs1x = (max(xData_all) - min(xData_all)) / 40
+    lrs1y = (max(yData_all) - min(yData_all)) / 20
+
+    # Add scatter plot for all data
+    fig.add_trace(go.Scatter(
+        x=xData_all,
+        y=yData_all,
+        mode='markers',
+        marker=dict(color=myColor.dark_blue(0.3), size=6, line=dict(color=myColor.dark_blue(0.6), width=1)), # opacity=0.5),
+        name='all years/location',
+    ), row=row, col=col)
+
+    # Add scatter plot for this year's data
+    fig.add_trace(go.Scatter(
+        x=xData_thisYear,
+        y=yData_thisYear,
+        mode='markers',
+        marker=dict(color=myColor.dark_red(1), size=4),
+        name='this year/location',
+    ), row=row, col=col)
+
+    # Add rectangle to mark the current data point (week)
+    fig.add_shape(type='rect',
+                  x0=xData_thisYear[week] - lrs1x / 2, y0=yData_thisYear[week] - lrs1y / 2,
+                  x1=xData_thisYear[week] + lrs1x / 2, y1=yData_thisYear[week] + lrs1y / 2,
+                  line=dict(color=myColor.black(1)),
+                  fillcolor=myColor.black(0),
+                  layer='above',
+                  row=row, col=col
+                  )
+    
+        # Update layout
+
+    fig.update_xaxes(
+        # tickvals=dateNum_every_day[:7:dateTickDistance],
+        # ticktext=xTickLabels[week*7:(week+1)*7:dateTickDistance] if xTickLabels is not None else None,
+        title_text=xlabel, 
+        automargin=True,
+        # range=[time_mean[0]+3.5, time_mean[-1]-10.5], 
+        row=row, col=col)
+    fig.update_yaxes(title_text=ylabel, row=row, col=col)
+
+    return fig
+
+
+
+def initialize_plot_kernelEstimation(fig, row, col, time, draft, week_starts, week_ends, week, LI_deepestMode_expect, LI_deepestMode, peaks_location, peaks_intensity, xlabel, ylabel):
+
+    # Filter draft data for the current week
+    draft_subset = draft[np.intersect1d(np.where(draft > 0), np.intersect1d(np.where(time > week_starts[week]), np.where(time < week_ends[week])))]
+
+    # Kernel density estimate
+    kde = scipy.stats.gaussian_kde(draft_subset)
+    xi = np.linspace(draft_subset.min(), draft_subset.max(), 100)
+    f = kde(xi)
+
+        # Add the histogram
+    number_of_bins = int((max(draft_subset) - min(draft_subset)) / 0.05)
+    histogram_numpy = np.histogram(draft_subset, bins=number_of_bins, density=True)
+    fig.add_trace(go.Bar(
+        x=histogram_numpy[1][:-1],
+        y=histogram_numpy[0],
+        marker=dict(color=myColor.black(0.7)),
+        name='Histogram',
+        width=(max(draft_subset) - min(draft_subset)) / number_of_bins,
+    ), row=row, col=col)
+
+    # Add the deepest mode LI line
+    fig.add_trace(go.Scatter(
+        x=[LI_deepestMode_expect[week], LI_deepestMode_expect[week]],
+        y=[0, 6],
+        mode='lines',
+        line=dict(color=myColor.dark_blue(1)),
+        name='deepest mode LI',
+    ), row=row, col=col)
+
+    # Add the average mode LI line
+    fig.add_trace(go.Scatter(
+        x=[LI_deepestMode[week], LI_deepestMode[week]],
+        y=[0, 6],
+        mode='lines',
+        line=dict(color=myColor.dark_red(1), dash='dash'),
+        name='average mode LI',
+    ), row=row, col=col)
+
+    # Add the kernel estimate line
+    fig.add_trace(go.Scatter(
+        x=xi,
+        y=f,
+        mode='lines',
+        line=dict(color=myColor.dark_red(1)),
+        name='Kernel estimate',
+    ), row=row, col=col)
+
+    # Add the peak signal scatter plot
+    fig.add_trace(go.Scatter(
+        x=peaks_location[week],
+        y=peaks_intensity[week],
+        mode='markers',
+        marker=dict(color=myColor.black(1), size=6),
+        name='peak signal',
+    ), row=row, col=col)
+
+    fig.update_xaxes(
+        # tickvals=dateNum_every_day[:7:dateTickDistance],
+        # ticktext=xTickLabels[week*7:(week+1)*7:dateTickDistance] if xTickLabels is not None else None,
+        title_text=xlabel, 
+        automargin=True,
+        # range=[time_mean[0]+3.5, time_mean[-1]-10.5], 
+        row=row, col=col)
+    fig.update_yaxes(title_text=ylabel, row=row, col=col)
 
     return fig

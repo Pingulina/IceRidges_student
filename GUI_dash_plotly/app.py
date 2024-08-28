@@ -55,6 +55,7 @@ app.layout = html.Div([
     dcc.Store(id='json-data-allRidges_allYears-store', data={}), # store the JSON data for all ridges from all years and locations
     dcc.Store(id='ridge_statistics-output', data={}), # store the ridge statistics output
     dcc.Store(id='plot-json-ridges-store', data=go.Figure().to_json()), # store the plot data for the ridges
+    dcc.Store(id='json-trace-indices-store', data={}), # store the trace indices for the plot data (needed for updating the plot)
 ])
 
 ### Import the callback files

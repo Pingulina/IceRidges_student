@@ -16,6 +16,7 @@ extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_p
 ridge_statistics = import_module('ridge_statistics', 'data_analysis')
 ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
 weekly_analysis_plot_plotly = import_module('weekly_analysis_plot_plotly', 'plot_functions')
+weekly_analysis_plot_plotly_update = import_module('weekly_analysis_plot_plotly_update', 'plot_functions')
 
 
 ### Callbacks for Tab 3
@@ -162,6 +163,7 @@ def register_tab3_callbacks(app):
     # Callback to render the weekly analysis plot
     @app.callback(
         Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
+        Output('json-trace-indices-store', 'data'),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
         Input('render-weekly-analysis-button', 'n_clicks'),
@@ -176,34 +178,36 @@ def register_tab3_callbacks(app):
         if n_clicks > 0:
             if not json_data:
                 print(json_data)
-                return go.Figure(), True, 'No data loaded. Please load the data first'
+                return go.Figure(), {}, True, 'No data loaded. Please load the data first'
             if season is None or loc is None:
-                return go.Figure(), True, 'Please select a season and a location'
+                return go.Figure(), {}, True, 'Please select a season and a location'
             if dict_ridge_statistics_allYears is None:
-                return go.Figure(), True, 'No additional data loaded. Please load the additional data first'
+                return go.Figure(), {}, True, 'No additional data loaded. Please load the additional data first'
             print('plot weekly analysis')
             year = int(season.split('-')[0])
             print(year)
-            fig = weekly_analysis_plot_plotly.weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, json_data)
-            return fig, False, ''
-        return go.Figure(), False, ''
+            fig, dict_trace_indices = weekly_analysis_plot_plotly.weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, json_data)
+            return fig, dict_trace_indices, False, ''
+        return go.Figure(), {}, False, ''
 
     # Callback to update the plot for weekly analysis and correction
     @app.callback(
         Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
         Input('week-slider', 'value'),
         State('json-data-store', 'data'),
+        State('json-data-allRidges_allYears-store', 'data'),
         State('season-plot-dropdown', 'value'),
         State('location-plot-dropdown', 'value'),
         State('plot-weekly-analysis', 'figure'),
+        State('json-trace-indices-store', 'data'),
         prevent_initial_call=True
     )
-    def update_weekly_analysis_plot(week, json_data, season, loc, fig):
+    def update_weekly_analysis_plot(week, json_data, dict_ridge_statistics_allYears, season, loc, fig, dict_trace_indices):
         print('update weekly analysis plot')
         if json_data and season and loc:
             year = season.split('-')[0]
-            # Assuming you have a function to generate the weekly analysis plot
-            fig = weekly_analysis_update_plot(json_data[year], year=year, loc=loc, week=week)
+            # Assuming you have a function to generate the weekly analysis plot week, year, loc, fig, dict_ridge_statistics_allYears, dict_ridge_statistics_jsonified, dict_trace_indices
+            fig = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, fig, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
             return fig
         return go.Figure()
     

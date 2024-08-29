@@ -185,7 +185,7 @@ def register_tab3_callbacks(app):
                 return go.Figure(), {}, True, 'No additional data loaded. Please load the additional data first'
             print('plot weekly analysis')
             year = int(season.split('-')[0])
-            print(year)
+            week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
             fig, dict_trace_indices = weekly_analysis_plot_plotly.weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, json_data)
             return fig, dict_trace_indices, False, ''
         return go.Figure(), {}, False, ''
@@ -193,6 +193,8 @@ def register_tab3_callbacks(app):
     # Callback to update the plot for weekly analysis and correction
     @app.callback(
         Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
         Input('week-slider', 'value'),
         State('json-data-store', 'data'),
         State('json-data-allRidges_allYears-store', 'data'),
@@ -204,11 +206,12 @@ def register_tab3_callbacks(app):
     )
     def update_weekly_analysis_plot(week, json_data, dict_ridge_statistics_allYears, season, loc, fig, dict_trace_indices):
         print('update weekly analysis plot')
+        week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
         if json_data and season and loc:
             year = season.split('-')[0]
             # Assuming you have a function to generate the weekly analysis plot week, year, loc, fig, dict_ridge_statistics_allYears, dict_ridge_statistics_jsonified, dict_trace_indices
-            fig = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, fig, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
-            return fig
-        return go.Figure()
+            fig, display_confirm, message_confirm = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, fig, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
+            return fig, display_confirm, message_confirm
+        return go.Figure(), False, ''
     
 

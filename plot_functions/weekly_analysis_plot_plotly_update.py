@@ -32,7 +32,7 @@ def weekly_analysis_update_plot(year, loc, week, fig, dict_ridge_statistics_allY
     draft_deepest_ridge = dict_ridge_statistics['expect_deepest_ridge']
     deepest_mode_weekly = dict_ridge_statistics['level_ice_deepest_mode']
     deepest_mode_expect_weekly = dict_ridge_statistics['level_ice_expect_deepest_mode']
-    week_to_keep = dict_ridge_statistics['week_to_keep']  # must be int
+    week_to_keep = dict_ridge_statistics['week_to_keep']
     number_ridges = dict_ridge_statistics['number_ridges']
     mean_keel_draft = dict_ridge_statistics['mean_keel_draft']
     draft_max_weekly = dict_ridge_statistics['draft_weekly_deepest_ridge']

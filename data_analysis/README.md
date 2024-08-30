@@ -11,6 +11,8 @@ For each week in the dataset, the method extracts ridge data (`draft_rc_reshape`
 
 #### Ridge Count: 
 The number of ridges for each week is calculated and stored in `R_no[week_num]`, providing a count of ridges observed within each weekly segment.
+To identify the different ice ridges, the Rayleigh Criteria is used. Rayleigh Criteria describes the minimal distance between to points to be seen as two independent points. Normally used in optics to describe the light fracturing and light bending, it can also be used as a definition for the independency of adjacent peaks.
+
 
 #### Subset of Raw ULS Draft Measurement:
 A subset of the draft measurements is selected based on specific criteria (draft values between 0 and 3 meters) and within the time frame of the current week. This subset is used for further statistical analysis.

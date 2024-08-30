@@ -43,7 +43,15 @@ This will download the code to your computer and initialize the git structure. Y
 cd IceRidges_student # navigate to the IceRidges_student folder
 ```
 
-Now, you will find a folder called `IceRidges_student` in your `IceRidges` folder. This folder contains the code of the simulation. To run the code, you have to set up the environment and download the data as described in the following sections.
+Now, you will find a folder called `IceRidges_student` in your `IceRidges` folder. This folder contains the code of the simulation. To run the code, you have to set up the environment and download the data as described [below](README.md#setting-up-the-environment).
+
+#### Updating your code with git
+To keep your code up to date, you have to pull the latest changes from the repository. Navigate to the `IceRidges_student` folder and update by the following command:
+
+```bash
+cd ./Documents/IceRidges/IceRidges_student # navigate to the IceRidges_student folder
+git pull # pull the latest changes from the repository (like updating the code)
+```
 
 
 ## Setting up the environment

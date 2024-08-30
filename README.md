@@ -65,7 +65,7 @@ It requires a `conda` environment, then all needed packages are installed via `c
 
 To set up the `conda` environment, it is recommended to use [Anaconda](https://www.anaconda.com/download). Download and install [Anaconda](https://www.anaconda.com/download). 
 
-Open the Anaconda Navigator and create a new environment. The environment can be named as you like. For example, you can name it `IceRidges`. The Python version should be `3.11` or newer. After creating the environment, open the terminal and activate the environment by typing 
+Open the Anaconda Navigator and create a new environment. The environment can be named as you like. For example, you can name it `IceRidges`. The Python version should be `3.11` or newer. After creating the environment, open the terminal. On Windows, it is recommended to use the Powershell Prompt provided by Anaconda. You can find it on the starting page of the Anaconda Navigator. Then activate the environment by typing 
 ```bash
 conda activate IceRidges
 ``` 

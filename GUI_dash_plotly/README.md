@@ -17,6 +17,10 @@ python app.py
 ```
 To open the GUI in your browser,open the link that is shown in the terminal. 
 
+
+## Stopping the GUI
+To stop the GUI, you have to kill the process in the terminal by pressing `ctrl` + `c`. There might be a better way in the future, but for now, you have to kill the process manually.
+
 ## Using the GUI
 The GUI consists of three tabs: `Settings`, `Simulation` and `Vizualization`.
 A general note: Some of the operations start slightly time-consuming calculations. Please be patient and wait for the calculations to finish. The GUI will inform you when the calculations are done, either by a message or by stopping the loading animation.
@@ -38,3 +42,5 @@ More steps will be added in the future.
 
 ### Visualization
 In the third tab, you can visualize the results of the simulation. On the top of the tab, you have to chose the season and location from the dropdown menus you want to visualize. Then click on `Load JSON Data`. This will load the data from the simulation. You will get a message, when the data is loaded. Then you can chose the visualization you want to see. For some of the visualizations, you have to set additional parameters or load additional data. The GUI will guide you through the process.
+
+

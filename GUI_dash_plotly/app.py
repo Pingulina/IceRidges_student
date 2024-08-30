@@ -79,7 +79,7 @@ def render_content(tab, fig_json_ridges):
     if tab == 'tab-1':
         return html.Div([
             html.Div([
-                html.Label('Select Year:'),
+                html.Label('Select Season:'),
                 dcc.Dropdown(
                     id='year-dropdown',
                     options=year_options,

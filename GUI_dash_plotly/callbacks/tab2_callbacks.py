@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import datetime
+import time
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -14,6 +15,7 @@ extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_p
 ridge_statistics = import_module('ridge_statistics', 'data_analysis')
 ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
 helping_functions = import_module('helping_functions', 'GUI_dash_plotly')
+d2j = import_module('data2json', 'initialization_preparation')
 
 ### Callbacks for Tab 2
 def register_tab2_callbacks(app):
@@ -24,13 +26,32 @@ def register_tab2_callbacks(app):
         State('selected-years-locations-store', 'data'),
         prevent_initial_call=True
     )
+
     def run_extract_ridge_LI_data(n_clicks, years_locs):
         if n_clicks > 0:
+            tic = time.time()
             feedback_message = 'Simulation is running...'
+            path_name = constants.pathName_mooring_data
+            file_path_list = [path_name.replace('SEASON', thisSeason) for thisSeason in ['2004-2005', '2005-2006', '2006-2007']] # ['2004-2005', '2005-2006', '2006-2007']]
+            this_file_path = os.path.abspath(os.getcwd())
+            storage_path_folder = os.path.join(this_file_path, 'Data', 'mooring_data')
+            print('extract data to json')
+            d2j.data2json_dict(storage_path_folder, years_locs)
+            print('extract ridge data')
             extract_ridge_LI_data.extract_ridge_LI_data(terminal_use=False, dict_mooring_locations=years_locs)
             feedback_message = 'Simulation has been run. Check the console for output.'
+            toc = time.time()
+            print(f"Time taken for run_extract_ridge_LI_data: {toc-tic}")
             return feedback_message
         return ''
+    
+    # def run_extract_ridge_LI_data(n_clicks, years_locs):
+    #     if n_clicks > 0:
+    #         feedback_message = 'Simulation is running...'
+    #         extract_ridge_LI_data.extract_ridge_LI_data(terminal_use=False, dict_mooring_locations=years_locs)
+    #         feedback_message = 'Simulation has been run. Check the console for output.'
+    #         return feedback_message
+    #     return ''
     
 
     # Callback to handle the button click for showing the extracted data in Tab 2

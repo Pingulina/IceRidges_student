@@ -133,7 +133,7 @@ def render_content(tab, fig_json_ridges):
     elif tab == 'tab-2':
         return html.Div([
             html.Div([
-                html.P('Extract data (might take multiple minutes per location and year):'),
+                html.P('Extract data (might take up to 10 minutes or more per location and year):'),
                 html.Button('Extract data', id='run-extract_ridge_LI_data-button', n_clicks=0, className='button-default'),
                 html.Button('Show extracted data', id='show-extracted-data-button', n_clicks=0, className='button-default')
             ]),

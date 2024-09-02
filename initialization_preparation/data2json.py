@@ -77,6 +77,27 @@ def data2json_multi(file_path_list, storage_path_folder):
     print("All .dat files converted to .json")
     return None
 
+def data2json_dict(storage_path_folder, dict_mooring_locations):
+    """Transform multiple .dat files to .json files, in dict_mooring_locations is stored which locations should be transformed
+    :param storage_path_folder: path to the folder where the folders for each season containing the .json files are stored
+    :param dict_mooring_locations: dict, dict with the seasons as keys and the locations as values
+    :return: None
+    """
+    # iterate over file_path_list and find all .dat files
+    for season in dict_mooring_locations.keys():
+        # create the storeage path for the current file_path
+        # get the current season from the file_path (e.g. 2004-2005)
+        print(f"Converting .dat files from {season}")
+        # add the current seasen (e.g. 2004-2005) to the storage_path_folder
+        storage_path = os.path.join(storage_path_folder, season)
+        file_path = constants.pathName_mooring_data.replace('SEASON', season)
+        for file in os.listdir(file_path):
+            if file.endswith('.dat') and file.split('_')[0][-1] in dict_mooring_locations[season]:
+                data2json(file_path, file, storage_path)
+
+    print("All .dat files converted to .json")
+    return None
+
 def data2json_interactive(file_path_list, storage_path_folder, overwrite=None):
     """Transform multiple .dat files to .json files
     Asking the user if he wants to proceed, if there is already a file with the same name in the storage path

@@ -5,6 +5,7 @@ import scipy.stats
 import os
 import sys
 from copy import deepcopy
+import time
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 # Get the current working directory
@@ -23,7 +24,7 @@ constants = import_module('constants', 'helper_functions')
 d2j = import_module('dict2json', 'data_handling')
 
 
-def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0.5, terminal_use=True, use_existing_mooringLocs=None, dict_mooring_locations=None):
+def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = None, terminal_use=True, use_existing_mooringLocs=None, dict_mooring_locations=None):
     """sort the data from the json file into weekly data and store it back to json file
     :param estimate_hourly: bool, optional, if True, the hourly data is estimated from the available data
     :param years: list, optional, list of years to be processed
@@ -35,7 +36,7 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
     :param dict_mooring_locations: dict, optional, dictionary with the mooring locations
     :return: None
     """
-    
+    tic = time.time()
     if dict_mooring_locations is None and terminal_use:
         dict_mooring_locations = mooring_locs.mooring_locations(storage_path='Data', use_existing=use_existing_mooringLocs) # dictionary with the mooring locations
         if terminal_use:
@@ -108,8 +109,52 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
             # meaning only keep position_info, dateNum and draft
             dateNum = np.array(data_dict['dateNum'])
             draft = np.array(data_dict['draft'])
+
+            # get the sample rate of the data
+            if sample_rate is None:
+                ping_interval = np.mean(np.diff(data_dict['dateNum']))*24*3600 # time between two pings in seconds
+                ping_interval = np.round(ping_interval, 1) # round to one decimal
+                sample_rate = 1/ping_interval # sample rate in Hz
+                sample_rate_days = sample_rate / (24*3600) # sample rate in days
+
             # fit dateNum to sample rate (full seconds)
             dateNum = np.round(dateNum * sample_rate * (3600 * 24)) / (sample_rate * (3600 * 24))
+
+            # some data sets have missing data inbetween. Recognize this and insert draft 0 at the missing time points
+            # find the missing time points
+            theoretical_dateNum = np.arange(dateNum[0], dateNum[-1]+sample_rate_days/2, sample_rate_days)
+            if len(theoretical_dateNum) > len(dateNum):
+                # there are missing points in dateNum and draft
+                # find the missing time points (dateNum is not completly evenspaced, but roughly; theoreticical_dateNum is completly evenspaced)
+                missingPoints_start = np.where(np.diff(dateNum) > 1.5 * sample_rate_days)[0]
+            
+                
+                for missingPoint in reversed(missingPoints_start):
+                    # iterate backwards, otherwise the indices are not correct anymore after inserting the missing points
+
+                    # find the number of missing points between two points
+                    number_missing_points = int(np.round((dateNum[missingPoint+1] - dateNum[missingPoint]) / sample_rate_days)) +1 # find the number of missing points plus the the two points, that are already there
+                    # insert the missing points
+                    insertPoints = np.linspace(dateNum[missingPoint], dateNum[missingPoint+1], number_missing_points)
+                    dateNum = np.insert(dateNum, missingPoint+1, insertPoints[1:-1])
+                    if number_missing_points > 4: # if there are more than 2 values (missingPoints = 4) to insert, insert zeros
+                        draft = np.insert(draft, missingPoint+1, np.zeros(number_missing_points-2))
+                        # print(f"Inserted {len(insertPoints)-2} missing points value 0 at index {missingPoint}")
+                    elif number_missing_points > 2: # if there are 1 or 2 values (missingPoints = 3 or 4) to insert, insert the value of the last point
+                        draft = np.insert(draft, missingPoint+1, draft[missingPoint])
+                        # print(f"Inserted {len(insertPoints)-2} missing points value {draft[missingPoint]} at index {missingPoint}")
+                    else: # no points to insert (missingPoints = 2 means there are the two existing points and no point missing)
+                        pass
+
+
+                    
+
+            elif len(theoretical_dateNum) < len(dateNum):
+                # there is a ploblem with the theoretical_dateNum, because it is not the same length as dateNum
+                pass
+                
+            missing_time_points = np.setdiff1d(theoretical_dateNum, dateNum)
+            # insert the missing time points with draft 0
 
 
             # mean time interval between two measurements
@@ -117,7 +162,8 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
             # if there is a missmatch in the data time, fix it
             if not np.isclose(min(np.diff(dateNum)), dt_days, atol=1e-8):
                 print("There is a missmatch in the time data. Fixing it automatically.")
-                dateNum = np.arange(dateNum[0], dateNum[-1], dt_days)
+                dateNum = np.linspace(dateNum[0], dateNum[-1], len(dateNum)) # this is to make sure that the time is evenly spaced (to get rid of some small numerical errors)
+                # np.arange(dateNum[0], dateNum[-1]+dt_days, dt_days)
             # transform dt_days in seconds
             dt = np.round(dt_days * constants.hours_day * constants.seconds_hour) # FIXME: this is a restriction that only natural numbers are allowed for dt
 
@@ -184,4 +230,6 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = 0
 
 
     print(f"Data for draft, ridge draft and level ice draft stored in {storage_path}")
+    toc = time.time()
+    print(f" ---------------- \nTime elapsed: {toc-tic} seconds \n ----------------- \n")
             

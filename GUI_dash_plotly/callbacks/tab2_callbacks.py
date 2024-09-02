@@ -76,6 +76,7 @@ def register_tab2_callbacks(app):
     )
     def run_ridge_statistics(n_clicks, years_locs):
         if n_clicks > 0:
+            tic = time.time()
             ridge_statistics.ridge_statistics(years_locs_dict=years_locs, saveAsJson=True, run_as_app=True)
             print('Simulation has been run. Check the console for output.')
             json_data = {}
@@ -85,6 +86,8 @@ def register_tab2_callbacks(app):
                 for location in years_locs[season]:
                     with open(os.path.join(constants.pathName_dataResults, 'ridge_statistics', f"ridge_statistics_{year}{location}.json"), 'r') as f:
                         json_data[season][location] = json.load(f)
+            toc = time.time()
+            print(f"Time taken for run_ridge_statistics: {toc-tic}")
             return 'Simulation has been run. Check the console for output.', json_data
         return '', {}
     

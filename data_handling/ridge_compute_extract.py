@@ -102,12 +102,15 @@ def find_dateTime_in_week(dateNum, week_start, week_end):
     :param week_end: float, dateNum of the end of the week
     return: int, int, indices of the first and last element in the week
     """
-    week_start_idx = np.where(dateNum >= week_start)[0][0] # find the first element, that is larger or equal to week_start
-    week_end_idx = np.where(dateNum <= week_end)[0][-1]+1 # find the last element, that is smaller or equal to week_en
-    if np.isnan(week_start_idx) or np.isnan(week_end_idx):
+    week_start_idx = np.where(dateNum >= week_start)[0] # find all elements, that are larger or equal to week_start
+    week_end_idx = np.where(dateNum <= week_end)[0] # find all element, that are smaller or equal to week_end
+    if len(week_start_idx) == 0 or len(week_end_idx) == 0: # if there is no element in the data, that is larger or equal to week_start and smaller or equal to week_end
         # return 0, 0, such that no data is written to the dateNum_reshape (since there is no needed data in this week)
         week_start_idx = 0
         week_end_idx = 0
+    else:
+        week_start_idx = week_start_idx[0]
+        week_end_idx = week_end_idx[-1] + 1
     if week_end_idx == len(dateNum):
-        week_end_idx = np.nan # if the end of the week is the last element in the data, return nan, such that the last element is also included
+        week_end_idx = None # if the end of the week is the last element in the data, return None, such that the last element is also included
     return week_start_idx, week_end_idx

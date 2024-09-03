@@ -24,7 +24,7 @@ constants = import_module('constants', 'helper_functions')
 d2j = import_module('dict2json', 'data_handling')
 
 
-def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = None, terminal_use=True, use_existing_mooringLocs=None, dict_mooring_locations=None):
+def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate=None, terminal_use=True, use_existing_mooringLocs=None, dict_mooring_locations=None):
     """sort the data from the json file into weekly data and store it back to json file
     :param estimate_hourly: bool, optional, if True, the hourly data is estimated from the available data
     :param years: list, optional, list of years to be processed
@@ -122,18 +122,17 @@ def extract_ridge_LI_data(estimate_hourly=True, overwrite=False, sample_rate = N
 
             # some data sets have missing data inbetween. Recognize this and insert draft 0 at the missing time points
             # find the missing time points
-            theoretical_dateNum = np.arange(dateNum[0], dateNum[-1]+sample_rate_days/2, sample_rate_days)
+            theoretical_dateNum = np.arange(dateNum[0], dateNum[-1]+1/sample_rate_days/2, 1/sample_rate_days)
             if len(theoretical_dateNum) > len(dateNum):
                 # there are missing points in dateNum and draft
                 # find the missing time points (dateNum is not completly evenspaced, but roughly; theoreticical_dateNum is completly evenspaced)
-                missingPoints_start = np.where(np.diff(dateNum) > 1.5 * sample_rate_days)[0]
+                missingPoints_start = np.where(np.diff(dateNum) > 1.5 * 1/sample_rate_days)[0]
             
-                
                 for missingPoint in reversed(missingPoints_start):
                     # iterate backwards, otherwise the indices are not correct anymore after inserting the missing points
 
                     # find the number of missing points between two points
-                    number_missing_points = int(np.round((dateNum[missingPoint+1] - dateNum[missingPoint]) / sample_rate_days)) +1 # find the number of missing points plus the the two points, that are already there
+                    number_missing_points = int(np.round((dateNum[missingPoint+1] - dateNum[missingPoint]) * sample_rate_days)) +1 # find the number of missing points plus the the two points, that are already there
                     # insert the missing points
                     insertPoints = np.linspace(dateNum[missingPoint], dateNum[missingPoint+1], number_missing_points)
                     dateNum = np.insert(dateNum, missingPoint+1, insertPoints[1:-1])

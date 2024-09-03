@@ -8,7 +8,8 @@ from dotdict import Map
 # dict named params, that contains all parameters
 constants = Map({}) # dict() with dotdict functionality #
 
-constants['pathName_mooring_data'] = r"C:\Users\linasap\Documents\Ice_ridges\IceRidges_python\Data_Beaufort_Gyre_Exploration\SEASON"
+#constants['pathName_mooring_data'] = r"C:\Users\linasap\Documents\Ice_ridges\IceRidges_python\Data_Beaufort_Gyre_Exploration\SEASON"
+constants['pathName_mooring_data'] = os.path.join(os.getcwd(), "Data_Beaufort_Gyre_Exploration", "SEASON")
 constants['pathName_dataResults'] = os.path.join(os.getcwd(), "Data_results")
 constants['pathName_dataRaw'] = os.path.join(os.getcwd(), "Data")
 constants['pathName_plots'] = os.path.join(os.getcwd(), "Plots")

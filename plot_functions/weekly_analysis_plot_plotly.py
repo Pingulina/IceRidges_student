@@ -154,8 +154,8 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
     # plot the data
     # the figure should contain a spectogram and some lines on top of it (all in one plot)
     HHi_plot = HHi / (period+1)
-    print('dateNum_hist: ', dateNum_hist)
-    print('hh: ', hh)
+    # print('dateNum_hist: ', dateNum_hist)
+    # print('hh: ', hh)
     
 
     ### Create a subplot figure

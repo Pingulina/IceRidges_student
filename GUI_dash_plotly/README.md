@@ -1,21 +1,26 @@
 # Graphical user interface (GUI) for the IceRidges simulation
 The graphical user interface (GUI) is your interface to the simulation. It allows you to set up the simulation, run it and visualize the results.
 ## Starting the GUI
-To start the GUI, you have to navigate to the `IceRidges_student` folder and run the `gui.py` script.
+To start the GUI, you have to navigate to the `IceRidges_student` folder and run the `app.py` script, as described below.
 
-Open the terminal and activate the conda environment by typing 
+**On unix-based systems (e.g. macOS and Linux):** Open the terminal and activate the conda environment by typing 
 ```bash
 conda activate IceRidges
 ```
-Replace `IceRidges` with the name of your conda environment, if you named it differently. Navigate to the `IceRidges_student` folder 
+Replace `IceRidges` with the name of your conda environment, if you named it differently. 
+
+**On Windows:** Open the Anaconda Powershell Promt via the Anaconda Navigator. First, choose the correct environment in the Anaconda Navigator, then open the Powershell Promt. Like that, the environment is activated automatically.
+
+Navigate to the `IceRidges_student` folder 
 ```bash
-cd Documents/IceRidges/IceRidges_student # navigate to the folder where the code is stored
+cd Documents/IceRidges # navigate to the folder where the code is stored
+cd IceRidges_student # navigate to the IceRidges_student folder
 ```
 and start the GUI by typing 
 ```bash
-python app.py
+python GUI_dash_plotly/app.py
 ```
-To open the GUI in your browser,open the link that is shown in the terminal. 
+To open the GUI in your browser, open the link that is shown in the terminal. 
 
 
 ## Stopping the GUI

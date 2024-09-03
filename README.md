@@ -14,7 +14,7 @@ To get the code, you need to have git installed on your computer. If you don't h
 ### How to use git
 #### Cloning the repository
 Cloning a repository means, that an instance of the code is downloaded to your computer. This way, you can work on the code locally and get the latest updates from the repository in an easy way.
-We will use the terminal or command prompt for all git commands. Don't be affraid of the terminal, it's not as scary as it looks. All needed commands can be directly copied from here. Just one hint: don't use `ctrl` + `c` to copy in the terminal, becuase it will stop the current command. Use `crtl + shift + c` instead.
+We will use the terminal (on Windows, 'git bash' is a good option) for all git commands. In the following, only the expression 'terminal' is used, even though on windows no application called 'terminal' exists. Don't be affraid of the terminal, it's not as scary as it looks. All needed commands can be directly copied from here. Just one hint: don't use `ctrl` + `c` to copy in the terminal, becuase it will stop the current command. Use `crtl + shift + c` instead.
 
 To clone the repository, open the terminal or command prompt and navigate to the folder where you want to store the code. In this example, we will store the code in `Documents` in a folder called `IceRidges`. To create this folder, type the following command and press enter:
 

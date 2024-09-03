@@ -41,10 +41,12 @@ The table at the bottom of the tab shows the parameters used in the simulation. 
 ### Simulation
 In the second tab, you can run the different simulations. You have to chose the seasons and locations in the first tab before running any simulations.
 
-In the first step, you have to extract the data from the `.dat` files. This is done by clicking on the `Extract data` button. It might take multiple minutes per location and year, so be patient.
+In the first step, you have to transform the `.dat` files to `.json` files. This is done by clicking on the `Transform data` button. It might take multiple minutes per location and year, so be patient. When you click on `Show transformed data`, you can see a list of all the data that has been transformed.
+
+In the second step, you have to extract the ridges and level ice sequences from the data. This is done by clicking on the `Extract data` button. It might take multiple minutes per location and year, so be patient.
 When you click on `Show extracted data`, you can see a list of all the data that has been extracted.
 
-The second step is to find the ridges in the data. This is done by clicking on the `Find ridges` button. This step might take a while, so be patient. When you click on `Show computed ridge data`, you can see a list of all the ridges that have been found.
+The third step is to do some ridge statistics. This is done by clicking on the `Find ridges` button. This step might take a while, so be patient. When you click on `Show computed ridge data`, you can see a list of all the ridges that have been found.
 
 More steps will be added in the future.
 

@@ -56,7 +56,7 @@ def update_plot_weekly_data_draft(
     # Update the x-axis ticks and labels
     tickvals = dateNum_every_day[:7:dateTickDistance]
     ticktext = xTickLabels[week*7:(week+1)*7:dateTickDistance] if xTickLabels is not None else None
-    print('fig keys: ', fig['layout']['xaxis2'].keys())
+    # print('fig keys: ', fig['layout']['xaxis3'])
     fig['layout']['xaxis3'].update(
         range=[time[week][0], time[week][-1]],
         tickvals=tickvals,

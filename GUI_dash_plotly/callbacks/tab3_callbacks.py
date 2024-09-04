@@ -1,4 +1,4 @@
-from dash import Output, Input, State
+from dash import Output, Input, State, Patch
 import plotly.graph_objs as go
 import json
 import os
@@ -187,10 +187,35 @@ def register_tab3_callbacks(app):
             year = int(season.split('-')[0])
             week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
             fig, dict_trace_indices = weekly_analysis_plot_plotly.weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, json_data)
+            print('weekly analysis plot initialized')
             return fig, dict_trace_indices, False, ''
         return go.Figure(), {}, False, ''
 
-    # Callback to update the plot for weekly analysis and correction
+    # # Callback to update the plot for weekly analysis and correction
+    # @app.callback(
+    #     Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
+    #     Output('confirm', 'displayed', allow_duplicate=True),
+    #     Output('confirm', 'message', allow_duplicate=True),
+    #     Input('week-slider', 'value'),
+    #     State('json-data-store', 'data'),
+    #     State('json-data-allRidges_allYears-store', 'data'),
+    #     State('season-plot-dropdown', 'value'),
+    #     State('location-plot-dropdown', 'value'),
+    #     State('plot-weekly-analysis', 'figure'),
+    #     State('json-trace-indices-store', 'data'),
+    #     prevent_initial_call=True
+    # )
+    # def update_weekly_analysis_plot(week, json_data, dict_ridge_statistics_allYears, season, loc, fig, dict_trace_indices):
+    #     print('update weekly analysis plot')
+    #     week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
+    #     if json_data and season and loc:
+    #         year = season.split('-')[0]
+    #         # Assuming you have a function to generate the weekly analysis plot week, year, loc, fig, dict_ridge_statistics_allYears, dict_ridge_statistics_jsonified, dict_trace_indices
+    #         fig, display_confirm, message_confirm = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, fig, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
+    #         return fig, display_confirm, message_confirm
+    #     return go.Figure(), False, ''
+    
+    # Callback to update the plot for weekly analysis and correction partially
     @app.callback(
         Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
         Output('confirm', 'displayed', allow_duplicate=True),
@@ -200,18 +225,19 @@ def register_tab3_callbacks(app):
         State('json-data-allRidges_allYears-store', 'data'),
         State('season-plot-dropdown', 'value'),
         State('location-plot-dropdown', 'value'),
-        State('plot-weekly-analysis', 'figure'),
         State('json-trace-indices-store', 'data'),
         prevent_initial_call=True
     )
-    def update_weekly_analysis_plot(week, json_data, dict_ridge_statistics_allYears, season, loc, fig, dict_trace_indices):
-        print('update weekly analysis plot')
+    def update_weekly_analysis_plot_partially(week, json_data, dict_ridge_statistics_allYears, season, loc, dict_trace_indices):
         week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
         if json_data and season and loc:
+            print('update weekly analysis plot partially')
+            # Create a patch object
+            patch = Patch()
             year = season.split('-')[0]
-            # Assuming you have a function to generate the weekly analysis plot week, year, loc, fig, dict_ridge_statistics_allYears, dict_ridge_statistics_jsonified, dict_trace_indices
-            fig, display_confirm, message_confirm = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, fig, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
-            return fig, display_confirm, message_confirm
+            # Update the current week patch in the figure
+            patch, display_confirm, message_confirm = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, patch, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
+            return patch, display_confirm, message_confirm
         return go.Figure(), False, ''
     
 

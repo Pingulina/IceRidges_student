@@ -241,28 +241,28 @@ def register_tab3_callbacks(app):
         return go.Figure(), False, ''
     
 
-    ## Callbacks to correct specified values
-    # Callback to chose a value
-    @app.callback(
-        Output('value-to-correct', 'data'),
-        Input('click-value', 'data'), # this variable is to store the clicked value in the plot
-    )
-    def get_value_to_correct(click_value):
-        return click_value
+    # ## Callbacks to correct specified values
+    # # Callback to chose a value
+    # @app.callback(
+    #     Output('value-to-correct', 'data'),
+    #     Input('click-value', 'data'), # this variable is to store the clicked value in the plot
+    # )
+    # def get_value_to_correct(click_value):
+    #     return click_value
     
 
-    @app.callback(
-        Output('corrected-value', 'data'),
-        Output('json-data-store', 'data', allow_duplicate=True),
-        Input('navigation-arrows', 'value'),
-        State('value-to-correct', 'data'),
-        State('json-data-store', 'data'),
-        prevent_initial_call=True
-    )
-    def correct_value(navigation, value_id, json_data):
-        corrected_value = json_data[value_id] # TODO: need to implement correction
-        # idea: navigation consists of value for the up and down arrows to correct the value in steps. Or with direct entry field.
-        return corrected_value, json_data
+    # @app.callback(
+    #     Output('corrected-value', 'data'),
+    #     Output('json-data-store', 'data', allow_duplicate=True),
+    #     Input('navigation-arrows', 'value'),
+    #     State('value-to-correct', 'data'),
+    #     State('json-data-store', 'data'),
+    #     prevent_initial_call=True
+    # )
+    # def correct_value(navigation, value_id, json_data):
+    #     corrected_value = json_data[value_id] # TODO: need to implement correction
+    #     # idea: navigation consists of value for the up and down arrows to correct the value in steps. Or with direct entry field.
+    #     return corrected_value, json_data
         
     
 

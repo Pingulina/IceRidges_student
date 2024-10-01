@@ -56,6 +56,7 @@ app.layout = html.Div([
     dcc.Store(id='ridge_statistics-output', data={}), # store the ridge statistics output
     dcc.Store(id='plot-json-ridges-store', data=go.Figure().to_json()), # store the plot data for the ridges
     dcc.Store(id='json-trace-indices-store', data={}), # store the trace indices for the plot data (needed for updating the plot)
+    dcc.Store(id='this-time-draft-tuple', data=(0, 0)), # store the time and draft data for the current week
 ])
 
 ### Import the callback files
@@ -203,6 +204,7 @@ def render_content(tab, fig_json_ridges):
                 '''),
             html.Button('Load additional data', id='load-weekly-analysis-button', n_clicks=0, className='button-default'),
             html.Button('Render plot', id='render-weekly-analysis-button', n_clicks=0, className='button-default'),
+            html.Button('Correct value', id='correct-value-button', n_clicks=0, className='button-default'),
             dcc.Markdown('''Select the week to analyze:'''),
             dcc.Slider(
                 id='week-slider',
@@ -213,7 +215,48 @@ def render_content(tab, fig_json_ridges):
                 marks={i: f'{i}' for i in range(1, 53)},
                 tooltip={"placement": "bottom", "always_visible": True}
             ),
-            dcc.Graph(id='plot-weekly-analysis'),
+            
+            # Hidden div to trigger the modal
+            html.Div(id='modal', style={'display': 'none'}),
+            # Modal layout
+            html.Div(
+                id='modal-content',
+                style={
+                    'display': 'none',
+                    'position': 'fixed',
+                    'z-index': '1',
+                    'left': '0',
+                    'top': '0',
+                    'width': '100%',
+                    'height': '100%',
+                    'overflow': 'auto',
+                    'background-color': 'rgb(0,0,0)',
+                    'background-color': 'rgba(0,0,0,0.4)',
+                    'padding-top': '60px'
+                },
+                children=[
+                    html.Div(
+                        style={
+                            'background-color': '#fefefe',
+                            'margin': '5% auto',
+                            'padding': '20px',
+                            'border': '1px solid #888',
+                            'width': '80%'
+                        },
+                        children=[
+                            html.Label('New X Coordinate:'),
+                            dcc.Input(id='new-x-coordinate', type='number', value=10),
+                            html.Label('New Y Coordinate:'),
+                            dcc.Input(id='new-y-coordinate', type='number', value='this-time-draft-tuple'[1]),
+                            html.Button('Save', id='save-button', n_clicks=0),
+                            html.Button('Delete', id='delete-button', n_clicks=0),
+                            html.Button('Cancel', id='cancel-button', n_clicks=0)
+                        ]
+                    )
+                ]
+            ),
+            
+            dcc.Graph(id='plot-weekly-analysis'),   
         ])
 
 

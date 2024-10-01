@@ -166,6 +166,7 @@ def register_tab3_callbacks(app):
         Output('json-trace-indices-store', 'data'),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
+        Output('this-time-draft-tuple', 'data', allow_duplicate=True),
         Input('render-weekly-analysis-button', 'n_clicks'),
         State('json-data-store', 'data'),
         State('json-data-allRidges_allYears-store', 'data'),
@@ -186,10 +187,10 @@ def register_tab3_callbacks(app):
             print('plot weekly analysis')
             year = int(season.split('-')[0])
             week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
-            fig, dict_trace_indices = weekly_analysis_plot_plotly.weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, json_data)
+            fig, dict_trace_indices, this_time, this_draft = weekly_analysis_plot_plotly.weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, json_data)
             print('weekly analysis plot initialized')
-            return fig, dict_trace_indices, False, ''
-        return go.Figure(), {}, False, ''
+            return fig, dict_trace_indices, False, '', (this_time, this_draft)
+        return go.Figure(), {}, False, '', (0, 0)
 
     # # Callback to update the plot for weekly analysis and correction
     # @app.callback(
@@ -220,6 +221,7 @@ def register_tab3_callbacks(app):
         Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
+        Output('this-time-draft-tuple', 'data', allow_duplicate=True),
         Input('week-slider', 'value'),
         State('json-data-store', 'data'),
         State('json-data-allRidges_allYears-store', 'data'),
@@ -236,9 +238,9 @@ def register_tab3_callbacks(app):
             patch = Patch()
             year = season.split('-')[0]
             # Update the current week patch in the figure
-            patch, display_confirm, message_confirm = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, patch, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
-            return patch, display_confirm, message_confirm
-        return go.Figure(), False, ''
+            patch, display_confirm, message_confirm, this_time, this_draft = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, patch, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
+            return patch, display_confirm, f"{message_confirm}; {(this_time, this_draft)}", (this_time, this_draft)
+        return go.Figure(), False, '', (0, 0)
     
 
     ## Callbacks to correct specified values
@@ -264,5 +266,28 @@ def register_tab3_callbacks(app):
         # idea: navigation consists of value for the up and down arrows to correct the value in steps. Or with direct entry field.
         return corrected_value, json_data
         
+
+    # Callback to show the modal when the button is clicked
+    @app.callback(
+        Output('modal-content', 'style'),
+        Input('correct-value-button', 'n_clicks'),
+        Input('cancel-button', 'n_clicks'),
+    )
+    def display_modal(correct_clicks, cancel_clicks):
+        if correct_clicks > 0 and (cancel_clicks is None or correct_clicks > cancel_clicks):
+            return {
+                'display': 'block',
+                'position': 'fixed',
+                'z-index': '1',
+                'left': '0',
+                'top': '0',
+                'width': '100%',
+                'height': '100%',
+                'overflow': 'auto',
+                'background-color': 'rgb(0,0,0)',
+                'background-color': 'rgba(0,0,0,0.4)',
+                'padding-top': '60px'
+            }
+        return {'display': 'none'}
     
 

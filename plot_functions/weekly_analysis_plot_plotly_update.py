@@ -58,7 +58,8 @@ def weekly_analysis_update_plot(year, loc, week, fig, dict_ridge_statistics_allY
     xTickLabels = date_time_stuff.datestr(dateNum_every_day, format='DD.MM.YY')
 
     if week > len(dateNum_reshape)-1:
-        return fig, True, f"Week index out of range. The maximum week for this location is {len(dateNum_reshape)}."
+        max_week = len(dateNum_reshape)-1
+        return fig, True, f"Week index out of range. The maximum week for this location is {max_week+1}.", dateNum_rc_pd[max_week], deepest_mode_weekly[max_week]
 
     # update week patch in draft overview plot
     fig = data_analysis_plot_plotly_update.update_current_week_patch(fig, dict_trace_indices['draftAll_patch_trace_index'], week_starts, week_ends, week)
@@ -98,4 +99,10 @@ def weekly_analysis_update_plot(year, loc, week, fig, dict_ridge_statistics_allY
         xData_thisYear=deepest_mode_weekly, yData_thisYear=number_ridges, week=week
     )
 
-    return fig, False, ''
+    # update the title
+    fig['layout']['title']['text'] = f"Year {year}, location {loc}, week {week+1}"
+
+    this_time = dateNum_rc_pd[week]
+    this_draft = deepest_mode_weekly[week]
+
+    return fig, False, '', this_time, this_draft

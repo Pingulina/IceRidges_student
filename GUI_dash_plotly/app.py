@@ -244,12 +244,9 @@ def render_content(tab, fig_json_ridges):
                             'width': '80%'
                         },
                         children=[
-                            html.Label('New X Coordinate:'),
-                            dcc.Input(id='new-x-coordinate', type='number', value=10),
-                            html.Label('New Y Coordinate:'),
-                            dcc.Input(id='new-y-coordinate', type='number', value='this-time-draft-tuple'[1]),
+                            html.Label('Correct value for ice draft:'),
+                            dcc.Input(id='new-y-coordinate', type='number', value='', step=0.1),
                             html.Button('Save', id='save-button', n_clicks=0),
-                            html.Button('Delete', id='delete-button', n_clicks=0),
                             html.Button('Cancel', id='cancel-button', n_clicks=0)
                         ]
                     )

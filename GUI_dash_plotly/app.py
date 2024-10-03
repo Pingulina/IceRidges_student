@@ -57,6 +57,7 @@ app.layout = html.Div([
     dcc.Store(id='plot-json-ridges-store', data=go.Figure().to_json()), # store the plot data for the ridges
     dcc.Store(id='json-trace-indices-store', data={}), # store the trace indices for the plot data (needed for updating the plot)
     dcc.Store(id='this-time-draft-tuple', data=(0, 0)), # store the time and draft data for the current week
+    dcc.Store(id='click-data-draft-index', data=None), # store the index of the clicked data point
 ])
 
 ### Import the callback files
@@ -204,7 +205,8 @@ def render_content(tab, fig_json_ridges):
                 '''),
             html.Button('Load additional data', id='load-weekly-analysis-button', n_clicks=0, className='button-default'),
             html.Button('Render plot', id='render-weekly-analysis-button', n_clicks=0, className='button-default'),
-            html.Button('Correct value', id='correct-value-button', n_clicks=0, className='button-default'),
+            # html.Button('Correct value', id='correct-value-button', n_clicks=0, className='button-default'),
+            html.Button('Update', id='update-values-plot-button', n_clicks=0, className='button-default'),
             dcc.Markdown('''Select the week to analyze:'''),
             dcc.Slider(
                 id='week-slider',
@@ -253,7 +255,8 @@ def render_content(tab, fig_json_ridges):
                 ]
             ),
             
-            dcc.Graph(id='plot-weekly-analysis'),   
+            dcc.Graph(id='plot-weekly-analysis'), 
+            html.Div(id='click-data-draft')  
         ])
 
 

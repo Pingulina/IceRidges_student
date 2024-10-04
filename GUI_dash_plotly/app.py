@@ -2,6 +2,7 @@
 # the GUI is realized as dash application using dash and plotly
 import dash
 from dash import dcc, html, Input, Output, State, dash_table, callback_context, dash_table
+import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 import plotly.io as pio
 import pandas as pd
@@ -34,7 +35,7 @@ with open(json_file_path, 'r') as file:
 year_options = [{'label': year, 'value': year} for year in mooring_data.keys()]
 
 ### Initialize the Dash app
-app = dash.Dash(__name__, suppress_callback_exceptions=True) # suppress_callback_exceptions=True is needed to suppress the error message when clicking on the tabs
+app = dash.Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.YETI]) # suppress_callback_exceptions=True is needed to suppress the error message when clicking on the tabs
 
 ### Define the layout of the app
 app.layout = html.Div([
@@ -249,7 +250,7 @@ def render_content(tab, fig_json_ridges):
                             html.Label('Correct value for ice draft:'),
                             dcc.Input(id='new-y-coordinate', type='number', value='', step=0.1),
                             html.Button('Save', id='save-button', n_clicks=0),
-                            html.Button('Cancel', id='cancel-button', n_clicks=0)
+                            html.Button('Close', id='cancel-button', n_clicks=0)
                         ]
                     )
                 ]

@@ -253,19 +253,21 @@ def register_tab3_callbacks(app):
         Output('modal-content', 'style'),
         Output('new-y-coordinate', 'value'),
         Output('cancel-button', 'n_clicks'),
+        # Output('save-button', 'n_clicks', allow_duplicate=True),
         # Input('correct-value-button', 'n_clicks'),
         Input('click-data-draft-index', 'data'),
         Input('save-button', 'n_clicks'),
         Input('cancel-button', 'n_clicks'),
         State('this-time-draft-tuple', 'data'),
+        prevent_initial_call=True
     )
     # def display_modal(correct_clicks, cancel_clicks, this_time_draft):
     def display_modal(correct_index, save_clicks, cancel_clicks, this_time_draft):
         # if correct_clicks > 0 and (cancel_clicks is None or correct_clicks > cancel_clicks):
-        print((correct_index, cancel_clicks))
-        if correct_index is not None and save_clicks is 0 and (cancel_clicks is 0 or cancel_clicks is None):
+        print((correct_index, cancel_clicks, save_clicks))
+        if correct_index is not None  and (cancel_clicks == 0 or cancel_clicks is None): # and save_clicks == 0
             cancel_clicks = 0
-            save_clicks = 0
+            # save_clicks = 0
             if this_time_draft:
                 return {
                     'display': 'block',
@@ -279,7 +281,7 @@ def register_tab3_callbacks(app):
                     'background-color': 'rgb(0,0,0)',
                     'background-color': 'rgba(0,0,0,0.4)',
                     'padding-top': '60px'
-                }, this_time_draft[1], cancel_clicks
+                }, this_time_draft[1], cancel_clicks #, save_clicks
             else:
                 return {
                     'display': 'block',
@@ -293,10 +295,10 @@ def register_tab3_callbacks(app):
                     'background-color': 'rgb(0,0,0)',
                     'background-color': 'rgba(0,0,0,0.4)',
                     'padding-top': '60px'
-                }, '', cancel_clicks
+                }, '', cancel_clicks, save_clicks
         cancel_clicks = 0
-        save_clicks = 0
-        return {'display': 'none'}, '', cancel_clicks
+        # save_clicks = 0
+        return {'display': 'none'}, '', cancel_clicks #, save_clicks
     
 
     # Callback to update the value of the current week when the save button is clicked
@@ -305,6 +307,7 @@ def register_tab3_callbacks(app):
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
         Output('json-data-store', 'data', allow_duplicate=True),
+        # Output('save-button', 'n_clicks', allow_duplicate=True),        
         # Output('this-time-draft-tuple', 'data', allow_duplicate=True),
         Input('save-button', 'n_clicks'),
         State('new-y-coordinate', 'value'),
@@ -319,6 +322,7 @@ def register_tab3_callbacks(app):
     )
     def update_weekly_analysis_plot_save(save_clicks, new_y, pointIndex, week, json_data, dict_ridge_statistics_allYears, season, loc, dict_trace_indices):
         if save_clicks > 0:
+            # save_clicks = 0
             week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
             if json_data and season and loc:
                 print(f"season: {season}")
@@ -327,6 +331,12 @@ def register_tab3_callbacks(app):
                 print(f"pointIndex: {pointIndex}, week: {week}")
                 print(f"keys: {json_data[year][loc]['keel_draft_ridge'].keys()}")
                 json_data[year][loc]['keel_draft_ridge']['data'][week][pointIndex] = new_y
+                # get the indices for the chosen point in the other lists
+                print('find the weekly data index')
+                weekly_data_index = np.where(np.array(json_data[year][loc]['dateNum']['data']) == json_data[year][loc]['keel_dateNum_ridge']['data'][week][pointIndex])[0][0]
+                print(f"weekly_data_index: {weekly_data_index}")
+                json_data[year][loc]['draft']['data'][weekly_data_index] = new_y
+                # 'mean_keel_draft', 'draft_weekly_deepest_ridge', 'level_ice_deepest_mode'
                 # Update the current week patch in the figure
                 patch = Patch()
                 print('update weekly analysis plot')

@@ -38,10 +38,10 @@ def main():
     # wva.weekly_visual_analysis()
 
     ### uncomment the following line to run the weekly_manual_correction.py file
-    wmc.weekly_manual_correction()
+    # wmc.weekly_manual_correction()
 
     ### uncomment the following line to run the preliminary_analysis_simulation.py file
-    # pas.prelim_analysis_simulation([2004, 2006], ['a', 'b', 'c', 'd'])
+    pas.prelim_analysis_simulation([2004, 2006], ['a', 'b', 'c', 'd'])
 
     ### uncomment the following line to run the level_ice_statistics.py file
     # lis.level_ice_statistics(year=2004, loc='a')

@@ -20,56 +20,63 @@ from import_module import import_module
 constants = import_module('constants', 'helper_functions')
 prelim_plot = import_module('preliminary_analysis_plot_plotly', 'plot_functions')
 load_data = import_module('load_data', 'data_handling')
+j2d = import_module('jsonified2dict', 'data_handling')
 
 
-def prelim_analysis_simulation(years, locs):
+def prelim_analysis_simulation(year, loc, week, dict_ridge_statistics_allYears, dict_ridge_statistics_jsonified):
     """ decription of the function
     """
-    # check, if the years and locations are lists, if not, make lists
-    if isinstance(years, list):
-        pass
-    elif isinstance(years, int):
-        years = [years]
-    else:
-        raise ValueError("The input years must be a list or an integer.")
-    if isinstance(locs, list):
-        pass
-    elif isinstance(locs, str):
-        locs = [locs]
-    else:
-        raise ValueError("The input locations must be a list or a string.")
-    
-    # load the data
-    pathName = os.getcwd()
-    path_to_json_mooring = os.path.join(pathName, 'Data', 'uls_data')
-    path_to_json_corrected = os.path.join(constants.pathName_dataResults, 'ridge_statistics', 'ridge_statistics_corrected')
-    path_to_json_processed = os.path.join(constants.pathName_dataResults, 'ridge_statistics')
+    ### get the variables out of the dicts
+    all_LIDM = dict_ridge_statistics_allYears['all_LIDM']
+    all_MKD = dict_ridge_statistics_allYears['all_MKD']
+    all_Dmax = dict_ridge_statistics_allYears['all_Dmax']
+    all_number_of_ridges = dict_ridge_statistics_allYears['all_number_of_ridges']
+
+    # print(dict_ridge_statistics_jsonified.keys())
+    dict_ridge_statistics = j2d.jsonified2dict(dict_ridge_statistics_jsonified[str(year)][loc]) # this is to convert the jsonified data to a dict with its original data types
+    dateNum_LI = dict_ridge_statistics['dateNum_LI']
+    draft_mode = dict_ridge_statistics['draft_mode']
+    dateNum_rc = dict_ridge_statistics['dateNum_rc']
+    draft_rc = dict_ridge_statistics['draft_rc']
+    dateNum_rc_pd = dict_ridge_statistics['mean_dateNum']
+    draft_deepest_ridge = dict_ridge_statistics['expect_deepest_ridge']
+    deepest_mode_weekly = dict_ridge_statistics['level_ice_deepest_mode']
+    deepest_mode_expect_weekly = dict_ridge_statistics['level_ice_expect_deepest_mode']
+    week_to_keep = dict_ridge_statistics['week_to_keep']  # must be int
+    number_ridges = dict_ridge_statistics['number_ridges']
+    mean_keel_draft = dict_ridge_statistics['mean_keel_draft']
+    draft_max_weekly = dict_ridge_statistics['draft_weekly_deepest_ridge']
+    dateNum_reshape = dict_ridge_statistics['keel_dateNum']
+    draft_reshape = dict_ridge_statistics['keel_draft']
+    draft_ridge = dict_ridge_statistics['keel_draft_ridge']
+    dateNum_ridge = dict_ridge_statistics['keel_dateNum_ridge']
+
+    week_starts = dict_ridge_statistics['week_start']
+    week_ends = dict_ridge_statistics['week_end']
+
+    peaks_location = dict_ridge_statistics['peaks_location']
+    peaks_intensity = dict_ridge_statistics['peaks_intensity']
+
+    dateNum = dict_ridge_statistics['dateNum']
+    draft = dict_ridge_statistics['draft']
+    keel_draft_flat = [x for xs in draft_ridge for x in xs]
+    keel_dateNum_flat = [x for xs in dateNum_ridge for x in xs]
+
+
 
     level_ice_deepest_mode = []
     mean_keel_draft = []
     number_of_ridges = []
     draft_weekly_deepest_ridge = []
     weeks_to_keep = []
-    for year in years:
-        for loc in locs:
-            # check, if this year and location exists in the corrected files, otherwise use the processed files
-            fileName = f"ridge_statistics_{year}{loc}.json"
-            if os.path.exists(os.path.join(path_to_json_corrected, fileName)):
-                dateNum, draft, dict_ridge_statistics_corrected, year, loc = load_data.load_data_oneYear(path_to_json_processed=path_to_json_corrected, path_to_json_mooring=path_to_json_mooring,
-                                                                                             year=year, loc=loc)
-            else:
-                dateNum, draft, dict_ridge_statistics_corrected, year, loc = load_data.load_data_oneYear(path_to_json_processed=path_to_json_processed, path_to_json_mooring=path_to_json_mooring,
-                                                                                             year=year, loc=loc, skip_nonexistent_locs=True)
-                if dateNum is None:
-                    continue
-            week_to_keep = dict_ridge_statistics_corrected[loc]['week_to_keep']
-            # make lists of the data, include all data that is marked to keep (listed in week_to_keep)
-            level_ice_deepest_mode.extend([dict_ridge_statistics_corrected[loc]['level_ice_deepest_mode'][weekNr] for weekNr in np.where(week_to_keep)[0]]) # needs to be this way, because dict entry is a list not a np.array
-            mean_keel_draft.extend([dict_ridge_statistics_corrected[loc]['mean_keel_draft'][weekNr] for weekNr in np.where(week_to_keep)[0]])
-            number_of_ridges.extend([dict_ridge_statistics_corrected[loc]['number_ridges'][weekNr] for weekNr in np.where(week_to_keep)[0]])
-            draft_weekly_deepest_ridge.extend([dict_ridge_statistics_corrected[loc]['draft_weekly_deepest_ridge'][weekNr] for weekNr in np.where(week_to_keep)[0]])
-
-            weeks_to_keep.extend([dict_ridge_statistics_corrected[loc]['week_to_keep'][weekNr] for weekNr in np.where(week_to_keep)[0]])
+    for this_year in year:
+        for this_loc in loc:
+            lidm_loc, mkd_loc, nor_loc, dwd_loc, wtk_loc = prelim_anaylsis_simulation_weekToKeep_data(dict_ridge_statistics)
+            level_ice_deepest_mode.extend(lidm_loc)
+            mean_keel_draft.extend(mkd_loc)
+            number_of_ridges.extend(nor_loc)
+            draft_weekly_deepest_ridge.extend(dwd_loc)
+            weeks_to_keep.extend(wtk_loc)
 
     # make numpy arrays
     level_ice_deepest_mode = np.array(level_ice_deepest_mode)
@@ -186,8 +193,8 @@ def prelim_analysis_simulation(years, locs):
     mean_keel_draft_simulated = curve_fitting(level_ice_deepest_mode, mean_keel_draft, level_ice_deepest_mode)[0] * np.random.normal(ridgeDepth_probDist[0], ridgeDepth_probDist[1], len(mean_keel_draft))
     number_of_ridges_simByDraft = 38.78 * (mean_keel_draft_simulated-constants.min_draft) ** 2.047 * np.random.normal(ridgeNumber_probDist[0], ridgeNumber_probDist[1], len(mean_keel_draft_simulated))
     # exceedance probability of keel depth (depths of all keys)
-    weeks_to_keep_thisLoc = dict_ridge_statistics_corrected[loc]['week_to_keep']
-    keel_draft_ridge_toKeep = np.concatenate([dict_ridge_statistics_corrected[loc]['keel_draft_ridge'][weekNr] for weekNr in np.where(weeks_to_keep_thisLoc)[0]])
+    weeks_to_keep_thisLoc = dict_ridge_statistics[loc]['week_to_keep']
+    keel_draft_ridge_toKeep = np.concatenate([dict_ridge_statistics[loc]['keel_draft_ridge'][weekNr] for weekNr in np.where(weeks_to_keep_thisLoc)[0]])
     scatter1_x = np.sort(keel_draft_ridge_toKeep)
     scatter1_y = np.arange(len(scatter1_x), 0, -1) / len(scatter1_x)
 
@@ -270,3 +277,18 @@ def fitting_y(x, b):
     if type(x) == list:
         x = np.array(x)
     return b[0]*x + b[1]
+
+def prelim_anaylsis_simulation_weekToKeep_data(dict_ridge_statistics:dict) -> tuple[list, list, list, list, list]:
+    """ extract the data for the preliminary analysis for one year and location for the weeks that are marked to keep
+        :param dict_ridge_statistics: the dictionary with the ridge statistics data
+    """
+    week_to_keep = dict_ridge_statistics['week_to_keep']
+    # make lists of the data, include all data that is marked to keep (listed in week_to_keep)
+    level_ice_deepest_mode = [dict_ridge_statistics['level_ice_deepest_mode'][weekNr] for weekNr in np.where(week_to_keep)[0]] # needs to be this way, because dict entry is a list not a np.array
+    mean_keel_draft = [dict_ridge_statistics['mean_keel_draft'][weekNr] for weekNr in np.where(week_to_keep)[0]]
+    number_of_ridges = [dict_ridge_statistics['number_ridges'][weekNr] for weekNr in np.where(week_to_keep)[0]]
+    draft_weekly_deepest_ridge = [dict_ridge_statistics['draft_weekly_deepest_ridge'][weekNr] for weekNr in np.where(week_to_keep)[0]]
+
+    weeks_to_keep = [dict_ridge_statistics['week_to_keep'][weekNr] for weekNr in np.where(week_to_keep)[0]]
+
+    return level_ice_deepest_mode, mean_keel_draft, number_of_ridges, draft_weekly_deepest_ridge, weeks_to_keep

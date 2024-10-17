@@ -2,6 +2,7 @@
 import json
 import os
 import numpy as np
+from jsonified2dict import jsonified2dict
 
 def json2numpy(file_path:str, loc_mooring:str):
     """Load the data from a json file and return numpy arrays
@@ -28,6 +29,7 @@ def json2numpy(file_path:str, loc_mooring:str):
         draft = None
         draft_mode = None
         return sucess, dateNum, draft, draft_mode
+    data = jsonified2dict(data)
     dateNum = np.array(data['dateNum'])
     draft = np.array(data['draft'])
     if 'draft_mode' in data:

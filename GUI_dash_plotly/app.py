@@ -188,6 +188,10 @@ def render_content(tab, fig_json_ridges):
                         **Every time data is loaded, it may take up to a few minutes, depending on the size of the data set(s). So be patient, don't switch the tabs or click the buttons multiple times.**
                          '''),
             html.Button('Load JSON Data', id='load-json-data-button', n_clicks=0, className='button-default'),
+            dcc.Markdown('''
+                         If you want to run either weekly visual analysis or level ice analaysis, you need to load the additional data. 
+                         '''),
+            html.Button('Load additional data', id='load-weekly-analysis-button', n_clicks=0, className='button-default'),
             ########
              # Ridge statistics
             dcc.Markdown('''
@@ -202,9 +206,8 @@ def render_content(tab, fig_json_ridges):
             dcc.Markdown('''
                 ## Weekly visual analysis and correction
                 In the following, the ridges per week can be analyzed in relation to all other ridges from the whole dataset of all years and locations. 
-                This data needs to be loaded additionally to the data loaded in the beginning. To do so, click the 'Load additional data' button.
+                This data needs to be loaded additionally to the data loaded in the beginning. To do so, click the 'Load additional data' button at the top.
                 '''),
-            html.Button('Load additional data', id='load-weekly-analysis-button', n_clicks=0, className='button-default'),
             html.Button('Render plot', id='render-weekly-analysis-button', n_clicks=0, className='button-default'),
             # html.Button('Correct value', id='correct-value-button', n_clicks=0, className='button-default'),
             html.Button('Update', id='update-values-plot-button', n_clicks=0, className='button-default'),
@@ -257,7 +260,13 @@ def render_content(tab, fig_json_ridges):
             ),
             
             dcc.Graph(id='plot-weekly-analysis'), 
-            html.Div(id='click-data-draft')  
+            html.Div(id='click-data-draft'),
+            dcc.Markdown('''
+                ## Level ice analysis
+                In the following, the level ice can visually be analyzed.
+            '''),  
+            html.Button('Level ice analysis', id='render-LI-analysis-button', n_clicks=0, className='button-default'),
+            dcc.Graph(id='plot-LI-analysis'),
         ])
 
 

@@ -17,6 +17,7 @@ ridge_statistics = import_module('ridge_statistics', 'data_analysis')
 ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
 weekly_analysis_plot_plotly = import_module('weekly_analysis_plot_plotly', 'plot_functions')
 weekly_analysis_plot_plotly_update = import_module('weekly_analysis_plot_plotly_update', 'plot_functions')
+level_ice_statistics_plotly = import_module('level_ice_statistics_plotly', 'plot_functions')
 
 
 ### Callbacks for Tab 3
@@ -362,4 +363,29 @@ def register_tab3_callbacks(app):
         if point['curveNumber'] == 5:
             return f"You clicked on point: x={point['x']}, y={point['y']}, pointIndex={point['pointIndex']}, curveNumber={point['curveNumber']}", point['pointIndex'], (point['x'], point['y'])
         return "Click on a data point of weekly draft to see the details here.", None, (0, 0)
+    
+
+    @app.callback(
+        Output('plot-LI-analysis', 'figure'),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
+        Output('json-data-store', 'data'),
+        Input('render-LI-analysis-button', 'n_clicks'),
+        State('json-data-store', 'data'),
+        State('json-data-allRidges_allYears-store', 'data'),
+        State('season-plot-dropdown', 'value'),
+        State('location-plot-dropdown', 'value'),
+        prevent_initial_call=True
+    )
+    def plot_LI_analysis_plot(n_clicks, json_data, dict_ridge_statistics_allYears, season, loc):
+        if n_clicks > 0:
+            if not json_data:
+                return go.Figure(), True, 'No data loaded. Please load the data first', json_data
+            if season is None or loc is None:
+                return go.Figure(), True, 'Please select a season and a location', json_data
+            year = season.split('-')[0]
+            print('plot LI analysis')
+            fig = level_ice_statistics_plotly.level_ice_statistics(year, loc, 0, dict_ridge_statistics_allYears, json_data[str(year)][loc])
+            return fig, False, '', json_data
+        return go.Figure(), False, '', json_data
     

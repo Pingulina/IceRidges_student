@@ -385,7 +385,7 @@ def register_tab3_callbacks(app):
                 return go.Figure(), True, 'Please select a season and a location', json_data
             year = season.split('-')[0]
             print('plot LI analysis')
-            fig = level_ice_statistics_plotly.level_ice_statistics(year, loc, 0, dict_ridge_statistics_allYears, json_data[str(year)][loc])
+            fig, dict_trace_indices, this_time, this_draft = level_ice_statistics_plotly.level_ice_statistics_initialize(year, loc, 0, dict_ridge_statistics_allYears, json_data[str(year)][loc])
             return fig, False, '', json_data
         return go.Figure(), False, '', json_data
     

@@ -26,10 +26,11 @@ rce = import_module('ridge_compute_extract', 'data_handling')
 user_input_iteration = import_module('user_input_iteration', 'user_interaction')
 dts = import_module('date_time_stuff', 'helper_functions')
 j2d = import_module('jsonified2dict', 'data_handling')
+myColor = import_module('myColor', 'helper_functions')
 
 
 
-def level_ice_statistics(year, loc, week, dict_ridge_statistics_allYears, dict_ridge_statistics_jsonified):
+def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYears, dict_ridge_statistics_jsonified):
     """Analysing the level ice data, determine the level ice mode for each week
     """
     ### get the variables out of the dicts
@@ -38,8 +39,8 @@ def level_ice_statistics(year, loc, week, dict_ridge_statistics_allYears, dict_r
     all_Dmax = dict_ridge_statistics_allYears['all_Dmax']
     all_number_of_ridges = dict_ridge_statistics_allYears['all_number_of_ridges']
 
-    # print(dict_ridge_statistics_jsonified.keys())
-    dict_ridge_statistics = j2d.jsonified2dict(dict_ridge_statistics_jsonified[str(year)][loc]) # this is to convert the jsonified data to a dict with its original data types
+    print(dict_ridge_statistics_jsonified.keys())
+    dict_ridge_statistics = j2d.jsonified2dict(dict_ridge_statistics_jsonified) # this is to convert the jsonified data to a dict with its original data types
     dateNum_LI = dict_ridge_statistics['dateNum_LI']
     draft_LI = dict_ridge_statistics['draft_LI']
     draft_mode = dict_ridge_statistics['draft_mode']
@@ -108,10 +109,10 @@ def level_ice_statistics(year, loc, week, dict_ridge_statistics_allYears, dict_r
     [X, Y] = np.meshgrid(dateNum_hist_levelIce_weekly, histBins_mids)
     
     ### parameters/data
-    mean_dateNum = dict_ridge_statistics[loc]['mean_dateNum']
-    mean_keel_draft = dict_ridge_statistics[loc]['mean_keel_draft']
-    level_ice_deepest_mode = dict_ridge_statistics[loc]['level_ice_deepest_mode']
-    level_ice_expect_deepest_mode = dict_ridge_statistics[loc]['level_ice_expect_deepest_mode']
+    mean_dateNum = dict_ridge_statistics['mean_dateNum']
+    mean_keel_draft = dict_ridge_statistics['mean_keel_draft']
+    level_ice_deepest_mode = dict_ridge_statistics['level_ice_deepest_mode']
+    level_ice_expect_deepest_mode = dict_ridge_statistics['level_ice_expect_deepest_mode']
     newHourIndex = np.where((dateNum*constants.hours_day).astype(int)-np.roll((dateNum*constants.hours_day).astype(int), 1)!=0)[0]
     newDayIndex = np.where(dateNum.astype(int)-np.roll(dateNum.astype(int), 1)!=0)[0]
     newMonthIndex = np.where([dt.fromordinal(int(dateNum[newDayIndex[i]])).month - dt.fromordinal(int(dateNum[newDayIndex[i-1]])).month for i in range(len(newDayIndex))])
@@ -124,10 +125,10 @@ def level_ice_statistics(year, loc, week, dict_ridge_statistics_allYears, dict_r
     figure_LI_statistics = make_subplots(
         rows=4, cols=6,
         specs=[
-            [{"colspan": 4}, None, None, None, {"colspan": 2}, None],
-            [{"colspan": 4}, None, None, None, {"colspan": 2}, None],
-            [{"colspan": 4, "rowspan":2}, None, None, None, {"colspan": 2}, None],
-            [None, None, None, None, {"colspan": 2}, None]
+            [{"colspan": 3, "rowspan":2}, None, None, {"colspan": 3, "rowspan":2}, None, None],
+            [None, None, None, None, None, None],
+            [{"colspan": 3}, None, None, {"colspan": 1, "rowspan":2}, {"colspan":1, "rowspan":2}, {"colspan":1, "rowspan":2}],
+            [{"colspan": 3}, None, None, None, None, None]
         ],
         # subplot_titles=(
         #     "Ice Data", "", "", "", "Mean Ridge Keel Depth",
@@ -163,7 +164,7 @@ def level_ice_statistics(year, loc, week, dict_ridge_statistics_allYears, dict_r
     hist_levelIce_mode_weekly_plot = hist_levelIce_mode_weekly / (period+1)
 
     figure_LI_statistics, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker = initialize_plot_spectrum(
-        fig=figure_LI_statistics, row=0, col=0, spec_x=X, spec_y=Y, spec_z=hist_levelIce_mode_weekly.T, spec_properties={}, 
+        fig=figure_LI_statistics, row=1, col=4, spec_x=X, spec_y=Y, spec_z=hist_levelIce_mode_weekly.T, spec_properties={}, 
         scatter1_x=dateNum_hist_draft_weekly, scatter1_y=level_ice_deepest_mode, scatter1_properties={}, 
         scatter2_x=dateNum_hist_levelIce_weekly, scatter2_y=level_ice_expect_deepest_mode, scatter2_properties={}, 
         currentPoint_x=dateNum_hist_levelIce_weekly[0], currentPoint_y=level_ice_deepest_mode[0], ylim=[0, 3], xticks=dateNum[newMonthIndex[::2]],
@@ -171,7 +172,7 @@ def level_ice_statistics(year, loc, week, dict_ridge_statistics_allYears, dict_r
     
 
     figure_LI_statistics, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker = plot_spectrum(
-        figure_LI_statistics, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker,
+        figure_LI_statistics, 1, 4, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker,
         X, Y, hist_levelIce_mode_weekly.T, {}, dateNum_hist_levelIce_weekly, level_ice_deepest_mode, 
         dateNum_hist_levelIce_weekly, level_ice_expect_deepest_mode, dateNum_hist_levelIce_weekly[0], level_ice_deepest_mode[0]
     )
@@ -179,98 +180,127 @@ def level_ice_statistics(year, loc, week, dict_ridge_statistics_allYears, dict_r
     # ax_iceDraft_spectrum.set_xticklabels(dateTicks) #, rotation=45)
 
     # ice draft overview
-    ax_iceDraft_overview = figure_LI_statistics.add_subplot(gridspec_LI_statistics[2:4, 0:3])
-    line_iceDraft_ice = ax_iceDraft_overview.plot(dateNum[0:-1:20], draft[0:-1:20], 'blue', label='Ice draft', zorder=1)
-    line_iceDraft_LI = ax_iceDraft_overview.plot(dateNum_LI, draft_LI, 'orange', label='Level ice draft', zorder=2)
-    line_iceDraft_LIDM = ax_iceDraft_overview.plot(dateNum_LI, level_ice_deepest_mode_hourly, 'red', label='Level ice deepest mode', zorder=3)
-    line_iceDraft_LIDM_expect = ax_iceDraft_overview.plot(dateNum_hist_levelIce_weekly, level_ice_expect_deepest_mode, 'olive', label='LI expected deepest mode', zorder=4)
-    currentWeekPatch = mpatches.Rectangle((dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0), constants.level_ice_statistic_days, 30, 
-                                          edgecolor='None', facecolor='red', alpha=0.3, zorder=4)
-    line_iceDraft_currentWeekPatch = ax_iceDraft_overview.add_patch(currentWeekPatch)
-    ax_iceDraft_overview.set_title('Ice draft overview')
-    ax_iceDraft_overview.set_xlabel('Date')
-    ax_iceDraft_overview.set_ylabel('Ice draft [m]')
-    # ax_iceDraft_overview.legend(loc='upper left')
-    ax_iceDraft_overview.set_xticks(dateNum[newMonthIndex[::2]])
-    ax_iceDraft_overview.set_xticklabels(dateTicks) #, rotation=45)
-    ax_iceDraft_overview.set_ylim([-0.1, 30])
-    ax_iceDraft_overview.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
 
+    figure_LI_statistics, line_iceDraft_traceIndex, line_LI_iceDraft_traceIndex, line_LIDM_traceIndex, line_iceDraft_traceIndex, patch_current_week_traceIndex = initialize_iceDraft_overview(
+        figure_LI_statistics, row=1, col=1, dateNum=dateNum[0:-1:20], draft=draft[0:-1:20], prop_draft={'color':'blue', 'linewidth':0.5, 'label':'Ice draft'}, 
+        dateNum_LI=dateNum_LI, draft_LI=draft_LI, prop_LI={'color':'orange', 'linewidth':0.5, 'label':'Level ice draft'}, 
+        dateNum_LIDM = dateNum_LI, draft_LIDM=level_ice_deepest_mode_hourly, prop_LIDM={'color':'red', 'linewidth':0.5, 'label':'Level ice deepest mode'},
+        dateNum_expLIDM=dateNum_hist_levelIce_weekly, draft_expLIDM=level_ice_expect_deepest_mode, prop_expLIDM={'color':'olive', 'linewidth':0.5, 'label':'LI expected deepest mode'},
+        week_starts=week_starts, week_ends=week_ends, week=week, xlabel='Date', ylabel='Ice draft [m]', ylim=[-0.1, 30], xTickLabels=dateTicks, xTickIndices=newMonthIndex[::2], legend=True, title='Ice draft overview'
+        )
+    
     ### level ice mode of the whole season
-    ax_levelIce_mode = figure_LI_statistics.add_subplot(gridspec_LI_statistics[3:6, 3])
-    ax_levelIce_mode.set_title('Level ice mode')
-    ax_levelIce_mode.set_xlabel('Ice draft [m]')
-    ax_levelIce_mode.set_ylabel('Density [-]')
-    # initialize the line indicating the current mode
-    line_levelIce_current_mode = ax_levelIce_mode.plot([0, 0], [0, 12], 'red', zorder=1)
-    # initialize the histogram
-    ax_levelIce_mode, hist_levelIce_mode = initialize_plot_histogram(ax_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins_array, 'density':True}, xlim=[-0.1, 8], ylim=[0, 4])
-    # ax_levelIce_mode, hist_levelIce_mode = plot_histogram(ax_levelIce_mode, hist_levelIce_mode, level_ice_deepest_mode_hourly, {'bins': histBins, 'density':True})
+    # initialize the line indicating the current mode and the histogram of the level ice mode
+    figure_LI_statistics, hist_levelIce_mode_traceIndex, line_hist_levelIce_mode_traceIndex = initialize_plot_histogram_line(
+        figure_LI_statistics, row=3, col=4, line_x=[0, 0], line_y=[0, 12], line_properties={'color':'red', 'linestyle':'--', 'name':'current mode'},
+        hist_data=level_ice_deepest_mode, hist_properties={'bins': histBins_array, 'density':True}, title='Level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 8], ylim=[0, 4])
     
     ### level ice mode weekly
-    ax_levelIce_mode_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[0:3, 3])
-    ax_levelIce_mode_weekly.set_title('Weekly level ice mode')
-    ax_levelIce_mode_weekly.set_xlabel('Ice draft [m]')
-    ax_levelIce_mode_weekly.set_ylabel('Density [-]')
-    ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = initialize_plot_histogram(ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], 
-                                                                                        {'bins': histBins_array, 'density':True}, hist_points=histBins_array, xlim=[-0.1, 3.1], ylim=[0, 4.1])
-    interpolated_histBins_array = np.linspace(histBins_array[0], histBins_array[-1], len(histBins_array)*4)
-    ax_levelIce_mode_weekly, line_dist_levelIce_mode_weekly = initialize_plot_distribution(
-        ax_levelIce_mode_weekly, np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
-        interpolated_histBins_array, {'color':'red'})
+    kde = scipy.stats.gaussian_kde(np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), bw_method=0.1)
+    line_x = np.linspace(histBins_array[0], histBins_array[-1], len(histBins_array)*4) #np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24])
+    line_y = kde(line_x)
+    figure_LI_statistics, hist_levelIce_mode_weekly_traceIndex, line_hist_levelIce_mode_weekly_traceIndex = initialize_plot_histogram_line(
+        figure_LI_statistics, row=3, col=5, line_x=line_x, line_y=line_y, line_properties={'color':'red', 'linestyle':'--', 'name':'current mode'},
+        hist_data=hist_draft_mode_weekly_dens[week], hist_properties={'bins': histBins_array, 'density':True}, title='Weekly level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 3.1], ylim=[0, 4.1])
     
 
     ### plot weekly level ice thickness
-    ax_levelIce_weekly = figure_LI_statistics.add_subplot(gridspec_LI_statistics[4:6, 0:3])
-    ax_levelIce_weekly.set_title('Weekly level ice draft')
-    ax_levelIce_weekly.set_xlabel('Date')
-    ax_levelIce_weekly.set_ylabel('Ice draft [m]') 
-    ax_levelIce_weekly, line_draftLI_weekly = initialize_plot_draft(
-        ax_levelIce_weekly, np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
-        np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
-        {'color':'blue', 'linewidth':0.5}, ylim=[-0.1, 5.1],
-        x_ticks=dateNum[newDayIndex[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2]], 
-        x_ticklabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2])
-    ax_levelIce_weekly, line_LI_DM_weekly = initialize_plot_straightLine(
-        ax_levelIce_weekly, [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], 
-        level_ice_deepest_mode[week], {'color':'red', 'linestyle':'--'})
-    ax_levelIce_weekly, line_LI_Dm_expect_weekly = initialize_plot_straightLine(
-        ax_levelIce_weekly, [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], 
-        level_ice_expect_deepest_mode[week], {'color':'olive', 'linestyle':'--'})
-    currentDayPatch = mpatches.Rectangle((dateNum[newDayIndex[week*constants.level_ice_statistic_days]], 0), 1, 30, edgecolor='None', facecolor='green', alpha=0.3, zorder=4)
-    line_levelIce_weekly_currentDayPatch = ax_levelIce_weekly.add_patch(currentDayPatch)
-    ax_levelIce_weekly.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
+    figure_LI_statistics, line_iceDraft_weekly_traceIndex, line_LI_iceDraft_weekly_traceIndex, line_LIDM_weekly_traceIndex, line_iceDraft_weekly_traceIndex, patch_current_day_traceIndex = initialize_iceDraft_overview(
+        figure_LI_statistics, row=3, col=1, dateNum=np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
+        draft=np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), prop_draft={'color':'blue', 'linewidth':0.5, 'label':'Ice draft'}, 
+        dateNum_LI=[dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], draft_LI=[draft_LI[week], draft_LI[week]], prop_LI={'color':'orange', 'linewidth':0.5, 'label':'Level ice draft'}, 
+        dateNum_LIDM = [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], draft_LIDM=[level_ice_deepest_mode[week], level_ice_deepest_mode[week]], prop_LIDM={'color':'red', 'linewidth':0.5, 'label':'Level ice deepest mode'},
+        dateNum_expLIDM=[dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], draft_expLIDM=[level_ice_expect_deepest_mode[week], level_ice_expect_deepest_mode[week]], prop_expLIDM={'color':'olive', 'linewidth':0.5, 'label':'LI expected deepest mode'},
+        week_starts=week_starts, week_ends=week_ends, week=day, xlabel='Date', ylabel='Ice draft [m]', ylim=[-0.1, 30], 
+        xTickLabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2], xTickIndices=newDayIndex[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2], 
+        legend=True, title='Weekly level ice draft'
+        )
 
 
     ### plot daily level ice thickness
-    ax_levelIce_daily = figure_LI_statistics.add_subplot(gridspec_LI_statistics[6:8, 0:3])
-    ax_levelIce_daily.set_title(f"Daily LI draft {dateTicks_days[week*constants.level_ice_statistic_days+day]}")
-    ax_levelIce_daily.set_xlabel('Time')
-    ax_levelIce_daily.set_ylabel('Ice draft [m]')
-    ax_levelIce_daily, line_draftLI_daily = initialize_plot_draft(
-        ax_levelIce_daily, 
-        np.concatenate(dateNum_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
-        np.concatenate(draft_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
-        {'color':'blue', 'linewidth':0.5}, ylim=[-0.1, 5.1],
-        x_ticks=dateNum[newHourIndex[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4]], 
-        x_ticklabels=dateTicks_hours[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4])
-    currentHourPatch = mpatches.Rectangle(
-        (dateNum[newHourIndex[week*constants.level_ice_statistic_days*constants.hours_day +day*constants.hours_day]], 0), 1/24, 30, 
-        edgecolor='None', facecolor='blue', alpha=0.3, zorder=4)
-    line_levelIce_daily_currentHourPatch = ax_levelIce_daily.add_patch(currentHourPatch)
-    ax_levelIce_daily.invert_yaxis() # make the y-axis upside down, since it is the ice depth plotted
+    figure_LI_statistics, line_iceDraft_daily_traceIndex, patch_current_hour_traceIndex = initialize_iceDraft_daily(
+        figure_LI_statistics, row=4, col=1, dateNum=np.concatenate(dateNum_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
+        draft=np.concatenate(draft_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), prop_draft={'color':'blue', 'linewidth':0.5, 'label':'Ice draft'}, 
+        week_starts=week_starts, week_ends=week_ends, week=0, xlabel='Time', ylabel='Ice draft [m]', ylim=[-0.1, 30], 
+        xTickLabels=dateTicks_hours[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4], xTickIndices=newHourIndex[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4], 
+        legend=True, title=f"Daily LI draft {dateTicks_days[week*constants.level_ice_statistic_days+day]}"
+        )
 
 
     ### reserve the space for the legend at grid position (3,2)
-    h, l = ax_iceDraft_overview.get_legend_handles_labels() 
-    ax_legend_patches = figure_LI_statistics.add_subplot(gridspec_LI_statistics[6:8, 3:4])
-    ax_legend_patches.axis('off')
-    ax_legend_patches.add_patch(mpatches.Rectangle((0, 0), 0, 0, edgecolor='None', facecolor='red', alpha=0.3, zorder=4, label='Selected week'))
-    ax_legend_patches.add_patch(mpatches.Rectangle((0, 0), 0, 0, edgecolor='None', facecolor='green', alpha=0.3, zorder=4, label='Selected day'))
-    ax_legend_patches.add_patch(mpatches.Rectangle((0, 0), 0, 0, edgecolor='None', facecolor='blue', alpha=0.3, zorder=4, label='Selected hour'))
-    h_patches, l_patches = ax_legend_patches.get_legend_handles_labels()
-    ax_legend_patches.legend(h+h_patches, l+l_patches)
 
+
+    # Extract legend entries from the plot in row 2, column 1
+    legend_entries = []
+    for trace in figure_LI_statistics['data']:
+        if trace['xaxis'] == 'x3' and trace['yaxis'] == 'y3':  # Check if the trace belongs to row 2, col 1
+            legend_entries.append(go.Scatter(
+                x=[None], y=[None],
+                mode='markers',
+                marker=dict(size=15, color=trace['line']['color'], symbol='square'),
+                name=trace['name']
+            ))
+
+    # Create legend patches
+    legend_patches = [
+        go.Scatter(
+            x=[None], y=[None],
+            mode='markers',
+            marker=dict(size=15, color='red', symbol='square', opacity=0.3),
+            name='Selected week'
+        ),
+        go.Scatter(
+            x=[None], y=[None],
+            mode='markers',
+            marker=dict(size=15, color='green', symbol='square', opacity=0.3),
+            name='Selected day'
+        ),
+        go.Scatter(
+            x=[None], y=[None],
+            mode='markers',
+            marker=dict(size=15, color='blue', symbol='square', opacity=0.3),
+            name='Selected hour'
+        )
+    ]
+
+    # Add legend patches to the figure
+    for patch in legend_patches + legend_entries:
+        figure_LI_statistics.add_trace(patch, row=3, col=6)
+
+    # Update layout to hide axes for the legend subplot
+    figure_LI_statistics.update_xaxes(visible=False, row=3, col=5)
+    figure_LI_statistics.update_yaxes(visible=False, row=3, col=5)
+
+    dict_all_trace_indices = {
+        'line_iceDraft_traceIndex': line_iceDraft_traceIndex,
+        'line_LI_iceDraft_traceIndex': line_LI_iceDraft_traceIndex,
+        'line_LIDM_traceIndex': line_LIDM_traceIndex,
+        'line_iceDraft_traceIndex': line_iceDraft_traceIndex,
+        'patch_current_week_traceIndex': patch_current_week_traceIndex,
+        'line_iceDraft_weekly_traceIndex': line_iceDraft_weekly_traceIndex,
+        'line_LI_iceDraft_weekly_traceIndex': line_LI_iceDraft_weekly_traceIndex,
+        'line_LIDM_weekly_traceIndex': line_LIDM_weekly_traceIndex,
+        'line_iceDraft_weekly_traceIndex': line_iceDraft_weekly_traceIndex,
+        'patch_current_day_traceIndex': patch_current_day_traceIndex,
+        'line_iceDraft_daily_traceIndex': line_iceDraft_daily_traceIndex,
+        'patch_current_hour_traceIndex': patch_current_hour_traceIndex,
+        'line_iceDraft_daily_traceIndex': line_iceDraft_daily_traceIndex,
+        'line_hist_levelIce_mode_weekly_traceIndex': line_hist_levelIce_mode_weekly_traceIndex,
+        'line_hist_levelIce_mode_traceIndex': line_hist_levelIce_mode_traceIndex,
+        'line_iceDraft_weekly_currentDayPatch_traceIndex': patch_current_day_traceIndex,
+        'line_iceDraft_daily_currentHourPatch_traceIndex': patch_current_hour_traceIndex,
+        'scatter_iceDraft_traceIndex': scatter_iceDraft,
+        'scatter_iceDraft_expect_traceIndex': scatter_iceDraft_expect,
+        'currentPoint_marker_traceIndex': currentPoint_marker,
+        'colorMesh_iceDraft_spectrum_traceIndex': colorMesh_iceDraft_spectrum
+    }
+    this_time = dateNum_rc_pd[week]
+    this_draft = deepest_mode_weekly[week]
+
+    return figure_LI_statistics, dict_all_trace_indices, this_time, this_draft
+
+
+def level_ice_statistics_update(figure_LI_statistics, year, loc, week, dict_ridge_statistics_allYears, dict_ridge_statistics_jsonified):
 
     while True:
         # loop through the weeks
@@ -355,6 +385,179 @@ def plot_straightLine(fig, straightLine, x, y):
     straightLine.y = np.ones(len(x)) * y
     return fig, straightLine
 
+def initialize_iceDraft_overview(
+        fig, row, col, dateNum, draft, prop_draft, dateNum_LI, draft_LI, prop_LI, dateNum_LIDM, draft_LIDM, prop_LIDM,
+        dateNum_expLIDM, draft_expLIDM, prop_expLIDM, week_starts, week_ends, week, xlabel=None, ylabel=None, xlim=None, ylim=None, 
+        xTickLabels=None, xTickIndices=None, legend=False, title=None
+        ):
+    if xlabel is None:
+        xlabel = ''
+    if ylabel is None:
+        ylabel = ''
+    if xlim is None:
+        xlim = [dateNum[0], dateNum[-1]]
+    if ylim is None:
+        ylim = [min(draft), max(draft)]
+
+    line_draft = go.Scatter(
+        x=dateNum,
+        y=draft,
+        mode='lines',
+        line=dict(color=prop_draft.get('color', 'blue'), width=prop_draft.get('linewidth', 1)),
+        name=prop_draft.get('label', '-'),
+        showlegend=legend
+    )
+    line_draft_LI = go.Scatter(
+        x=dateNum_LI,
+        y=draft_LI,
+        mode='lines',
+        line=dict(color=prop_LI.get('color', 'orange'), width=prop_LI.get('linewidth', 1)),
+        name=prop_LI.get('label', '-'),
+        showlegend=legend
+    )
+    line_draft_LIDM = go.Scatter(
+        x=dateNum_LIDM,
+        y=draft_LIDM,
+        mode='lines',
+        line=dict(color=prop_LIDM.get('color', 'red'), width=prop_LIDM.get('linewidth', 1)),
+        name=prop_LIDM.get('label', '-'),
+        showlegend=legend
+    )
+    line_draft_expLIDM = go.Scatter(
+        x=dateNum_expLIDM,
+        y=draft_expLIDM,
+        mode='lines',
+        line=dict(color=prop_expLIDM.get('color', 'olive'), width=prop_expLIDM.get('linewidth', 1)),
+        name=prop_expLIDM.get('label', '-'),
+        showlegend=legend
+    )
+    patch_current_week = go.Scatter(
+        x=[week_starts[week], week_ends[week], week_ends[week], week_starts[week], week_starts[week]],
+        y=[0, 0, max(draft), max(draft), 0],
+        fill='toself',
+        fillcolor=myColor.mid_blue(0.4),
+        line=dict(color=myColor.mid_blue(0.4)),
+        name='Current week ice data',
+        mode='lines',
+        showlegend=legend
+    )
+    fig.add_trace(line_draft, row=row, col=col)
+    line_iceDraft_traceIndex = len(fig.data) - 1
+    fig.add_trace(line_draft_LI, row=row, col=col)
+    line_LI_iceDraft_traceIndex = len(fig.data) - 1
+    fig.add_trace(line_draft_LIDM, row=row, col=col)
+    line_LIDM_traceIndex = len(fig.data) - 1
+    fig.add_trace(line_draft_expLIDM, row=row, col=col)
+    line_expLIDM_traceIndex = len(fig.data) - 1
+    fig.add_trace(patch_current_week, row=row, col=col)
+    patch_current_week_traceIndex = len(fig.data) - 1
+
+    if xTickLabels is not None:
+        if xTickIndices is not None:
+            dateNum_every_day = dateNum[xTickIndices]
+        else:
+            dateNum_every_day = dateNum[np.where(np.diff(dateNum.astype(int)))[0] + 1]
+        tickvals = dateNum_every_day[::50]
+        ticktext = xTickLabels[::50] if xTickLabels is not None else None
+        
+        fig.update_xaxes(
+            tickvals=tickvals,
+            ticktext=ticktext,
+            row=row, col=col,
+            automargin=True,
+            range=[xlim[0], xlim[1]],
+            title_text=xlabel
+        )
+    else:
+        fig.update_xaxes(
+            row=row, col=col,
+            automargin=True,
+            range=[xlim[0], xlim[1]],
+            title_text=xlabel
+        )
+
+    fig.update_yaxes(
+        row=row, col=col,
+        automargin=True,
+        range=[ylim[0], ylim[1]],
+        title_text=ylabel,
+        autorange='reversed'
+        )
+    if title is not None:
+        fig.update_layout(title_text=title)
+    return fig, line_iceDraft_traceIndex, line_LI_iceDraft_traceIndex, line_LIDM_traceIndex, line_expLIDM_traceIndex, patch_current_week_traceIndex
+
+def initialize_iceDraft_daily(
+        fig, row, col, dateNum, draft, prop_draft, week_starts, week_ends, week, xlabel=None, ylabel=None, xlim=None, ylim=None, 
+        xTickLabels=None, xTickIndices=None, legend=False, title=None
+        ):
+    if xlabel is None:
+        xlabel = ''
+    if ylabel is None:
+        ylabel = ''
+    if xlim is None:
+        xlim = [dateNum[0], dateNum[-1]]
+    if ylim is None:
+        ylim = [min(draft), max(draft)]
+
+    line_draft = go.Scatter(
+        x=dateNum,
+        y=draft,
+        mode='lines',
+        line=dict(color=prop_draft.get('color', 'blue'), width=prop_draft.get('linewidth', 1)),
+        name=prop_draft.get('label', '-'),
+        showlegend=legend
+    )
+    patch_current_week = go.Scatter(
+        x=[week_starts[week], week_ends[week], week_ends[week], week_starts[week], week_starts[week]],
+        y=[0, 0, max(draft), max(draft), 0],
+        fill='toself',
+        fillcolor=myColor.mid_blue(0.4),
+        line=dict(color=myColor.mid_blue(0.4)),
+        name='Current week ice data',
+        mode='lines',
+        showlegend=legend
+    )
+    fig.add_trace(line_draft, row=row, col=col)
+    line_iceDraft_traceIndex = len(fig.data) - 1
+    fig.add_trace(patch_current_week, row=row, col=col)
+    patch_current_week_traceIndex = len(fig.data) - 1
+
+    if xTickLabels is not None:
+        if xTickIndices is not None:
+            dateNum_every_day = dateNum[xTickIndices]
+        else:
+            dateNum_every_day = dateNum[np.where(np.diff(dateNum.astype(int)))[0] + 1]
+        tickvals = dateNum_every_day[::50]
+        ticktext = xTickLabels[::50] if xTickLabels is not None else None
+        
+        fig.update_xaxes(
+            tickvals=tickvals,
+            ticktext=ticktext,
+            row=row, col=col,
+            automargin=True,
+            range=[xlim[0], xlim[1]],
+            title_text=xlabel
+        )
+    else:
+        fig.update_xaxes(
+            row=row, col=col,
+            automargin=True,
+            range=[xlim[0], xlim[1]],
+            title_text=xlabel
+        )
+
+    fig.update_yaxes(
+        row=row, col=col,
+        automargin=True,
+        range=[ylim[0], ylim[1]],
+        title_text=ylabel,
+        autorange='reversed'
+        )
+    if title is not None:
+        fig.update_layout(title_text=title)
+    return fig, line_iceDraft_traceIndex, patch_current_week_traceIndex
+
 def initialize_plot_draft(fig, row, col, dateNum_data, draft_data, draft_properties={}, xlim=None, ylim=None, x_ticks=None, x_ticklabels=None):
     """Plot the draft data on the axis ax with the properties specified in draft_properties
     """
@@ -368,6 +571,7 @@ def initialize_plot_draft(fig, row, col, dateNum_data, draft_data, draft_propert
     fig.add_trace(draft_line, row=row, col=col)
     fig.update_xaxes(range=xlim, row=row, col=col)
     fig.update_yaxes(range=ylim, row=row, col=col)
+    trace_index = len(fig.data) - 1
     if x_ticks is not None:
         fig.update_xaxes(tickvals=x_ticks, ticktext=x_ticklabels, row=row, col=col)
     return fig, draft_line
@@ -380,6 +584,40 @@ def plot_draft(fig, draft_line, dateNum_data, draft_data, x_ticks=None, x_tickla
     if x_ticks is not None:
         fig.update_xaxes(tickvals=x_ticks, ticktext=x_ticklabels)
     return fig, draft_line
+
+def initialize_plot_histogram_line(fig, row, col, line_x, line_y, line_properties, hist_data, hist_properties, hist_points=None, xlim=None, ylim=None, xlabel=None, ylabel=None, title=None):
+    """Plot a line of the data in line_x and line_y combinded with a histogram of the data in hist_data on the axis ax with the properties specified in hist_properties"""
+    if hist_points is not None:
+        hist_heights = hist_data
+    else:
+        hist_numpy = np.histogram(hist_data, bins=hist_properties.get('bins', 10), density=hist_properties.get('density', False))
+        hist_heights = hist_numpy[0]
+        hist_points = hist_numpy[1]
+    hist_line = go.Bar(
+        x=hist_points[:-1],
+        y=hist_heights,
+        marker=dict(color=hist_properties.get('color', 'blue'), opacity=hist_properties.get('alpha', 0.5)),
+        name='Histogram'
+    )
+    fig.add_trace(hist_line, row=row, col=col)
+    hist_trace_index = len(fig.data) - 1
+    line_trace = go.Scatter(
+        x=line_x,
+        y=line_y,
+        mode='lines',
+        line=dict(color=line_properties.get('color', 'red'), width=line_properties.get('linewidth', 1)),
+        name='Line'
+    )
+    fig.add_trace(line_trace, row=row, col=col)
+    line_trace_index = len(fig.data) - 1
+    # Update x-axis
+    fig.update_xaxes(range=xlim, row=row, col=col, title_text=xlabel)
+    # Update y-axis
+    fig.update_yaxes(range=ylim, row=row, col=col, title_text=ylabel)
+    # Update title
+    if title is not None:
+        fig.update_layout(title_text=title)
+    return fig, hist_trace_index, line_trace_index
 
 def initialize_plot_histogram(fig, row, col, hist_data, hist_properties, hist_points=None, xlim=None, ylim=None):
     """Plot a histogram of the data in hist_data on the axis ax with the properties specified in hist_properties
@@ -432,7 +670,7 @@ def update_plot_distribution(fig, dist_line, hist_data, line_x):
     dist_line.y = line_y
     return fig, dist_line
 
-def plot_spectrum(fig, colorMesh, scatter1_line, scatter2_line, CP, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter2_x, scatter2_y, currentPoint_x, currentPoint_y, row, col):
+def plot_spectrum(fig, row, col, colorMesh, scatter1_line, scatter2_line, CP, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter2_x, scatter2_y, currentPoint_x, currentPoint_y):
     """
     Plot a spectrum of the data in x and y on the axis ax with the properties specified in spectrum_properties
     """

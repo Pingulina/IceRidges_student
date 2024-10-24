@@ -27,6 +27,7 @@ user_input_iteration = import_module('user_input_iteration', 'user_interaction')
 dts = import_module('date_time_stuff', 'helper_functions')
 j2d = import_module('jsonified2dict', 'data_handling')
 myColor = import_module('myColor', 'helper_functions')
+data_analysis_plot_plotly_initialize = import_module('data_analysis_plot_plotly_initialize', 'plot_functions')
 
 
 
@@ -164,35 +165,42 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
     hist_levelIce_mode_weekly_plot = hist_levelIce_mode_weekly / (period+1)
 
     figure_LI_statistics, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker = initialize_plot_spectrum(
-        fig=figure_LI_statistics, row=1, col=4, spec_x=X, spec_y=Y, spec_z=hist_levelIce_mode_weekly.T, spec_properties={}, 
+        fig=figure_LI_statistics, row=1, col=4, spec_x=dateNum_hist_levelIce_weekly, spec_y=histBins_mids, spec_z=hist_levelIce_mode_weekly_plot.T, spec_properties={}, 
         scatter1_x=dateNum_hist_draft_weekly, scatter1_y=level_ice_deepest_mode, scatter1_properties={}, 
         scatter2_x=dateNum_hist_levelIce_weekly, scatter2_y=level_ice_expect_deepest_mode, scatter2_properties={}, 
-        currentPoint_x=dateNum_hist_levelIce_weekly[0], currentPoint_y=level_ice_deepest_mode[0], ylim=[0, 3], xticks=dateNum[newMonthIndex[::2]],
+        currentPoint_x=dateNum_hist_levelIce_weekly[0], currentPoint_y=level_ice_deepest_mode[0], ylim=[0, 3], xticks_text=dateTicks, xticks=dateNum[newMonthIndex[::2]],
         xTitle='Date', yTitle='Level ice draft [m]', title='Level ice draft spectrum')
     
+    # figure_LI_statistics, colorMesh_iceDraft_spectrum, heatmap_patch_trace_index, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker = data_analysis_plot_plotly_initialize.initialize_plot_spectrum(
+    #     figure_LI_statistics, row=3, col=1, 
+    #     HHi_plot=hist_levelIce_mode_weekly_plot, X_spectogram=X, Y_spectogram=Y,
+    #     # HHi_plot=np.zeros((len(dateNum_rc_pd), len(deepest_mode_weekly)), dtype=float), X_spectogram=np.arange(len(dateNum_rc_pd)), Y_spectogram=np.arange(len(deepest_mode_weekly)),
+    #     time=dateNum_reshape, draft=draft, time_mean=dateNum_rc_pd, LI_deepestMode=deepest_mode_weekly, 
+    #     LI_deepestMode_expect=deepest_mode_expect_weekly, week_starts=week_starts, week_ends=week_ends, 
+    #     week=week, xlabel='Date specto', ylabel='Draft [m]', xTickLabels=dateNum[newMonthIndex[::2]])
+    
+    # figure_LI_statistics, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker = plot_spectrum(
+    #     figure_LI_statistics, 1, 4, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker,
+    #     X, Y, hist_levelIce_mode_weekly.T, {}, dateNum_hist_levelIce_weekly, level_ice_deepest_mode, 
+    #     dateNum_hist_levelIce_weekly, level_ice_expect_deepest_mode, dateNum_hist_levelIce_weekly[0], level_ice_deepest_mode[0]
+    # )
 
-    figure_LI_statistics, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker = plot_spectrum(
-        figure_LI_statistics, 1, 4, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker,
-        X, Y, hist_levelIce_mode_weekly.T, {}, dateNum_hist_levelIce_weekly, level_ice_deepest_mode, 
-        dateNum_hist_levelIce_weekly, level_ice_expect_deepest_mode, dateNum_hist_levelIce_weekly[0], level_ice_deepest_mode[0]
-    )
-    # ax_iceDraft_spectrum.set_xticks(dateNum[newMonthIndex[::2]])
-    # ax_iceDraft_spectrum.set_xticklabels(dateTicks) #, rotation=45)
 
     # ice draft overview
-
+    
     figure_LI_statistics, line_iceDraft_traceIndex, line_LI_iceDraft_traceIndex, line_LIDM_traceIndex, line_iceDraft_traceIndex, patch_current_week_traceIndex = initialize_iceDraft_overview(
-        figure_LI_statistics, row=1, col=1, dateNum=dateNum[0:-1:20], draft=draft[0:-1:20], prop_draft={'color':'blue', 'linewidth':0.5, 'label':'Ice draft'}, 
-        dateNum_LI=dateNum_LI, draft_LI=draft_LI, prop_LI={'color':'orange', 'linewidth':0.5, 'label':'Level ice draft'}, 
-        dateNum_LIDM = dateNum_LI, draft_LIDM=level_ice_deepest_mode_hourly, prop_LIDM={'color':'red', 'linewidth':0.5, 'label':'Level ice deepest mode'},
+        figure_LI_statistics, row=1, col=1, dateNum=dateNum[0:-1:20], draft=draft[0:-1:20], prop_draft={'color':myColor.dark_blue(1), 'linewidth':0.5, 'label':'Ice draft'}, 
+        dateNum_LI=dateNum_LI, draft_LI=draft_LI, prop_LI={'color':myColor.orange(1), 'linewidth':0.5, 'label':'Level ice draft'}, 
+        dateNum_LIDM = dateNum_LI, draft_LIDM=level_ice_deepest_mode_hourly, prop_LIDM={'color':myColor.dark_red(1), 'linewidth':0.5, 'label':'Level ice deepest mode'},
         dateNum_expLIDM=dateNum_hist_levelIce_weekly, draft_expLIDM=level_ice_expect_deepest_mode, prop_expLIDM={'color':'olive', 'linewidth':0.5, 'label':'LI expected deepest mode'},
-        week_starts=week_starts, week_ends=week_ends, week=week, xlabel='Date', ylabel='Ice draft [m]', ylim=[-0.1, 30], xTickLabels=dateTicks, xTickIndices=newMonthIndex[::2], legend=True, title='Ice draft overview'
+        week_starts=week_starts, week_ends=week_ends, week=week, xlabel='Date', ylabel='Ice draft [m]', xTickLabels=dateTicks, xTickIndices=newMonthIndex[::2], legend=True, title='Ice draft overview',
+        currentPatchColor=myColor.dark_red(0.2)
         )
     
     ### level ice mode of the whole season
     # initialize the line indicating the current mode and the histogram of the level ice mode
     figure_LI_statistics, hist_levelIce_mode_traceIndex, line_hist_levelIce_mode_traceIndex = initialize_plot_histogram_line(
-        figure_LI_statistics, row=3, col=4, line_x=[0, 0], line_y=[0, 12], line_properties={'color':'red', 'linestyle':'--', 'name':'current mode'},
+        figure_LI_statistics, row=3, col=4, line_x=[0, 0], line_y=[0, 12], line_properties={'color':myColor.dark_red(1), 'linestyle':'--', 'name':'current mode'},
         hist_data=level_ice_deepest_mode, hist_properties={'bins': histBins_array, 'density':True}, title='Level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 8], ylim=[0, 4])
     
     ### level ice mode weekly
@@ -200,28 +208,34 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
     line_x = np.linspace(histBins_array[0], histBins_array[-1], len(histBins_array)*4) #np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24])
     line_y = kde(line_x)
     figure_LI_statistics, hist_levelIce_mode_weekly_traceIndex, line_hist_levelIce_mode_weekly_traceIndex = initialize_plot_histogram_line(
-        figure_LI_statistics, row=3, col=5, line_x=line_x, line_y=line_y, line_properties={'color':'red', 'linestyle':'--', 'name':'current mode'},
+        figure_LI_statistics, row=3, col=5, line_x=line_x, line_y=line_y, line_properties={'color':myColor.dark_red(1), 'linestyle':'--', 'name':'current mode'},
         hist_data=hist_draft_mode_weekly_dens[week], hist_properties={'bins': histBins_array, 'density':True}, title='Weekly level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 3.1], ylim=[0, 4.1])
     
 
     ### plot weekly level ice thickness
+    day_starts = [week_starts[week] + i for i in range(7)]
+    day_ends = [week_starts[week] + i for i in range(1, 8)]
+    print("weekly level ice draft")
+    dateNum_week_hourly = dateNum_reshape_hourly[:,0][week*24*7:(week+1)*24*7]
+    draft_LI_week = draft_LI[week*24*7:(week+1)*24*7]
+    draft_LIDM_week = level_ice_deepest_mode_hourly[week*24*7:(week+1)*24*7]
     figure_LI_statistics, line_iceDraft_weekly_traceIndex, line_LI_iceDraft_weekly_traceIndex, line_LIDM_weekly_traceIndex, line_iceDraft_weekly_traceIndex, patch_current_day_traceIndex = initialize_iceDraft_overview(
         figure_LI_statistics, row=3, col=1, dateNum=np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
-        draft=np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), prop_draft={'color':'blue', 'linewidth':0.5, 'label':'Ice draft'}, 
-        dateNum_LI=[dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], draft_LI=[draft_LI[week], draft_LI[week]], prop_LI={'color':'orange', 'linewidth':0.5, 'label':'Level ice draft'}, 
-        dateNum_LIDM = [dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], draft_LIDM=[level_ice_deepest_mode[week], level_ice_deepest_mode[week]], prop_LIDM={'color':'red', 'linewidth':0.5, 'label':'Level ice deepest mode'},
-        dateNum_expLIDM=[dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24]], draft_expLIDM=[level_ice_expect_deepest_mode[week], level_ice_expect_deepest_mode[week]], prop_expLIDM={'color':'olive', 'linewidth':0.5, 'label':'LI expected deepest mode'},
-        week_starts=week_starts, week_ends=week_ends, week=day, xlabel='Date', ylabel='Ice draft [m]', ylim=[-0.1, 30], 
+        draft=np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), prop_draft={'color':myColor.dark_blue(1), 'linewidth':0.5, 'label':'Ice draft'}, 
+        dateNum_LI=dateNum_week_hourly, draft_LI=draft_LI[week*24*7:(week+1)*24*7], prop_LI={'color':myColor.orange(1), 'linewidth':1, 'label':'Level ice draft'}, 
+        dateNum_LIDM=dateNum_week_hourly, draft_LIDM=level_ice_deepest_mode_hourly[week*24*7:(week+1)*24*7], prop_LIDM={'color':myColor.dark_red(1), 'linewidth':1, 'label':'Level ice deepest mode'},
+        dateNum_expLIDM=[dateNum_week_hourly[0], dateNum_week_hourly[-1]], draft_expLIDM=[level_ice_expect_deepest_mode[week], level_ice_expect_deepest_mode[week]], prop_expLIDM={'color':'olive', 'linewidth':1, 'label':'LI expected deepest mode'},
+        week_starts=day_ends, week_ends=day_starts, week=day, xlabel='Date', ylabel='Ice draft [m]', ylim=[-0.1, 5.1], 
         xTickLabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2], xTickIndices=newDayIndex[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2], 
-        legend=True, title='Weekly level ice draft'
+        legend=True, title='Weekly level ice draft', currentPatchColor=myColor.green(0.2)
         )
 
 
     ### plot daily level ice thickness
     figure_LI_statistics, line_iceDraft_daily_traceIndex, patch_current_hour_traceIndex = initialize_iceDraft_daily(
         figure_LI_statistics, row=4, col=1, dateNum=np.concatenate(dateNum_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), 
-        draft=np.concatenate(draft_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), prop_draft={'color':'blue', 'linewidth':0.5, 'label':'Ice draft'}, 
-        week_starts=week_starts, week_ends=week_ends, week=0, xlabel='Time', ylabel='Ice draft [m]', ylim=[-0.1, 30], 
+        draft=np.concatenate(draft_reshape_hourly[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day]), prop_draft={'color':myColor.dark_blue(1), 'linewidth':0.5, 'label':'Ice draft'}, 
+        week_starts=week_starts, week_ends=week_ends, week=0, xlabel='Time', ylabel='Ice draft [m]', ylim=[-0.1, 5.1], 
         xTickLabels=dateTicks_hours[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4], xTickIndices=newHourIndex[(week*constants.level_ice_statistic_days +day) * constants.hours_day:(week*constants.level_ice_statistic_days +day+1) * constants.hours_day][1::4], 
         legend=True, title=f"Daily LI draft {dateTicks_days[week*constants.level_ice_statistic_days+day]}"
         )
@@ -246,7 +260,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
         go.Scatter(
             x=[None], y=[None],
             mode='markers',
-            marker=dict(size=15, color='red', symbol='square', opacity=0.3),
+            marker=dict(size=15, color=myColor.dark_red(1), symbol='square', opacity=0.3),
             name='Selected week'
         ),
         go.Scatter(
@@ -258,7 +272,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
         go.Scatter(
             x=[None], y=[None],
             mode='markers',
-            marker=dict(size=15, color='blue', symbol='square', opacity=0.3),
+            marker=dict(size=15, color=myColor.mid_blue(1), symbol='square', opacity=0.3),
             name='Selected hour'
         )
     ]
@@ -372,7 +386,7 @@ def initialize_plot_straightLine(fig, row, col, x, y, line_properties={}):
         x=x,
         y=np.ones(len(x)) * y,
         mode='lines',
-        line=dict(color=line_properties.get('color', 'red'), width=line_properties.get('linewidth', 1)),
+        line=dict(color=line_properties.get('color', myColor.dark_red(1)), width=line_properties.get('linewidth', 1)),
         name='Straight Line'
     )
     fig.add_trace(straightLine, row=row, col=col)
@@ -387,7 +401,7 @@ def plot_straightLine(fig, straightLine, x, y):
 
 def initialize_iceDraft_overview(
         fig, row, col, dateNum, draft, prop_draft, dateNum_LI, draft_LI, prop_LI, dateNum_LIDM, draft_LIDM, prop_LIDM,
-        dateNum_expLIDM, draft_expLIDM, prop_expLIDM, week_starts, week_ends, week, xlabel=None, ylabel=None, xlim=None, ylim=None, 
+        dateNum_expLIDM, draft_expLIDM, prop_expLIDM, week_starts, week_ends, week, currentPatchColor=myColor.mid_blue(0.4), xlabel=None, ylabel=None, xlim=None, ylim=None, 
         xTickLabels=None, xTickIndices=None, legend=False, title=None
         ):
     if xlabel is None:
@@ -399,11 +413,24 @@ def initialize_iceDraft_overview(
     if ylim is None:
         ylim = [min(draft), max(draft)]
 
+
+    # define the patch first, so that the lines are on top of the patch
+    patch_current_week = go.Scatter(
+        x=[week_starts[week], week_ends[week], week_ends[week], week_starts[week], week_starts[week]],
+        y=[0, 0, max(draft), max(draft), 0],
+        fill='toself',
+        fillcolor=currentPatchColor,
+        # line=dict(color=currentPatchColor),
+        name='Current week ice data',
+        mode='lines',
+        showlegend=legend
+    )
+    # define all lines
     line_draft = go.Scatter(
         x=dateNum,
         y=draft,
         mode='lines',
-        line=dict(color=prop_draft.get('color', 'blue'), width=prop_draft.get('linewidth', 1)),
+        line=dict(color=prop_draft.get('color', myColor.dark_blue(1)), width=prop_draft.get('linewidth', 1)),
         name=prop_draft.get('label', '-'),
         showlegend=legend
     )
@@ -411,7 +438,7 @@ def initialize_iceDraft_overview(
         x=dateNum_LI,
         y=draft_LI,
         mode='lines',
-        line=dict(color=prop_LI.get('color', 'orange'), width=prop_LI.get('linewidth', 1)),
+        line=dict(color=prop_LI.get('color', myColor.orange(1)), width=prop_LI.get('linewidth', 1)),
         name=prop_LI.get('label', '-'),
         showlegend=legend
     )
@@ -419,7 +446,7 @@ def initialize_iceDraft_overview(
         x=dateNum_LIDM,
         y=draft_LIDM,
         mode='lines',
-        line=dict(color=prop_LIDM.get('color', 'red'), width=prop_LIDM.get('linewidth', 1)),
+        line=dict(color=prop_LIDM.get('color', myColor.dark_red(1)), width=prop_LIDM.get('linewidth', 1)),
         name=prop_LIDM.get('label', '-'),
         showlegend=legend
     )
@@ -431,16 +458,7 @@ def initialize_iceDraft_overview(
         name=prop_expLIDM.get('label', '-'),
         showlegend=legend
     )
-    patch_current_week = go.Scatter(
-        x=[week_starts[week], week_ends[week], week_ends[week], week_starts[week], week_starts[week]],
-        y=[0, 0, max(draft), max(draft), 0],
-        fill='toself',
-        fillcolor=myColor.mid_blue(0.4),
-        line=dict(color=myColor.mid_blue(0.4)),
-        name='Current week ice data',
-        mode='lines',
-        showlegend=legend
-    )
+
     fig.add_trace(line_draft, row=row, col=col)
     line_iceDraft_traceIndex = len(fig.data) - 1
     fig.add_trace(line_draft_LI, row=row, col=col)
@@ -479,9 +497,9 @@ def initialize_iceDraft_overview(
     fig.update_yaxes(
         row=row, col=col,
         automargin=True,
-        range=[ylim[0], ylim[1]],
+        range=[ylim[1], ylim[0]],
         title_text=ylabel,
-        autorange='reversed'
+        # autorange='reversed'
         )
     if title is not None:
         fig.update_layout(title_text=title)
@@ -499,15 +517,6 @@ def initialize_iceDraft_daily(
         xlim = [dateNum[0], dateNum[-1]]
     if ylim is None:
         ylim = [min(draft), max(draft)]
-
-    line_draft = go.Scatter(
-        x=dateNum,
-        y=draft,
-        mode='lines',
-        line=dict(color=prop_draft.get('color', 'blue'), width=prop_draft.get('linewidth', 1)),
-        name=prop_draft.get('label', '-'),
-        showlegend=legend
-    )
     patch_current_week = go.Scatter(
         x=[week_starts[week], week_ends[week], week_ends[week], week_starts[week], week_starts[week]],
         y=[0, 0, max(draft), max(draft), 0],
@@ -518,6 +527,15 @@ def initialize_iceDraft_daily(
         mode='lines',
         showlegend=legend
     )
+    line_draft = go.Scatter(
+        x=dateNum,
+        y=draft,
+        mode='lines',
+        line=dict(color=prop_draft.get('color', myColor.dark_red(1)), width=prop_draft.get('linewidth', 1)),
+        name=prop_draft.get('label', '-'),
+        showlegend=legend
+    )
+
     fig.add_trace(line_draft, row=row, col=col)
     line_iceDraft_traceIndex = len(fig.data) - 1
     fig.add_trace(patch_current_week, row=row, col=col)
@@ -550,9 +568,9 @@ def initialize_iceDraft_daily(
     fig.update_yaxes(
         row=row, col=col,
         automargin=True,
-        range=[ylim[0], ylim[1]],
+        range=[ylim[1], ylim[0]],
         title_text=ylabel,
-        autorange='reversed'
+        # autorange='reversed'
         )
     if title is not None:
         fig.update_layout(title_text=title)
@@ -565,7 +583,7 @@ def initialize_plot_draft(fig, row, col, dateNum_data, draft_data, draft_propert
         x=dateNum_data,
         y=draft_data,
         mode='lines',
-        line=dict(color=draft_properties.get('color', 'blue'), width=draft_properties.get('linewidth', 1)),
+        line=dict(color=draft_properties.get('color', myColor.dark_blue(1)), width=draft_properties.get('linewidth', 1)),
         name='Draft Line'
     )
     fig.add_trace(draft_line, row=row, col=col)
@@ -596,7 +614,7 @@ def initialize_plot_histogram_line(fig, row, col, line_x, line_y, line_propertie
     hist_line = go.Bar(
         x=hist_points[:-1],
         y=hist_heights,
-        marker=dict(color=hist_properties.get('color', 'blue'), opacity=hist_properties.get('alpha', 0.5)),
+        marker=dict(color=hist_properties.get('color', myColor.dark_red(1)), opacity=hist_properties.get('alpha', 0.5)),
         name='Histogram'
     )
     fig.add_trace(hist_line, row=row, col=col)
@@ -605,7 +623,7 @@ def initialize_plot_histogram_line(fig, row, col, line_x, line_y, line_propertie
         x=line_x,
         y=line_y,
         mode='lines',
-        line=dict(color=line_properties.get('color', 'red'), width=line_properties.get('linewidth', 1)),
+        line=dict(color=line_properties.get('color', myColor.dark_red(1)), width=line_properties.get('linewidth', 1)),
         name='Line'
     )
     fig.add_trace(line_trace, row=row, col=col)
@@ -631,7 +649,7 @@ def initialize_plot_histogram(fig, row, col, hist_data, hist_properties, hist_po
     hist_line = go.Bar(
         x=hist_points[:-1],
         y=hist_heights,
-        marker=dict(color=hist_properties.get('color', 'blue'), opacity=hist_properties.get('alpha', 0.5)),
+        marker=dict(color=hist_properties.get('color', myColor.mid_blue(1)), opacity=hist_properties.get('alpha', 0.5)),
         name='Histogram'
     )
     fig.add_trace(hist_line, row=row, col=col)
@@ -656,7 +674,7 @@ def initialize_plot_distribution(fig, row, col, hist_data, line_x, dist_properti
         x=line_x,
         y=line_y,
         mode='lines',
-        line=dict(color=dist_properties.get('color', 'red')),
+        line=dict(color=dist_properties.get('color', myColor.dark_red(1))),
         name='Distribution Line'
     )
     fig.add_trace(dist_line, row=row, col=col)
@@ -691,18 +709,13 @@ def plot_spectrum(fig, row, col, colorMesh, scatter1_line, scatter2_line, CP, sp
     CP.x = [currentPoint_x]
     CP.y = [currentPoint_y]
 
-    # Add traces to figure
-    fig.add_trace(colorMesh, row=row, col=col)
-    fig.add_trace(scatter1_line, row=row, col=col)
-    fig.add_trace(scatter2_line, row=row, col=col)
-    fig.add_trace(CP, row=row, col=col)
-
     return fig, colorMesh, scatter1_line, scatter2_line, CP
 
 
-def initialize_plot_spectrum(fig, row, col, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter1_properties, scatter2_x, scatter2_y, scatter2_properties, currentPoint_x, currentPoint_y, xlim=None, ylim=None, xticks=None, xTitle=None, yTitle=None, title=None):
+def initialize_plot_spectrum(fig, row, col, spec_x, spec_y, spec_z, spec_properties, scatter1_x, scatter1_y, scatter1_properties, scatter2_x, scatter2_y, scatter2_properties, currentPoint_x, currentPoint_y, xlim=None, ylim=None, xticks=None, xticks_text=None, xTitle=None, yTitle=None, title=None):
     """Initialize the spectrum plot with the given data and properties
     """
+    print(f"xticks: {xticks}")
     colorMesh = go.Heatmap(
         x=spec_x,
         y=spec_y,
@@ -714,7 +727,7 @@ def initialize_plot_spectrum(fig, row, col, spec_x, spec_y, spec_z, spec_propert
         x=scatter1_x,
         y=scatter1_y,
         mode='markers',
-        marker=dict(color=scatter1_properties.get('color', 'red'), size=scatter1_properties.get('size', 10), symbol=scatter1_properties.get('marker', 'circle')),
+        marker=dict(color=scatter1_properties.get('color', myColor.dark_red(1)), size=scatter1_properties.get('size', 10), symbol=scatter1_properties.get('marker', 'circle')),
         name='Scatter 1'
     )
     scatter2_line = go.Scatter(
@@ -728,19 +741,33 @@ def initialize_plot_spectrum(fig, row, col, spec_x, spec_y, spec_z, spec_propert
         x=[currentPoint_x],
         y=[currentPoint_y],
         mode='markers',
-        marker=dict(color='red', size=12, symbol='square'),
+        marker=dict(color=myColor.dark_red(1), size=12, symbol='square'),
         name='Current Point'
     )
     fig.add_trace(colorMesh, row=row, col=col)
     fig.add_trace(scatter1_line, row=row, col=col)
     fig.add_trace(scatter2_line, row=row, col=col)
     fig.add_trace(current_point, row=row, col=col)
-    fig.update_xaxes(range=xlim, tickvals=xticks, row=row, col=col)
-    fig.update_yaxes(range=ylim, row=row, col=col)
-    # set the x-axis title
-    fig.update_xaxes(title_text=xTitle, row=row, col=col)
+
+    if xlim is None:
+        spec_x_diff = np.mean(np.diff(spec_x))
+        xlim = [spec_x[0]-spec_x_diff/2, spec_x[-1]+spec_x_diff/2]
+    if ylim is None:
+        ylim = [spec_y[0], spec_y[-1]]
+    if xTitle is None:
+        xTitle = ''
+    if yTitle is None:
+        yTitle = ''
+    
+
+    if xticks is not None:
+        # set the x-axis title
+        fig.update_xaxes(range=xlim, tickvals=xticks, ticktext=xticks_text, title_text=xTitle, row=row, col=col)
+    else:
+        # set the x-axis title
+        fig.update_xaxes(range=xlim, title_text=xTitle, row=row, col=col)
     # set the y-axis title
-    fig.update_yaxes(title_text=yTitle, row=row, col=col)
+    fig.update_yaxes(range=ylim, title_text=yTitle, row=row, col=col)
     # set the figure title
     fig.update_layout(title_text=title)
     return fig, colorMesh, scatter1_line, scatter2_line, current_point

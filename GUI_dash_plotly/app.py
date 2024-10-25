@@ -79,6 +79,10 @@ register_tab3_callbacks(app)
     State('plot-json-ridges-store', 'data'),
 )
 def render_content(tab, fig_json_ridges):
+    colors = {
+        'background': 'rgba(255, 255, 255, 1)',
+        'text': 'rgba(200, 0, 0, 1)'
+    }
     if tab == 'tab-1':
         return html.Div([
             html.Div([
@@ -266,7 +270,17 @@ def render_content(tab, fig_json_ridges):
                 In the following, the level ice can visually be analyzed.
             '''),  
             html.Button('Level ice analysis', id='render-LI-analysis-button', n_clicks=0, className='button-default'),
-            dcc.Graph(id='plot-LI-analysis'),
+            dcc.Graph(id='plot-LI-analysis',
+                      figure={
+                        'layout': {
+                            'plot_bgcolor': 'rgba(0, 0, 0, 0)',
+                            'paper_bgcolor': 'rgba(0, 0, 0, 0)',
+                            'font': {
+                                'color': colors['text']
+                            }
+                        }
+                      }
+                      ),
         ])
 
 

@@ -201,7 +201,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
     # initialize the line indicating the current mode and the histogram of the level ice mode
     figure_LI_statistics, hist_levelIce_mode_traceIndex, line_hist_levelIce_mode_traceIndex = initialize_plot_histogram_line(
         figure_LI_statistics, row=3, col=4, line_x=[0, 0], line_y=[0, 12], line_properties={'color':myColor.dark_red(1), 'linestyle':'--', 'name':'current mode'},
-        hist_data=level_ice_deepest_mode, hist_properties={'bins': histBins_array, 'density':True}, title='Level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 8], ylim=[0, 4])
+        hist_data=level_ice_deepest_mode_hourly, hist_properties={'bins': histBins_array, 'density':True, 'color':myColor.mid_blue(1)}, title='Level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 8], ylim=[0, 4])
     
     ### level ice mode weekly
     kde = scipy.stats.gaussian_kde(np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), bw_method=0.1)
@@ -209,7 +209,9 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
     line_y = kde(line_x)
     figure_LI_statistics, hist_levelIce_mode_weekly_traceIndex, line_hist_levelIce_mode_weekly_traceIndex = initialize_plot_histogram_line(
         figure_LI_statistics, row=3, col=5, line_x=line_x, line_y=line_y, line_properties={'color':myColor.dark_red(1), 'linestyle':'--', 'name':'current mode'},
-        hist_data=hist_draft_mode_weekly_dens[week], hist_properties={'bins': histBins_array, 'density':True}, title='Weekly level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 3.1], ylim=[0, 4.1])
+        hist_data=hist_draft_mode_weekly_dens[week], hist_properties={'bins': histBins_array, 'density':True, 'color':myColor.mid_blue(1)}, hist_points=histBins_array, title='Weekly level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 3.1], ylim=[0, 4.1])
+    
+    # ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], {'bins': histBins_array, 'density':True}, hist_points=histBins_array, xlim=[-0.1, 3.1], ylim=[0, 4.1]
     
 
     ### plot weekly level ice thickness

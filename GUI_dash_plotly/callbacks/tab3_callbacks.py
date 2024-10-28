@@ -375,9 +375,10 @@ def register_tab3_callbacks(app):
         State('json-data-allRidges_allYears-store', 'data'),
         State('season-plot-dropdown', 'value'),
         State('location-plot-dropdown', 'value'),
+        State('week-slider-LI', 'value'),
         prevent_initial_call=True
     )
-    def plot_LI_analysis_plot(n_clicks, json_data, dict_ridge_statistics_allYears, season, loc):
+    def plot_LI_analysis_plot(n_clicks, json_data, dict_ridge_statistics_allYears, season, loc, week):
         if n_clicks > 0:
             if not json_data:
                 return go.Figure(), True, 'No data loaded. Please load the data first', json_data
@@ -385,7 +386,34 @@ def register_tab3_callbacks(app):
                 return go.Figure(), True, 'Please select a season and a location', json_data
             year = season.split('-')[0]
             print('plot LI analysis')
-            fig, dict_trace_indices, this_time, this_draft = level_ice_statistics_plotly.level_ice_statistics_initialize(year, loc, 0, dict_ridge_statistics_allYears, json_data[str(year)][loc])
+            fig, dict_trace_indices, this_time, this_draft = level_ice_statistics_plotly.level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYears, json_data[str(year)][loc])
             return fig, False, '', json_data
         return go.Figure(), False, '', json_data
     
+
+
+    @app.callback(
+        Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
+        # Output('this-time-draft-tuple', 'data', allow_duplicate=True),
+        Input('week-slider-LI', 'value'),
+        State('json-data-store', 'data'),
+        State('json-data-allRidges_allYears-store', 'data'),
+        State('season-plot-dropdown', 'value'),
+        State('location-plot-dropdown', 'value'),
+        State('json-trace-indices-store', 'data'),
+        prevent_initial_call=True
+    )
+    def update_weekly_analysis_plot_partially(week, json_data, dict_ridge_statistics_allYears, season, loc, dict_trace_indices):
+        week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
+        if json_data and season and loc:
+            print('update weekly analysis plot partially')
+            # Create a patch object
+            patch = Patch()
+            year = season.split('-')[0]
+            # Update the current week patch in the figure
+            tbd
+            print((this_time, this_draft))
+            return patch, display_confirm, message_confirm #, (this_time, this_draft)
+        return go.Figure(), False, '' #, (0, 0)

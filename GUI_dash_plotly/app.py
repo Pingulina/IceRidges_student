@@ -269,7 +269,7 @@ def render_content(tab, fig_json_ridges):
                 ## Level ice analysis
                 In the following, the level ice can visually be analyzed.
             '''),  
-            html.Button('Level ice analysis', id='render-LI-analysis-button', n_clicks=0, className='button-default'),
+            html.Button('Render plot', id='render-LI-analysis-button', n_clicks=0, className='button-default'),
             dcc.Markdown('''Select the week to analyze:'''),
             dcc.Slider(
                 id='week-slider-LI',
@@ -280,17 +280,17 @@ def render_content(tab, fig_json_ridges):
                 marks={i: f'{i}' for i in range(1, 53)},
                 tooltip={"placement": "bottom", "always_visible": True}
             ),
-            dcc.Graph(id='plot-LI-analysis',
-                      figure={
-                        'layout': {
-                            'plot_bgcolor': 'rgba(0, 0, 0, 0)',
-                            'paper_bgcolor': 'rgba(0, 0, 0, 0)',
-                            'font': {
-                                'color': colors['text']
-                            }
-                        }
-                      }
-                      ),
+            dcc.Slider(
+                id='day-slider-LI',
+                min=1,
+                max=7,
+                step=1,
+                value=1,
+                marks={i: f'{i}' for i in range(1, 8)},
+                tooltip={"placement": "bottom", "always_visible": True}
+            ),
+            dcc.Graph(id='plot-LI-analysis')
+            
         ])
 
 

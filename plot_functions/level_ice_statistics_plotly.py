@@ -41,7 +41,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
     all_Dmax = dict_ridge_statistics_allYears['all_Dmax']
     all_number_of_ridges = dict_ridge_statistics_allYears['all_number_of_ridges']
 
-    print(dict_ridge_statistics_jsonified.keys())
+    # print(dict_ridge_statistics_jsonified.keys())
     dict_ridge_statistics = j2d.jsonified2dict(dict_ridge_statistics_jsonified) # this is to convert the jsonified data to a dict with its original data types
     dateNum_LI = dict_ridge_statistics['dateNum_LI']
     draft_LI = dict_ridge_statistics['draft_LI']
@@ -169,7 +169,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
     # the figure should contain a spectogram and some lines on top of it (all in one plot)
     hist_levelIce_mode_weekly_plot = hist_levelIce_mode_weekly / (period+1)
 
-    figure_LI_statistics, colorMesh_iceDraft_spectrum, scatter_iceDraft, scatter_iceDraft_expect, currentPoint_marker = initialize_plot_spectrum(
+    figure_LI_statistics, colorMesh_iceDraft_spectrum_traceIndex, scatter_iceDraft_traceIndex, scatter_iceDraft_expect_traceIndex, currentPoint_marker_traceIndex = initialize_plot_spectrum(
         fig=figure_LI_statistics, row=1, col=4, spec_x=dateNum_hist_levelIce_weekly, spec_y=histBins_mids, spec_z=hist_levelIce_mode_weekly_plot.T, spec_properties={}, 
         scatter1_x=dateNum_hist_draft_weekly, scatter1_y=level_ice_deepest_mode, scatter1_properties={}, 
         scatter2_x=dateNum_hist_levelIce_weekly, scatter2_y=level_ice_expect_deepest_mode, scatter2_properties={}, 
@@ -193,7 +193,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
 
     # ice draft overview
     
-    figure_LI_statistics, line_iceDraft_traceIndex, line_LI_iceDraft_traceIndex, line_LIDM_traceIndex, line_iceDraft_traceIndex, patch_current_week_traceIndex = initialize_iceDraft_overview(
+    figure_LI_statistics, line_iceDraft_traceIndex, line_LI_iceDraft_traceIndex, line_LIDM_traceIndex, line_LIDMexp_traceIndex, patch_current_week_traceIndex = initialize_iceDraft_overview(
         figure_LI_statistics, row=1, col=1, dateNum=dateNum[0:-1:20], draft=draft[0:-1:20], prop_draft={'color':myColor.dark_blue(1), 'linewidth':0.5, 'label':'Ice draft'}, 
         dateNum_LI=dateNum_LI, draft_LI=draft_LI, prop_LI={'color':myColor.orange(1), 'linewidth':0.5, 'label':'Level ice draft'}, 
         dateNum_LIDM = dateNum_LI, draft_LIDM=level_ice_deepest_mode_hourly, prop_LIDM={'color':myColor.dark_red(1), 'linewidth':0.5, 'label':'Level ice deepest mode'},
@@ -226,7 +226,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
     dateNum_week_hourly = dateNum_reshape_hourly[:,0][week*24*7:(week+1)*24*7]
     draft_LI_week = draft_LI[week*24*7:(week+1)*24*7]
     draft_LIDM_week = level_ice_deepest_mode_hourly[week*24*7:(week+1)*24*7]
-    figure_LI_statistics, line_iceDraft_weekly_traceIndex, line_LI_iceDraft_weekly_traceIndex, line_LIDM_weekly_traceIndex, line_iceDraft_weekly_traceIndex, patch_current_day_traceIndex = initialize_iceDraft_overview(
+    figure_LI_statistics, line_iceDraft_weekly_traceIndex, line_LI_iceDraft_weekly_traceIndex, line_LIDM_weekly_traceIndex, line_LIDMexp_weekly_traceIndex, patch_current_day_traceIndex = initialize_iceDraft_overview(
         figure_LI_statistics, row=3, col=1, dateNum=np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), 
         draft=np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), prop_draft={'color':myColor.dark_blue(1), 'linewidth':0.5, 'label':'Ice draft'}, 
         dateNum_LI=dateNum_week_hourly, draft_LI=draft_LI[week*24*7:(week+1)*24*7], prop_LI={'color':myColor.orange(1), 'linewidth':1, 'label':'Level ice draft'}, 
@@ -296,24 +296,23 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
         'line_iceDraft_traceIndex': line_iceDraft_traceIndex,
         'line_LI_iceDraft_traceIndex': line_LI_iceDraft_traceIndex,
         'line_LIDM_traceIndex': line_LIDM_traceIndex,
-        'line_iceDraft_traceIndex': line_iceDraft_traceIndex,
+        'line_LIDMexp_traceIndex': line_LIDMexp_traceIndex,
         'patch_current_week_traceIndex': patch_current_week_traceIndex,
         'line_iceDraft_weekly_traceIndex': line_iceDraft_weekly_traceIndex,
         'line_LI_iceDraft_weekly_traceIndex': line_LI_iceDraft_weekly_traceIndex,
         'line_LIDM_weekly_traceIndex': line_LIDM_weekly_traceIndex,
-        'line_iceDraft_weekly_traceIndex': line_iceDraft_weekly_traceIndex,
+        'line_LIDMexp_weekly_traceIndex': line_LIDMexp_weekly_traceIndex,
         'patch_current_day_traceIndex': patch_current_day_traceIndex,
         'line_iceDraft_daily_traceIndex': line_iceDraft_daily_traceIndex,
         # 'patch_current_hour_traceIndex': patch_current_hour_traceIndex,
-        'line_iceDraft_daily_traceIndex': line_iceDraft_daily_traceIndex,
         'line_hist_levelIce_mode_weekly_traceIndex': line_hist_levelIce_mode_weekly_traceIndex,
         'line_hist_levelIce_mode_traceIndex': line_hist_levelIce_mode_traceIndex,
         'line_iceDraft_weekly_currentDayPatch_traceIndex': patch_current_day_traceIndex,
         # 'line_iceDraft_daily_currentHourPatch_traceIndex': patch_current_hour_traceIndex,
-        'scatter_iceDraft_traceIndex': scatter_iceDraft,
-        'scatter_iceDraft_expect_traceIndex': scatter_iceDraft_expect,
-        'currentPoint_marker_traceIndex': currentPoint_marker,
-        'colorMesh_iceDraft_spectrum_traceIndex': colorMesh_iceDraft_spectrum
+        'scatter_iceDraft_traceIndex': scatter_iceDraft_traceIndex,
+        'scatter_iceDraft_expect_traceIndex': scatter_iceDraft_expect_traceIndex,
+        'currentPoint_marker_traceIndex': currentPoint_marker_traceIndex,
+        'colorMesh_iceDraft_spectrum_traceIndex': colorMesh_iceDraft_spectrum_traceIndex
     }
     this_time = dateNum_rc_pd[week]
     this_draft = deepest_mode_weekly[week]
@@ -365,6 +364,10 @@ def level_ice_statistics_update(figure_LI_statistics, dict_all_trace_indices, ye
     level_ice_deepest_mode = dict_ridge_statistics['level_ice_deepest_mode']
     level_ice_expect_deepest_mode = dict_ridge_statistics['level_ice_expect_deepest_mode']
 
+    if week > len(dateNum_reshape)-1:
+        max_week = len(dateNum_reshape)-1
+        return figure_LI_statistics, True, f"Week index out of range. The maximum week for this location is {max_week+1}.", dateNum_rc_pd[max_week], deepest_mode_weekly[max_week]
+
     # extract the hourly data
     dateNum_reshape_hourly, draft_reshape_hourly = rce.extract_hourly_data_draft(dateNum, draft) #, start_at_midnight=True, end_at_midnight=True)
 
@@ -380,27 +383,30 @@ def level_ice_statistics_update(figure_LI_statistics, dict_all_trace_indices, ye
     day_starts = [week_starts[week] + i for i in range(7)]
     day_ends = [week_starts[week] + i for i in range(1, 8)]
     dateNum_week = np.concatenate(dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24])
-    newDayIndex = np.where(dateNum_week.astype(int)-np.roll(dateNum_week.astype(int), 1)!=0)[0]
-    dateTicks_days = [str(dt.fromordinal(thisDate))[0:10] for thisDate in dateNum_week[newDayIndex].astype(int)]
+    newDayIndex_week = np.where(dateNum_week.astype(int)-np.roll(dateNum_week.astype(int), 1)!=0)[0]
+    dateTicks_days = [str(dt.fromordinal(thisDate))[0:10] for thisDate in dateNum_week[newDayIndex_week].astype(int)]
 
     figure_LI_statistics = update_iceDraft_overview(
         figure_LI_statistics, day_ends, day_starts, day, dict_all_trace_indices['line_iceDraft_weekly_traceIndex'], dict_all_trace_indices['line_LI_iceDraft_weekly_traceIndex'], 
-        dict_all_trace_indices['line_LIDM_weekly_traceIndex'], dict_all_trace_indices['line_iceDraft_weekly_traceIndex'], dict_all_trace_indices['patch_current_day_traceIndex'], 
+        dict_all_trace_indices['line_LIDM_weekly_traceIndex'], dict_all_trace_indices['line_LIDMexp_weekly_traceIndex'], dict_all_trace_indices['patch_current_day_traceIndex'], 
         dateNum=dateNum_week, 
         draft=np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]),
         dateNum_LI=dateNum_week_hourly, draft_LI=draft_LI[week*24*7:(week+1)*24*7],
         dateNum_LIDM=dateNum_week_hourly, draft_LIDM=level_ice_deepest_mode_hourly[week*24*7:(week+1)*24*7],
         dateNum_expLIDM=[dateNum_week_hourly[0], dateNum_week_hourly[-1]], draft_expLIDM=[level_ice_expect_deepest_mode[week], level_ice_expect_deepest_mode[week]],
         xlim=[dateNum_reshape_hourly[week*constants.level_ice_statistic_days*24][0], dateNum_reshape_hourly[(week+1)*constants.level_ice_statistic_days*24][0]],
-        xTickLabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2], xTickIndices=newDayIndex[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2],
-        axisName='xaxis2'
+        xTickLabels=dateTicks_days[week*constants.level_ice_statistic_days:(week+1)*constants.level_ice_statistic_days+1][1::2], xTickIndices=newDayIndex_week[1::2],
+        axisName='xaxis3'
     )
     
     # update the plot of the daily ice draft
-    nearest_hourStart = np.argmin([np.abs(dateNum[newDayIndex[week*constants.level_ice_statistic_days + day]] - dateNum_hour[0]) for dateNum_hour in dateNum_reshape_hourly])
+    nearest_hourStart = np.argmin([np.abs(dateNum_week[newDayIndex_week[day]] - dateNum_hour[0]) for dateNum_hour in dateNum_reshape_hourly])
+    print(f"nearest_hourStart: {nearest_hourStart}")
+    print(f"start: {dateNum_reshape_hourly[nearest_hourStart]}")
+    print(f"end: {dateNum_reshape_hourly[nearest_hourStart+constants.hours_day]}")
     figure_LI_statistics = update_iceDraft_daily(
-        figure_LI_statistics, dict_all_trace_indices['line_iceDraft_traceIndex'], draft=np.concatenate(draft_reshape_hourly[nearest_hourStart:nearest_hourStart + constants.hours_day]), 
-        dateNum=np.concatenate(dateNum_reshape_hourly[nearest_hourStart:nearest_hourStart + constants.hours_day]), axisName='xaxis4'
+        figure_LI_statistics, dict_all_trace_indices['line_iceDraft_daily_traceIndex'], draft=np.concatenate(draft_reshape_hourly[nearest_hourStart:nearest_hourStart + constants.hours_day]), 
+        dateNum=np.concatenate(dateNum_reshape_hourly[nearest_hourStart:nearest_hourStart + constants.hours_day]), axisName='xaxis7'
     )
     
 
@@ -434,7 +440,7 @@ def level_ice_statistics_update(figure_LI_statistics, dict_all_trace_indices, ye
 
 
     print('done')
-    return figure_LI_statistics
+    return figure_LI_statistics, False, '', dateNum_rc_pd[week], deepest_mode_weekly[week]
 
 
 def initialize_plot_straightLine(fig, row, col, x, y, line_properties={}):
@@ -572,15 +578,19 @@ def update_iceDraft_overview(
         dateNum=None, draft=None, dateNum_LI=None, draft_LI=None, dateNum_LIDM=None, draft_LIDM=None, dateNum_expLIDM=None, draft_expLIDM=None,
         xlim=None, ylim=None, xTickLabels=None, xTickIndices=None, legend=False, title=None, axisName='xaxis3'):
     if dateNum is not None and draft is not None:
+        print("updating draft")
         fig.data[line_iceDraft_traceIndex].x = dateNum
         fig.data[line_iceDraft_traceIndex].y = draft
     if dateNum_LI is not None and draft_LI is not None:
+        print("updating draft_LI")
         fig.data[line_LI_iceDraft_traceIndex].x = dateNum_LI
         fig.data[line_LI_iceDraft_traceIndex].y = draft_LI
     if dateNum_LIDM is not None and draft_LIDM is not None:
+        print("updating draft_LIDM")
         fig.data[line_LIDM_traceIndex].x = dateNum_LIDM
         fig.data[line_LIDM_traceIndex].y = draft_LIDM
     if dateNum_expLIDM is not None and draft_expLIDM is not None:
+        print("updating draft_expLIDM")
         fig.data[line_expLIDM_traceIndex].x = dateNum_expLIDM
         fig.data[line_expLIDM_traceIndex].y = draft_expLIDM
 
@@ -849,9 +859,13 @@ def initialize_plot_spectrum(fig, row, col, spec_x, spec_y, spec_z, spec_propert
         name='Current Point'
     )
     fig.add_trace(colorMesh, row=row, col=col)
+    colorMesh_traceIndex = len(fig.data) - 1
     fig.add_trace(scatter1_line, row=row, col=col)
+    scatter1_line_traceIndex = len(fig.data) - 1
     fig.add_trace(scatter2_line, row=row, col=col)
+    scatter2_line_traceIndex = len(fig.data) - 1
     fig.add_trace(current_point, row=row, col=col)
+    current_point_traceIndex = len(fig.data) - 1
 
     if xlim is None:
         spec_x_diff = np.mean(np.diff(spec_x))
@@ -874,7 +888,8 @@ def initialize_plot_spectrum(fig, row, col, spec_x, spec_y, spec_z, spec_propert
     fig.update_yaxes(range=ylim, title_text=yTitle, row=row, col=col)
     # set the figure title
     fig.update_layout(title_text=title)
-    return fig, colorMesh, scatter1_line, scatter2_line, current_point
+    return fig, colorMesh_traceIndex, scatter1_line_traceIndex, scatter2_line_traceIndex, current_point_traceIndex
+    # return fig, colorMesh, scatter1_line, scatter2_line, current_point
 
 def update_plot_spectrum(fig, current_point_traceIndex, currentPoint_x, currentPoint_y):
     """Update the spectrum plot with the given data

@@ -194,6 +194,7 @@ def register_tab3_callbacks(app):
             print('weekly analysis plot initialized')
             print((this_time, this_draft))
             dict_trace_indices_all['weekly_analysis'] = dict_trace_indices
+            print(f"figure weekly: {fig}")
             return fig, dict_trace_indices_all, False, '' #, (this_time, this_draft)
         return go.Figure(), dict_trace_indices_all, False, '' #, (0, 0)
 
@@ -398,7 +399,6 @@ def register_tab3_callbacks(app):
             print('plot LI analysis')
             fig, dict_trace_indices, this_time, this_draft, json_data[str(year)][loc] = level_ice_statistics_plotly.level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYears, json_data[str(year)][loc])
             dict_trace_indices_all['LI_analysis'] = dict_trace_indices
-            print(f"figure_LI: {fig}")
             return fig, False, '', json_data, dict_trace_indices_all
         return go.Figure(), False, '', json_data, dict_trace_indices_all
     
@@ -428,7 +428,6 @@ def register_tab3_callbacks(app):
             patch = Patch()
             year = season.split('-')[0]
             # Update the current week patch in the figure
-            patch = level_ice_statistics_plotly.level_ice_statistics_update(patch, dict_trace_indices, year, loc, week, day, dict_ridge_statistics_allYears, json_data[str(year)][loc])
-            print(f"patch_LI: {patch}")
-            return patch, False, '' #, (this_time, this_draft)
+            patch, display_confirm, message_confirm, this_time, this_draft = level_ice_statistics_plotly.level_ice_statistics_update(patch, dict_trace_indices, year, loc, week, day, dict_ridge_statistics_allYears, json_data[str(year)][loc])
+            return patch,display_confirm, message_confirm #, (this_time, this_draft)
         return go.Figure(), False, '' #, (0, 0)

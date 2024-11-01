@@ -93,9 +93,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
         hist_levelIce_mode_weekly_dens[i], _ = np.histogram(level_ice_deepest_mode_hourly[i*period:(i+1)*period], bins=histBins_array, density=True)
         dateNum_hist_levelIce_weekly[i] = np.mean(dateNum_LI[i*period:(i+1)*period])
 
-    # add dateNum_hist_level_ice_weekly to the dict_ridge_statistics
-    dict_ridge_statistics['dateNum_hist_levelIce_weekly'] = dateNum_hist_levelIce_weekly
-    dict_ridge_statistics_jsonified = d2j.dict2jsonable(dict_ridge_statistics)
+
 
     hist_draft_mode_weekly = np.zeros((int(len(draft_reshape_hourly)/constants.level_ice_statistic_days), len(histBins_array)-1))
     dateNum_hist_draft_weekly = np.zeros(int(len(draft_reshape_hourly)/constants.level_ice_statistic_days))
@@ -110,6 +108,14 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
             draft_reshape_hourly[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24], bins=histBins_array, density=True
             )
         dateNum_hist_draft_weekly[i] = np.mean(dateNum[i*constants.level_ice_statistic_days*24:(i+1)*constants.level_ice_statistic_days*24])
+
+    # add histogram data to the dict_ridge_statistics
+    dict_ridge_statistics['dateNum_hist_levelIce_weekly'] = dateNum_hist_levelIce_weekly
+    dict_ridge_statistics['hist_levelIce_mode_weekly'] = hist_draft_mode_weekly
+    dict_ridge_statistics['hist_draft_mode_weekly_dens'] = hist_draft_mode_weekly_dens
+    dict_ridge_statistics['hist_draft_mode_weekly_points'] = hist_draft_mode_weekly_points
+    dict_ridge_statistics['hist_draft_mode_weekly_dens_points'] = hist_draft_mode_weekly_dens_points
+    dict_ridge_statistics_jsonified = d2j.dict2jsonable(dict_ridge_statistics)
 
     histBins_mids = histBins_array[0:-1] + np.diff(histBins_array)/2
     [X, Y] = np.meshgrid(dateNum_hist_levelIce_weekly, histBins_mids)
@@ -205,8 +211,8 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
     ### level ice mode of the whole season
     # initialize the line indicating the current mode and the histogram of the level ice mode
     figure_LI_statistics, hist_levelIce_mode_traceIndex, line_hist_levelIce_mode_traceIndex = initialize_plot_histogram_line(
-        figure_LI_statistics, row=3, col=4, line_x=[0, 0], line_y=[0, 12], line_properties={'color':myColor.dark_red(1), 'linestyle':'--', 'name':'current mode'},
-        hist_data=level_ice_deepest_mode_hourly, hist_properties={'bins': histBins_array, 'density':True, 'color':myColor.mid_blue(1)}, title='Level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 8], ylim=[0, 4])
+        figure_LI_statistics, row=3, col=4, line_x=[0, 0], line_y=[0, 5], line_properties={'color':myColor.dark_red(1), 'linestyle':'--', 'name':'current mode'},
+        hist_data=level_ice_deepest_mode_hourly, hist_properties={'bins': histBins_array, 'density':True, 'color':myColor.dark_blue(1)}, title='Level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 8], ylim=[0, 4])
     
     ### level ice mode weekly
     kde = scipy.stats.gaussian_kde(np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), bw_method=0.1)
@@ -214,7 +220,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
     line_y = kde(line_x)
     figure_LI_statistics, hist_levelIce_mode_weekly_traceIndex, line_hist_levelIce_mode_weekly_traceIndex = initialize_plot_histogram_line(
         figure_LI_statistics, row=3, col=5, line_x=line_x, line_y=line_y, line_properties={'color':myColor.dark_red(1), 'linestyle':'--', 'name':'current mode'},
-        hist_data=hist_draft_mode_weekly_dens[week], hist_properties={'bins': histBins_array, 'density':True, 'color':myColor.mid_blue(1)}, hist_points=histBins_array, title='Weekly level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 3.1], ylim=[0, 4.1])
+        hist_data=hist_draft_mode_weekly_dens[week], hist_properties={'bins': histBins_array, 'density':True, 'color':myColor.dark_blue(1)}, hist_points=histBins_array, title='Weekly level ice mode', xlabel='Ice draft [m]', ylabel='Density [-]', xlim=[-0.1, 3.1], ylim=[0, 4.1])
     
     # ax_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week], {'bins': histBins_array, 'density':True}, hist_points=histBins_array, xlim=[-0.1, 3.1], ylim=[0, 4.1]
     
@@ -305,6 +311,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
         'patch_current_day_traceIndex': patch_current_day_traceIndex,
         'line_iceDraft_daily_traceIndex': line_iceDraft_daily_traceIndex,
         # 'patch_current_hour_traceIndex': patch_current_hour_traceIndex,
+        'hist_levelIce_mode_weekly_traceIndex': hist_levelIce_mode_weekly_traceIndex,
         'line_hist_levelIce_mode_weekly_traceIndex': line_hist_levelIce_mode_weekly_traceIndex,
         'line_hist_levelIce_mode_traceIndex': line_hist_levelIce_mode_traceIndex,
         'line_iceDraft_weekly_currentDayPatch_traceIndex': patch_current_day_traceIndex,
@@ -364,6 +371,13 @@ def level_ice_statistics_update(figure_LI_statistics, dict_all_trace_indices, ye
     level_ice_deepest_mode = dict_ridge_statistics['level_ice_deepest_mode']
     level_ice_expect_deepest_mode = dict_ridge_statistics['level_ice_expect_deepest_mode']
 
+    # extract the histogram data
+    hist_levelIce_mode_weekly = dict_ridge_statistics['hist_levelIce_mode_weekly']
+    hist_draft_mode_weekly_dens = dict_ridge_statistics['hist_draft_mode_weekly_dens']
+    hist_draft_mode_weekly_points = dict_ridge_statistics['hist_draft_mode_weekly_points']
+    hist_draft_mode_weekly_dens_points = dict_ridge_statistics['hist_draft_mode_weekly_dens_points']
+    dateNum_hist_levelIce_weekly = dict_ridge_statistics['dateNum_hist_levelIce_weekly']
+
     if week > len(dateNum_reshape)-1:
         max_week = len(dateNum_reshape)-1
         return figure_LI_statistics, True, f"Week index out of range. The maximum week for this location is {max_week+1}.", dateNum_rc_pd[max_week], deepest_mode_weekly[max_week]
@@ -414,6 +428,23 @@ def level_ice_statistics_update(figure_LI_statistics, dict_all_trace_indices, ye
     figure_LI_statistics = update_plot_spectrum(
         figure_LI_statistics, dict_all_trace_indices['currentPoint_marker_traceIndex'], dict_ridge_statistics['dateNum_hist_levelIce_weekly'][week], level_ice_deepest_mode[week]
     )
+
+    # update the marker of the current level ice deepest mode in the histogram of the level ice deepest mode of the whole year
+    figure_LI_statistics = update_plot_histogram_line(
+        figure_LI_statistics, line_trace_index=dict_all_trace_indices['line_hist_levelIce_mode_traceIndex'], line_x=np.ones(2)*level_ice_deepest_mode[week]
+    )
+
+    # update the histogram of the level ice mode of this week
+    histBins_array = np.arange(min(level_ice_deepest_mode_hourly)-0.1, max(level_ice_deepest_mode_hourly), 0.1)
+    kde = scipy.stats.gaussian_kde(np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24]), bw_method=0.1)
+    line_x = np.linspace(histBins_array[0], histBins_array[-1], len(histBins_array)*4) #np.concatenate(draft_reshape_hourly[week*constants.level_ice_statistic_days*24:(week+1)*constants.level_ice_statistic_days*24])
+    line_y = kde(line_x)
+    figure_LI_statistics = update_plot_histogram_line(
+        figure_LI_statistics, hist_trace_index=dict_all_trace_indices['hist_levelIce_mode_weekly_traceIndex'], 
+        line_trace_index=dict_all_trace_indices['line_hist_levelIce_mode_weekly_traceIndex'], 
+        line_x=line_x, line_y=line_y, hist_data=hist_draft_mode_weekly_dens[week], hist_points=histBins_array)
+    
+
 
     # line_levelIce_current_mode[0].set_xdata(np.ones(2)*level_ice_deepest_mode[week])
     # ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly = plot_histogram(ax_levelIce_mode_weekly, line_hist_levelIce_mode_weekly, hist_draft_mode_weekly_dens[week])
@@ -728,7 +759,7 @@ def initialize_plot_histogram_line(fig, row, col, line_x, line_y, line_propertie
     hist_line = go.Bar(
         x=hist_points[:-1],
         y=hist_heights,
-        marker=dict(color=hist_properties.get('color', myColor.dark_red(1)), opacity=hist_properties.get('alpha', 0.5)),
+        marker=dict(color=hist_properties.get('color', myColor.dark_red(1)), opacity=hist_properties.get('alpha', 0.8)),
         name='Histogram'
     )
     fig.add_trace(hist_line, row=row, col=col)
@@ -751,6 +782,24 @@ def initialize_plot_histogram_line(fig, row, col, line_x, line_y, line_propertie
         fig.update_layout(title_text=title)
     return fig, hist_trace_index, line_trace_index
 
+def update_plot_histogram_line(fig, hist_trace_index=None, line_trace_index=None, hist_data=None, hist_points=None, bins=None, line_x=None, line_y=None, hist_properties={}):
+    """Update the histogram plot"""
+    if hist_data is not None and (bins is not None or hist_points is not None) and hist_trace_index is not None:
+        if hist_points is not None:
+            hist_heights = hist_data
+        else:
+            hist_numpy = np.histogram(hist_data, bins=bins, density=hist_properties.get('density', False))
+            hist_heights = hist_numpy[0]
+            hist_points = hist_numpy[1]
+        fig.data[hist_trace_index].x = hist_points[:-1]
+        fig.data[hist_trace_index].y = hist_heights
+    if line_trace_index is not None:
+        if line_x is not None:
+            fig.data[line_trace_index].x = line_x
+        if line_y is not None:
+            fig.data[line_trace_index].y = line_y
+    return fig
+
 def initialize_plot_histogram(fig, row, col, hist_data, hist_properties, hist_points=None, xlim=None, ylim=None):
     """Plot a histogram of the data in hist_data on the axis ax with the properties specified in hist_properties
     """
@@ -763,7 +812,7 @@ def initialize_plot_histogram(fig, row, col, hist_data, hist_properties, hist_po
     hist_line = go.Bar(
         x=hist_points[:-1],
         y=hist_heights,
-        marker=dict(color=hist_properties.get('color', myColor.mid_blue(1)), opacity=hist_properties.get('alpha', 0.5)),
+        marker=dict(color=hist_properties.get('color', myColor.mid_blue(1)), opacity=hist_properties.get('alpha', 0.8)),
         name='Histogram'
     )
     fig.add_trace(hist_line, row=row, col=col)

@@ -265,6 +265,7 @@ def render_content(tab, fig_json_ridges):
             
             dcc.Graph(id='plot-weekly-analysis'), 
             html.Div(id='click-data-draft'),
+            ######## Level ice analysis
             dcc.Markdown('''
                 ## Level ice analysis
                 In the following, the level ice can visually be analyzed.
@@ -289,8 +290,30 @@ def render_content(tab, fig_json_ridges):
                 marks={i: f'{i}' for i in range(1, 8)},
                 tooltip={"placement": "bottom", "always_visible": True}
             ),
-            dcc.Graph(id='plot-LI-analysis')
-            
+            dcc.Graph(id='plot-LI-analysis'),
+
+            ######## Consolidated layer simulation based on level ice analysis
+            dcc.Markdown('''
+                         ## Consolidated layer simulation based on level ice analysis
+                         In the following, the consolidated layer of the ridges is estimated based on the level ice analysis
+                        '''),
+            html.Button('Render plot', id='render-consolidated-layer-button', n_clicks=0, className='button-default'),
+            dcc.Graph(id='plot-consolidated-layer'),
+
+
+            ######## Load computation (loads on fixed structures)
+            dcc.Markdown('''
+                            ## Load simulation
+                            In the following, the load simulation can be done. First, set the diameter [m] of the structure. The loads are then computed for the chosen year.
+                            '''),
+            html.Div([
+                html.Label('Diameter of the structure [m]:'),
+                dcc.Input(id='diameter-structure', type='number', value=100.0, step=0.1),
+                html.Label('Water depth [m]:'),
+                dcc.Input(id='water-depth', type='number', value=20.0, step=0.1),
+            ]),
+            html.Button('Compute loads', id='compute-loads-button', n_clicks=0, className='button-default'),
+            dcc.Graph(id='plot-loads'),
         ])
 
 

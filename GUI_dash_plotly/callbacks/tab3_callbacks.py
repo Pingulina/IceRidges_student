@@ -18,6 +18,7 @@ ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'pl
 weekly_analysis_plot_plotly = import_module('weekly_analysis_plot_plotly', 'plot_functions')
 weekly_analysis_plot_plotly_update = import_module('weekly_analysis_plot_plotly_update', 'plot_functions')
 level_ice_statistics_plotly = import_module('level_ice_statistics_plotly', 'plot_functions')
+simulation_ridges_plotly = import_module('simulation_ridges_plotly', 'simulation_functions')
 
 
 ### Callbacks for Tab 3
@@ -431,3 +432,29 @@ def register_tab3_callbacks(app):
             patch, display_confirm, message_confirm, this_time, this_draft = level_ice_statistics_plotly.level_ice_statistics_update(patch, dict_trace_indices, year, loc, week, day, dict_ridge_statistics_allYears, json_data[str(year)][loc])
             return patch,display_confirm, message_confirm #, (this_time, this_draft)
         return go.Figure(), False, '' #, (0, 0)
+
+
+    @app.callback(
+        Output('json-data-load-store', 'data', allow_duplicate=True),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
+        Input('ridge-simulation-consolidation-button', 'n_clicks'),
+        State('json-data-store', 'data'),
+        prevent_initial_call=True
+    )
+    def simulation_load_ridges_data(n_clicks, json_data):
+        if n_clicks > 0:
+            print('ridge prediction')
+            if not json_data:
+                return {}, True, 'No data loaded. Please load the data first'
+            
+            prob_distri_normalized_weekly_draft_mean_evaluate, prob_distri_normalized_number_ridges_evaluate, percentile_mean_y, LI_linear_regression_fn = simulation_ridges_plotly.simulate_all_ridges(json_data)
+            # still missing: simulation of when the ridges occur (ridge age). Need this for consolidated layer computation
+            print('consolidated layer computation')
+
+
+            print('simulation of ridge loads')
+            json_load_data = tbd_function()
+            
+            return json_load_data, True, 'Successfully loaded the simulation data. You can now render the plot.'
+        return None, False, ''

@@ -22,7 +22,7 @@ Hc = []
 load_calc = 0
 
 growth_curve = 1
-years = 100
+years = 1000
 a = 0.7
 peak_time = stats.norm(0.82, 0.06)
 season_start = stats.norm(0.0, 0.01)
@@ -41,7 +41,8 @@ w = 100 # width of the structure
 
 # Ice thickness simulation
 for nn in range(years):
-    print(f'hmu = {hmu:.1f}  || LI -  {nn + 1}')
+    if nn % 100 == 0:
+        print(f'hmu = {hmu:.1f}  || LI -  {nn + 1}')
     
     # Sampling values
     tp = peak_time.rvs()
@@ -60,7 +61,7 @@ for nn in range(years):
 
     h_n[t > tp] = 1 / (1 - tp) - 1 / (1 - tp) * t[t > tp] # normalized LI thickness melt season
     h = h_n * hp # real LI thickness (multiplied by the maximum annual LI thickness)
-    h = h + 0.2 * np.random.randn(len(h)) # week to week randomization of LI growth
+    h = h + 0.2 * np.random.rand(len(h)) # week to week randomization of LI growth
     h = h.reshape(-1, 1)
     
     t = t + ss # shifting the whole time vector to simulate random season start
@@ -112,7 +113,13 @@ for nn in range(years):
         hc = ((tr - trc) / tp) ** (1 - ((tr - trc) / tp)) * 2 * hp
 
     if np.any(hc < 0):
-        break
+        if np.abs(np.round(min(hc), 5)) == 0:
+            # it's a numerical error, just make it to zero
+            minimum_position = np.where(hc < 0)
+            hc[minimum_position] = 0
+        else:
+            print('Error: Negative consolidated layer thickness')
+            break
 
     # Store yearly results
     Tw.append(t)
@@ -121,33 +128,29 @@ for nn in range(years):
     Mw.append(m)
 
     # H.extend(hi)
-    D.extend(d)
-    Tr.extend(tr)
-    Trc.extend(trc)
-    Hi.extend(hi)
-    Hc.extend(hc)
+    D.append(d)
+    Tr.append(tr)
+    Trc.append(trc)
+    Hi.append(hi)
+    Hc.append(hc)
 
 # Convert to arrays for further processing and visualization
 Tw = np.array(Tw).flatten()
 Hw = np.array(Hw).flatten()
 
 # convert to arrays for further processing and visualization
-D = np.array(D)
-Tr = np.array(Tr)
-Trc = np.array(Trc)
-Hi = np.array(Hi)
-Hc = np.array(Hc)
+D = np.concatenate(D)
+Tr = np.concatenate(Tr)
+Trc = np.concatenate(Trc)
+Hi = np.concatenate(Hi)
+Hc_vec = np.concatenate(Hc)
 
 Ra = Tr - Trc
-R = Hc / Hi
+R = Hc_vec / Hi
 
 
 
 ##### load calculation
-
-# Parameters
-years = 10  # Replace with the actual value
-hmu = 0.1  # Replace with the actual value
 
 # Define distributions equivalent to makedist
 pdCr = stats.weibull_min(1.234, scale=0.245)  # Weibull distribution
@@ -186,7 +189,7 @@ for i in range(years):
     FC = pg * w * Hc[i]
     FC[D[i] > 16] = 0
     FCa.extend(FC.flatten())
-    FCam.append(np.max(FC))
+    FCam.append(np.nanmax(FC))
     
     # Generate random samples for other parameters
     e = pde.rvs(size=cs)
@@ -200,24 +203,26 @@ for i in range(years):
     FK = mi * D[i] * w * (D[i] * mi * gamma / 2 + 2 * c) * (1 + D[i] / (6 * w)) / 1E6
     FK[D[i] > 16] = 0
     FKa.extend(FK.flatten())
-    FKam.append(np.max(FK))
+    FKam.append(np.nanmax(FK))
     
     # Total force F
     F = FK + FC
     Fa.extend(F.flatten())
-    Fam.append(np.max(F))
+    Fam.append(np.nanmax(F))
     
     # cr test
     Cr = pdCr.rvs(size=cs)
-    CRam.append(np.max(Cr))
+    CRam.append(np.nanmax(Cr))
 
 
 
 # Plotting 
 # Create the first figure
 plt.figure(figsize=(6, 8))  # Adjust size as needed for clarity
+plt.ion()  # Turn on interactive mode
 
 # Subplot 1
+# relation between ridge thickness and consolidated layer thickness
 plt.subplot(6, 1, 1)
 plt.box(True)
 plt.grid(True)
@@ -233,7 +238,7 @@ plt.grid(True)
 plt.xlabel('Ice thickness [m]')
 plt.ylabel('Probability density [m^-1]')
 plt.hist(Hi, bins=np.arange(0, 5.05, 0.05), density=True, alpha=0.5, label='Level ice')
-plt.hist(Hc, bins=np.arange(0, 5.05, 0.05), density=True, alpha=0.5, label='Consolidated layer')
+plt.hist(Hc_vec, bins=np.arange(0, 5.05, 0.05), density=True, alpha=0.5, label='Consolidated layer')
 plt.legend()
 
 plt.tight_layout()  # Adjust layout to prevent overlap
@@ -264,6 +269,8 @@ Y_sorted = Y[np.argsort(Fam)]
 
 plt.subplot(6, 1, 4)
 plt.plot(Fam_sorted, 1 - Y_sorted, label='Exceedance Probability Curve')
+# y axis logaritmic
+plt.yscale('log')
 plt.xlabel('Force [MN]')
 plt.ylabel('Exceedance probability [MN^{-1}]')
 plt.title('Exceedance Probability for Fam')
@@ -282,4 +289,4 @@ stats.probplot(CRam, dist='norm', plot=plt)  # Default distribution is normal; a
 plt.title('Probability Plot for CRam')
 plt.grid(True)
 
-plt.show()
+# plt.show()

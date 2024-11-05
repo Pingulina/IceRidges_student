@@ -195,7 +195,7 @@ def register_tab3_callbacks(app):
             print('weekly analysis plot initialized')
             print((this_time, this_draft))
             dict_trace_indices_all['weekly_analysis'] = dict_trace_indices
-            print(f"figure weekly: {fig}")
+            # print(f"figure weekly: {fig}")
             return fig, dict_trace_indices_all, False, '' #, (this_time, this_draft)
         return go.Figure(), dict_trace_indices_all, False, '' #, (0, 0)
 

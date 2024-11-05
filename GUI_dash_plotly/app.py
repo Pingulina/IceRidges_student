@@ -43,6 +43,7 @@ app.layout = html.Div([
         dcc.Tab(label='Tab 1 - Settings', value='tab-1'),
         dcc.Tab(label='Tab 2 - Simulation', value='tab-2'),
         dcc.Tab(label='Tab 3 - Vizualization', value='tab-3'),
+        dcc.Tab(label='Tab 4 - Load (independent)', value='tab-4'),
     ]),
     html.Div(id='tabs-content'), # this is where the content of the tabs will be rendered
     html.Div(id='selected-values-display'),
@@ -65,11 +66,13 @@ app.layout = html.Div([
 from callbacks.tab1_callbacks import register_tab1_callbacks
 from callbacks.tab2_callbacks import register_tab2_callbacks
 from callbacks.tab3_callbacks import register_tab3_callbacks
+from callbacks.tab4_callbacks import register_tab4_callbacks
 
 # Register the callbacks for each tab
 register_tab1_callbacks(app)
 register_tab2_callbacks(app)
 register_tab3_callbacks(app)
+register_tab4_callbacks(app)
 
 ### Render the tab structure
 # Callback to render the content of each tab
@@ -314,6 +317,22 @@ def render_content(tab, fig_json_ridges):
             ]),
             html.Button('Compute loads', id='compute-loads-button', n_clicks=0, className='button-default'),
             dcc.Graph(id='plot-loads'),
+        ])
+    elif tab == 'tab-4':
+        return html.Div([
+            dcc.Markdown('''
+                ## Simulation of the loads on fixed structures
+                This tab is independent of the other tabs and can be used to load the data and generate the plots. 
+                This simulation is based on the parameters identified by Ilija Samardzija.
+                '''),
+            html.Div([
+                html.Label('Diameter of the structure [m]:'),
+                dcc.Input(id='diameter-structure', type='number', value=100, step=1),
+                html.Label('Number of years to simulate:'),
+                dcc.Input(id='years-simulation-load', type='number', value=100, step=10),
+            ]),
+            html.Button('Load simulations', id='load-simulations-button', n_clicks=0, className='button-default'),
+            dcc.Graph(id='load-simplified-plot'),
         ])
 
 

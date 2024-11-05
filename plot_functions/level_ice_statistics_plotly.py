@@ -204,7 +204,7 @@ def level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYe
         dateNum_LI=dateNum_LI, draft_LI=draft_LI, prop_LI={'color':myColor.orange(1), 'linewidth':0.5, 'label':'Level ice draft'}, 
         dateNum_LIDM = dateNum_LI, draft_LIDM=level_ice_deepest_mode_hourly, prop_LIDM={'color':myColor.dark_red(1), 'linewidth':0.5, 'label':'Level ice deepest mode'},
         dateNum_expLIDM=dateNum_hist_levelIce_weekly, draft_expLIDM=level_ice_expect_deepest_mode, prop_expLIDM={'color':'olive', 'linewidth':0.5, 'label':'LI expected deepest mode'},
-        week_starts=week_starts, week_ends=week_ends, week=week, xlabel='Date', ylabel='Ice draft [m]', xTickLabels=dateTicks, xTickIndices=newMonthIndex[::2], legend=True, title='Ice draft overview',
+        week_starts=week_starts, week_ends=week_ends, week=week, xlabel='Date', ylabel='Ice draft [m]', xTickLabels=dateTicks, xTickIndices=np.ceil(newMonthIndex[::2]/20).astype(int), legend=True, title='Ice draft overview',
         currentPatchColor=myColor.dark_red(0.2)
         )
     

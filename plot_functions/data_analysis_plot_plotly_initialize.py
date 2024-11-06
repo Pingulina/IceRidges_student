@@ -111,7 +111,7 @@ def initialize_plot_weekly_data_draft(fig, row, col, time, draft, time_ridge, dr
         x=time_ridge[week],
         y=draft_ridge[week],
         mode='markers',
-        marker=dict(color=myColor.dark_red(1), size=2),
+        marker=dict(color=myColor.dark_red(1), size=3),
         name='Individual ridge peaks'
     )
     fig.add_trace(ridge_peaks_trace, row=row, col=col)

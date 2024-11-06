@@ -84,7 +84,7 @@ Alternatively, you can set up your envinronment manually via conda or pip. Then 
 
 
 ## Data
-The data used is available on [Woods Hole Oceanographic Institution](https://www2.whoi.edu/site/beaufortgyre/data/mooring-data/) (Accessed on March 07, 2024). Please download the .dat files for all time slots you want to simulate. 
+The data used is available on [Woods Hole Oceanographic Institution](https://www2.whoi.edu/site/beaufortgyre/data/mooring-data/) (Accessed on March 07, 2024). Please download the .dat files for all time slots you want to simulate. The .dat files are either stored in a .zip file (use this for Windows) or in a .tar.Z file (use this for Unix (e.g. MacOS or Linux)).
 Store the data in the `Data_Beaufort_Gyre_Exploration` folder with subfolders for every mooring season. The folder structure should look like this:
 
 ```bash

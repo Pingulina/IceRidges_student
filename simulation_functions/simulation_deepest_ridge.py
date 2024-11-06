@@ -21,6 +21,10 @@ mooring_locs = import_module('mooring_locations', 'helper_functions')
 preliminary_analysis_plot = import_module('preliminary_analysis_plot', 'plot_functions')
 probabilistic_helper_functions = import_module('probabilistic_helper_functions', 'plot_functions')
 
+
+j2d = import_module('jsonified2dict', 'data_handling')
+
+
 def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
     """simulate the deepest ridge
     param year: int, the year for the level ice analysis
@@ -228,8 +232,7 @@ def simulate_deepest_ridge(year=None, loc=None, dict_mooring_locations=None):
 
     input("Press Enter to continue...")
 
-
-
+    return
 
 
 

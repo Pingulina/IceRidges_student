@@ -17,6 +17,8 @@ ridge_statistics = import_module('ridge_statistics', 'data_analysis')
 ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
 weekly_analysis_plot_plotly = import_module('weekly_analysis_plot_plotly', 'plot_functions')
 weekly_analysis_plot_plotly_update = import_module('weekly_analysis_plot_plotly_update', 'plot_functions')
+level_ice_statistics_plotly = import_module('level_ice_statistics_plotly', 'plot_functions')
+simulation_ridges_plotly = import_module('simulation_ridges_plotly', 'simulation_functions')
 
 
 ### Callbacks for Tab 3
@@ -63,7 +65,7 @@ def register_tab3_callbacks(app):
 
     # Callback to load the data from the JSON files
     @app.callback(
-        Output('json-data-store', 'data'),
+        Output('json-data-store', 'data', allow_duplicate=True),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
         Input('load-json-data-button', 'n_clicks'),
@@ -160,22 +162,25 @@ def register_tab3_callbacks(app):
             return dict_ridge_statistics_allYears, True, 'Successfully loaded the additional data. You can now render the plot.'
         return None, False, ''
 
-    # Callback to render the weekly analysis plot
+    # Callback to render the weekly analysis plot (or update it after changing some values)
     @app.callback(
         Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
-        Output('json-trace-indices-store', 'data'),
+        Output('json-trace-indices-store', 'data', allow_duplicate=True),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
+        # Output('this-time-draft-tuple', 'data', allow_duplicate=True),
         Input('render-weekly-analysis-button', 'n_clicks'),
+        Input('update-values-plot-button', 'n_clicks'),
         State('json-data-store', 'data'),
         State('json-data-allRidges_allYears-store', 'data'),
         State('season-plot-dropdown', 'value'),
         State('location-plot-dropdown', 'value'),
         State('week-slider', 'value'),
+        State('json-trace-indices-store', 'data'),
         prevent_initial_call=True
     )
-    def plot_weekly_analysis_plot(n_clicks, json_data, dict_ridge_statistics_allYears, season, loc, week):
-        if n_clicks > 0:
+    def plot_weekly_analysis_plot(n_clicks_render, n_clicks_update, json_data, dict_ridge_statistics_allYears, season, loc, week, dict_trace_indices_all):
+        if n_clicks_render > 0 or n_clicks_update > 0:
             if not json_data:
                 print(json_data)
                 return go.Figure(), {}, True, 'No data loaded. Please load the data first'
@@ -186,10 +191,13 @@ def register_tab3_callbacks(app):
             print('plot weekly analysis')
             year = int(season.split('-')[0])
             week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
-            fig, dict_trace_indices = weekly_analysis_plot_plotly.weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, json_data)
+            fig, dict_trace_indices, this_time, this_draft = weekly_analysis_plot_plotly.weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, json_data)
             print('weekly analysis plot initialized')
-            return fig, dict_trace_indices, False, ''
-        return go.Figure(), {}, False, ''
+            print((this_time, this_draft))
+            dict_trace_indices_all['weekly_analysis'] = dict_trace_indices
+            # print(f"figure weekly: {fig}")
+            return fig, dict_trace_indices_all, False, '' #, (this_time, this_draft)
+        return go.Figure(), dict_trace_indices_all, False, '' #, (0, 0)
 
     # # Callback to update the plot for weekly analysis and correction
     # @app.callback(
@@ -220,6 +228,7 @@ def register_tab3_callbacks(app):
         Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
+        # Output('this-time-draft-tuple', 'data', allow_duplicate=True),
         Input('week-slider', 'value'),
         State('json-data-store', 'data'),
         State('json-data-allRidges_allYears-store', 'data'),
@@ -232,37 +241,221 @@ def register_tab3_callbacks(app):
         week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
         if json_data and season and loc:
             print('update weekly analysis plot partially')
+            dict_trace_indices = dict_trace_indices['weekly_analysis']
             # Create a patch object
             patch = Patch()
             year = season.split('-')[0]
             # Update the current week patch in the figure
-            patch, display_confirm, message_confirm = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, patch, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
-            return patch, display_confirm, message_confirm
-        return go.Figure(), False, ''
+            patch, display_confirm, message_confirm, this_time, this_draft = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, patch, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
+            print((this_time, this_draft))
+            print(f"patch: {patch}")
+            return patch, display_confirm, message_confirm #, (this_time, this_draft)
+        return go.Figure(), False, '' #, (0, 0)
     
 
-    # ## Callbacks to correct specified values
-    # # Callback to chose a value
-    # @app.callback(
-    #     Output('value-to-correct', 'data'),
-    #     Input('click-value', 'data'), # this variable is to store the clicked value in the plot
-    # )
-    # def get_value_to_correct(click_value):
-    #     return click_value
-    
-
-    # @app.callback(
-    #     Output('corrected-value', 'data'),
-    #     Output('json-data-store', 'data', allow_duplicate=True),
-    #     Input('navigation-arrows', 'value'),
-    #     State('value-to-correct', 'data'),
-    #     State('json-data-store', 'data'),
-    #     prevent_initial_call=True
-    # )
-    # def correct_value(navigation, value_id, json_data):
-    #     corrected_value = json_data[value_id] # TODO: need to implement correction
-    #     # idea: navigation consists of value for the up and down arrows to correct the value in steps. Or with direct entry field.
-    #     return corrected_value, json_data
+    ## Callbacks to correct the value of the current week
         
+    # Callback to show the modal when the button is clicked and hide it when the cancel button is clicked
+    @app.callback(
+        Output('modal-content', 'style'),
+        Output('new-y-coordinate', 'value'),
+        Output('cancel-button', 'n_clicks'),
+        # Output('save-button', 'n_clicks', allow_duplicate=True),
+        # Input('correct-value-button', 'n_clicks'),
+        Input('click-data-draft-index', 'data'),
+        Input('save-button', 'n_clicks'),
+        Input('cancel-button', 'n_clicks'),
+        State('this-time-draft-tuple', 'data'),
+        prevent_initial_call=True
+    )
+    # def display_modal(correct_clicks, cancel_clicks, this_time_draft):
+    def display_modal(correct_index, save_clicks, cancel_clicks, this_time_draft):
+        # if correct_clicks > 0 and (cancel_clicks is None or correct_clicks > cancel_clicks):
+        print((correct_index, cancel_clicks, save_clicks))
+        if correct_index is not None  and (cancel_clicks == 0 or cancel_clicks is None): # and save_clicks == 0
+            cancel_clicks = 0
+            # save_clicks = 0
+            if this_time_draft:
+                return {
+                    'display': 'block',
+                    'position': 'fixed',
+                    'z-index': '1',
+                    'left': '0',
+                    'top': '0',
+                    'width': '100%',
+                    'height': '100%',
+                    'overflow': 'auto',
+                    'background-color': 'rgb(0,0,0)',
+                    'background-color': 'rgba(0,0,0,0.4)',
+                    'padding-top': '60px'
+                }, this_time_draft[1], cancel_clicks #, save_clicks
+            else:
+                return {
+                    'display': 'block',
+                    'position': 'fixed',
+                    'z-index': '1',
+                    'left': '0',
+                    'top': '0',
+                    'width': '100%',
+                    'height': '100%',
+                    'overflow': 'auto',
+                    'background-color': 'rgb(0,0,0)',
+                    'background-color': 'rgba(0,0,0,0.4)',
+                    'padding-top': '60px'
+                }, '', cancel_clicks, save_clicks
+        cancel_clicks = 0
+        # save_clicks = 0
+        return {'display': 'none'}, '', cancel_clicks #, save_clicks
     
 
+    # Callback to update the value of the current week when the save button is clicked
+    @app.callback(
+        Output('plot-weekly-analysis', 'figure'),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
+        Output('json-data-store', 'data', allow_duplicate=True),
+        # Output('save-button', 'n_clicks', allow_duplicate=True),        
+        # Output('this-time-draft-tuple', 'data', allow_duplicate=True),
+        Input('save-button', 'n_clicks'),
+        State('new-y-coordinate', 'value'),
+        State('click-data-draft-index', 'data'),
+        State('week-slider', 'value'),
+        State('json-data-store', 'data'),
+        State('json-data-allRidges_allYears-store', 'data'),
+        State('season-plot-dropdown', 'value'),
+        State('location-plot-dropdown', 'value'),
+        State('json-trace-indices-store', 'data'),
+        prevent_initial_call=True
+    )
+    def update_weekly_analysis_plot_save(save_clicks, new_y, pointIndex, week, json_data, dict_ridge_statistics_allYears, season, loc, dict_trace_indices):
+        if save_clicks > 0:
+            # save_clicks = 0
+            week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
+            if json_data and season and loc:
+                dict_trace_indices = dict_trace_indices['weekly_analysis']
+                print(f"season: {season}")
+                year = season.split('-')[0]
+                # update the draft data in the json_data dict
+                print(f"pointIndex: {pointIndex}, week: {week}")
+                print(f"keys: {json_data[year][loc]['keel_draft_ridge'].keys()}")
+                json_data[year][loc]['keel_draft_ridge']['data'][week][pointIndex] = new_y
+                # get the indices for the chosen point in the other lists
+                print('find the weekly data index')
+                weekly_data_index = np.where(np.array(json_data[year][loc]['dateNum']['data']) == json_data[year][loc]['keel_dateNum_ridge']['data'][week][pointIndex])[0][0]
+                print(f"weekly_data_index: {weekly_data_index}")
+                json_data[year][loc]['draft']['data'][weekly_data_index] = new_y
+                # 'mean_keel_draft', 'draft_weekly_deepest_ridge', 'level_ice_deepest_mode'
+                # Update the current week patch in the figure
+                patch = Patch()
+                print('update weekly analysis plot')
+                patch, display_confirm, message_confirm, this_time, this_draft = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, patch, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
+                print(f"this_time, this_draft: {(this_time, this_draft)}")
+                return patch, display_confirm, message_confirm, json_data #, (this_time, this_draft)
+        return go.Figure(), False, '', json_data #, (0, 0)
+
+    
+
+    # Callback to select the data point on the ice drift plot to be modified
+    @app.callback(
+        Output('click-data-draft', 'children'),
+        Output('click-data-draft-index', 'data'),
+        Output('this-time-draft-tuple', 'data', allow_duplicate=True),
+        Input('plot-weekly-analysis', 'clickData'),
+        prevent_initial_call=True
+    )
+    def display_click_data(clickData):
+        if clickData is None:
+            return "Click on a data point of weekly draft to see the details here.", None, (0, 0)
+        point = clickData['points'][0]
+        print(point)
+        if point['curveNumber'] == 5:
+            return f"You clicked on point: x={point['x']}, y={point['y']}, pointIndex={point['pointIndex']}, curveNumber={point['curveNumber']}", point['pointIndex'], (point['x'], point['y'])
+        return "Click on a data point of weekly draft to see the details here.", None, (0, 0)
+    
+
+    @app.callback(
+        Output('plot-LI-analysis', 'figure'),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
+        Output('json-data-store', 'data'),
+        Output('json-trace-indices-store', 'data', allow_duplicate=True),
+        Input('render-LI-analysis-button', 'n_clicks'),
+        State('json-data-store', 'data'),
+        State('json-data-allRidges_allYears-store', 'data'),
+        State('season-plot-dropdown', 'value'),
+        State('location-plot-dropdown', 'value'),
+        State('week-slider-LI', 'value'),
+        State('day-slider-LI', 'value'),
+        State('json-trace-indices-store', 'data'),
+        prevent_initial_call=True
+    )
+    def plot_LI_analysis_plot(n_clicks, json_data, dict_ridge_statistics_allYears, season, loc, week, day, dict_trace_indices_all):
+        if n_clicks > 0:
+            if not json_data:
+                return go.Figure(), True, 'No data loaded. Please load the data first', json_data
+            if season is None or loc is None:
+                return go.Figure(), True, 'Please select a season and a location', json_data
+            year = season.split('-')[0]
+            week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
+            day = day -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
+            print('plot LI analysis')
+            fig, dict_trace_indices, this_time, this_draft, json_data[str(year)][loc] = level_ice_statistics_plotly.level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYears, json_data[str(year)][loc])
+            dict_trace_indices_all['LI_analysis'] = dict_trace_indices
+            return fig, False, '', json_data, dict_trace_indices_all
+        return go.Figure(), False, '', json_data, dict_trace_indices_all
+    
+
+
+    @app.callback(
+        Output('plot-LI-analysis', 'figure', allow_duplicate=True),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
+        # Output('this-time-draft-tuple', 'data', allow_duplicate=True),
+        Input('week-slider-LI', 'value'),
+        Input('day-slider-LI', 'value'),
+        State('json-data-store', 'data'),
+        State('json-data-allRidges_allYears-store', 'data'),
+        State('season-plot-dropdown', 'value'),
+        State('location-plot-dropdown', 'value'),
+        State('json-trace-indices-store', 'data'),
+        prevent_initial_call=True
+    )
+    def update_LI_analysis_plot_partially(week, day, json_data, dict_ridge_statistics_allYears, season, loc, dict_trace_indices_all):
+        week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
+        day = day -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
+        if json_data and season and loc:
+            print('update weekly analysis plot partially')
+            dict_trace_indices = dict_trace_indices_all['LI_analysis']
+            # Create a patch object
+            patch = Patch()
+            year = season.split('-')[0]
+            # Update the current week patch in the figure
+            patch, display_confirm, message_confirm, this_time, this_draft = level_ice_statistics_plotly.level_ice_statistics_update(patch, dict_trace_indices, year, loc, week, day, dict_ridge_statistics_allYears, json_data[str(year)][loc])
+            return patch,display_confirm, message_confirm #, (this_time, this_draft)
+        return go.Figure(), False, '' #, (0, 0)
+
+
+    @app.callback(
+        Output('json-data-load-store', 'data', allow_duplicate=True),
+        Output('confirm', 'displayed', allow_duplicate=True),
+        Output('confirm', 'message', allow_duplicate=True),
+        Input('ridge-simulation-consolidation-button', 'n_clicks'),
+        State('json-data-store', 'data'),
+        prevent_initial_call=True
+    )
+    def simulation_load_ridges_data(n_clicks, json_data):
+        if n_clicks > 0:
+            print('ridge prediction')
+            if not json_data:
+                return {}, True, 'No data loaded. Please load the data first'
+            
+            prob_distri_normalized_weekly_draft_mean_evaluate, prob_distri_normalized_number_ridges_evaluate, percentile_mean_y, LI_linear_regression_fn = simulation_ridges_plotly.simulate_all_ridges(json_data)
+            # still missing: simulation of when the ridges occur (ridge age). Need this for consolidated layer computation
+            print('consolidated layer computation')
+
+
+            print('simulation of ridge loads')
+            
+            
+            return json_load_data, True, 'Successfully loaded the simulation data. You can now render the plot.'
+        return None, False, ''

@@ -352,6 +352,7 @@ def register_tab3_callbacks(app):
                 print(f"this_time, this_draft: {(this_time, this_draft)}")
                 return patch, display_confirm, message_confirm, json_data #, (this_time, this_draft)
         return go.Figure(), False, '', json_data #, (0, 0)
+
     
 
     # Callback to select the data point on the ice drift plot to be modified

@@ -177,7 +177,7 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
     )
 
     fig.update_layout(
-        title_text=f"Year {year}, location {loc}, week {week}",
+        title_text=f"Year {year}, location {loc}, week {week+1}",
         height=800,
         width=1200,
         showlegend=False
@@ -255,8 +255,9 @@ def weekly_analysis_plot(year, loc, week, dict_ridge_statistics_allYears, dict_r
         'numRidges_this_trace_index': numRidges_this_trace_index,
         'numRidges_marker_trace_index': numRidges_marker_trace_index
     }
-
-    return fig, dict_trace_indices
+    this_time = dateNum_rc_pd[week]
+    this_draft = deepest_mode_weekly[week]
+    return fig, dict_trace_indices, this_time, this_draft
 
 
 

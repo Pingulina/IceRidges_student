@@ -36,7 +36,9 @@ def register_tab4_callbacks(app):
             water_depth = 20
             hmu = 1.8
             wn = 40
+            print('simulation')
             R, Hi, Hc_vec, Tw, Hw, Fam, Fam_sorted, Y_sorted, CRam, shape, loc, scale = simulation_consolidated_layer.consolidated_layer_simulation(w, water_depth, hmu, wn, years)
+            print('plot')
             fig = simulation_consolidated_layer.consolidated_layer_plot(R, Hi, Hc_vec, Tw, Hw, Fam, Fam_sorted, Y_sorted, CRam, shape, loc, scale)
             return fig
         return go.Figure()   

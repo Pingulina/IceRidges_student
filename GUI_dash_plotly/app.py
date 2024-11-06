@@ -20,6 +20,7 @@ constants = import_module('constants', 'helper_functions')
 extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_preparation')
 ridge_statistics = import_module('ridge_statistics', 'data_analysis')
 ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
+myColor = import_module('myColor', 'helper_functions')
 
 
 ### load the needed variables from other files
@@ -40,10 +41,10 @@ app = dash.Dash(__name__, suppress_callback_exceptions=True, external_stylesheet
 ### Define the layout of the app
 app.layout = html.Div([
     dcc.Tabs(id="tabs-all", value='tab-1', children=[
-        dcc.Tab(label='Tab 1 - Settings', value='tab-1'),
-        dcc.Tab(label='Tab 2 - Simulation', value='tab-2'),
-        dcc.Tab(label='Tab 3 - Vizualization', value='tab-3'),
-        dcc.Tab(label='Tab 4 - Load (independent)', value='tab-4'),
+        dcc.Tab(label='Tab 1 - Settings', value='tab-1', style={'background-color': myColor['tab_unselected'], 'color': myColor['text_unselected']}, selected_style={'background-color': myColor['tab_selected'], 'color': myColor['text_selected']}),
+        dcc.Tab(label='Tab 2 - Simulation', value='tab-2', style={'background-color': myColor['tab_unselected'], 'color': myColor['text_unselected']}, selected_style={'background-color': myColor['tab_selected'], 'color': myColor['text_selected']}),
+        dcc.Tab(label='Tab 3 - Vizualization', value='tab-3', style={'background-color': myColor['tab_unselected'], 'color': myColor['text_unselected']}, selected_style={'background-color': myColor['tab_selected'], 'color': myColor['text_selected']}),
+        dcc.Tab(label='Tab 4 - Load (independent)', value='tab-4', style={'background-color': myColor['light_blue'](1), 'color': myColor['text_unselected']}),
     ]),
     html.Div(id='tabs-content'), # this is where the content of the tabs will be rendered
     html.Div(id='selected-values-display'),
@@ -320,9 +321,11 @@ def render_content(tab, fig_json_ridges):
         ])
     elif tab == 'tab-4':
         return html.Div([
-            dcc.Markdown('''
+            dcc.Markdown(
+                '''
                 ## Simulation of the loads on fixed structures
-                This tab is independent of the other tabs and can be used to load the data and generate the plots. 
+                #### This tab is independent of the other tabs and can be used to load the data and generate the plots. 
+                
                 This simulation is based on the parameters identified by Ilija Samardzija.
                 '''),
             html.Div([
@@ -333,6 +336,17 @@ def render_content(tab, fig_json_ridges):
             ]),
             html.Button('Load simulations', id='load-simulations-button', n_clicks=0, className='button-default'),
             dcc.Graph(id='load-simplified-plot'),
+            dcc.Markdown(
+                '''
+                #### Explanations to the graphs
+
+                h_i: ridge thickness
+                h_c: consolidated layer thickness
+                R: relation between the consolidated layer thickness and the ridge thickness. R_mean is the mean value of R.
+                LI: Level ice
+                
+
+                '''),
         ])
 
 

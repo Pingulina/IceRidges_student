@@ -83,15 +83,29 @@ def consolidated_layer_simulation(w, water_depth=20, hmu=1.8, wn=40, years=1000)
         t = t + t * se # shifting the wohle time vector to simulate random season end
         t = np.abs(t).reshape(-1, 1) # randomizing week time (just gives a nicer looking plot - more natural and resembles more the results from JP1)
 
-        m = 6.03 + 0.51 * h # making weekly mean ridge keel draft according to the linear correlation
-        m = m * h2m.rvs(size=m.shape) # introducing the variablitly
+        m_fix = 6.03 + 0.51 * h # making weekly mean ridge keel draft according to the linear correlation
+        m = m_fix * h2m.rvs(size=m_fix.shape) # introducing the variablitly
+        while np.any(m < 5):
+            print('Error: Mean ridge keel draft below 5 m, but 5m is the threshold for a ridge in general')
+            print('Trying again...')
+            m = m_fix * h2m.rvs(size=m_fix.shape) # just try again, this happens only rarely
+        # if np.any(m < 5):
+        #     print('Error: Mean ridge keel draft below 5 m, but 5m is the threshold for a ridge in general')
+        #     print(f"m_fix, m, h: {np.concatenate((m_fix, m, h), axis=1)}")
+        #     # print(f"m: {m}")
+        #     # print(f"h: {h}")
+        #     input('Press Enter to continue...')
         n = 37.21 * (m - 5) ** 2.16 # making weekly number of ridges according to the power function correlation
         n = n * m2n.rvs(size=n.shape) # introducing the variablitly
         
         # creating ridges
+        # initialize nan arrays
         d = np.empty(int(np.sum(n) * 1.1))
+        d[:] = np.nan
         tr = np.empty(int(np.sum(n) * 1.1))
+        tr[:] = np.nan
         hi = np.empty(int(np.sum(n) * 1.1))
+        hi[:] = np.nan
         iii = 0
         
         for i in range(len(m)):
@@ -138,8 +152,8 @@ def consolidated_layer_simulation(w, water_depth=20, hmu=1.8, wn=40, years=1000)
                 break
 
         # Store yearly results
-        Tw.append(t)
-        Hw.append(h)
+        Tw.append(t) # normalized time (weekly data points)
+        Hw.append(h) # LI thickness (weekly data points)
         Nw.append(n)
         Mw.append(m)
 
@@ -163,6 +177,13 @@ def consolidated_layer_simulation(w, water_depth=20, hmu=1.8, wn=40, years=1000)
 
     Ra = Tr - Trc
     R = Hc_vec / Hi
+
+    if np.any(np.isnan(R)):
+        print('Error: NaN values in R')
+        print(f"R: {R}")
+        print(f"Hi: {Hi}")
+        print(f"Hc_vec: {Hc_vec}")
+        input('Press Enter to continue...')
 
 
 
@@ -258,25 +279,24 @@ def consolidated_layer_simulation(w, water_depth=20, hmu=1.8, wn=40, years=1000)
 def consolidated_layer_plot(R, Hi, Hc_vec, Tw, Hw, Fam, Fam_sorted, Y_sorted, CRam, shape, loc, scale):
     # Create subplots
     fig = make_subplots(
-        rows=3, cols=2,
-        specs=[[{"colspan": 1, "rowspan":1}, {"colspan": 1, "rowspan":1}],
-               [{"colspan": 1, "rowspan":1}, {"colspan": 1, "rowspan":1}],
-               [{"colspan": 1, "rowspan":1}, {"colspan": 1, "rowspan":1}]
+        rows=2, cols=3,
+        specs=[[{"colspan": 1, "rowspan":1}, {"colspan": 1, "rowspan":1}, {"colspan": 1, "rowspan":1}],
+               [{"colspan": 1, "rowspan":1}, {"colspan": 1, "rowspan":1}, {"colspan": 1, "rowspan":1}]
         ],
-        # subplot_titles=(
-        #     'R_mean = {:.2f}'.format(np.mean(R[R < 2])),
-        #     'Ice thickness and Consolidated layer thickness',
-        #     'Tw vs Hw',
-        #     'Exceedance Probability for Fam',
-        #     'Probability Plot for Fam',
-        #     'Probability Plot for CRam'
-        # )
+        subplot_titles=(
+            'R_mean = {:.2f}'.format(np.mean(R[R < 2])),
+            'LI and consolidated layer thickness',
+            'Yearly level ice thickness evolution',
+            'Exceedance Probability for Fam',
+            'Probability Plot for Fam',
+            'Probability Plot for CRam'
+        )
     )
 
     # Subplot 1: Histogram of R
     # Create histogram of R with color myColor['dark_blue'](0.7)
 
-    hist_numpy = np.histogram(R, bins=int((5.1 - 0) / 0.1), density=True)
+    hist_numpy = np.histogram(R, bins=np.arange(0, 5, 0.1), density=True) # bins=int((5.1 - 0) / 0.1), density=True)
     hist_heights = hist_numpy[0]
     hist_points = hist_numpy[1]
     hist_R = go.Bar(
@@ -293,11 +313,11 @@ def consolidated_layer_plot(R, Hi, Hc_vec, Tw, Hw, Fam, Fam_sorted, Y_sorted, CR
     #     marker=dict(color=myColor['dark_blue'](0.7)),
     # )
     fig.add_trace(hist_R, row=1, col=1)
-    fig.update_xaxes(title_text='R = h_c / h_i []', row=1, col=1)
+    fig.update_xaxes(title_text='R = h_c / h_i [-]', row=1, col=1)
     fig.update_yaxes(title_text='Probability density []', row=1, col=1)
 
     # Subplot 2: Histograms of Hi and Hc_vec
-    hist_numpy = np.histogram(Hi, bins=int((5.05 - 0) / 0.05), density=True)
+    hist_numpy = np.histogram(Hi, int((5.05 - 0) / 0.05), density=True)
     hist_heights = hist_numpy[0]
     hist_points = hist_numpy[1]
     hist_Hi = go.Bar(
@@ -334,7 +354,7 @@ def consolidated_layer_plot(R, Hi, Hc_vec, Tw, Hw, Fam, Fam_sorted, Y_sorted, CR
     # )
     fig.add_trace(hist_Hi, row=1, col=2)
     fig.add_trace(hist_Hc_vec, row=1, col=2)
-    fig.update_xaxes(title_text='Ice thickness [m]', row=1, col=2)
+    fig.update_xaxes(title_text='Thickness [m]', row=1, col=2)
     fig.update_yaxes(title_text='Probability density [m^-1]', row=1, col=2)
     fig.update_layout(barmode='overlay')
     fig.update_layout(showlegend=True)
@@ -347,9 +367,14 @@ def consolidated_layer_plot(R, Hi, Hc_vec, Tw, Hw, Fam, Fam_sorted, Y_sorted, CR
         marker=dict(symbol='circle', size=5, color=myColor['dark_blue'](0.7)),
         name='Tw vs Hw',
     )
-    fig.add_trace(scatter_Tw_Hw, row=2, col=1)
-    fig.update_xaxes(title_text='Tw', row=2, col=1)
-    fig.update_yaxes(title_text='Hw', row=2, col=1)
+    fig.add_trace(scatter_Tw_Hw, row=1, col=3)
+    fig.update_xaxes(
+        title_text='Normalized time [-]',
+        tickvals=[0, 1],
+        ticktext=['season start', 'season end'],
+        row=1, col=3
+        )
+    fig.update_yaxes(title_text='Weekly mean LI thickness [m]', row=1, col=3)
 
     # Subplot 4: Exceedance Probability Curve
     exceedance_curve = go.Scatter(
@@ -359,9 +384,9 @@ def consolidated_layer_plot(R, Hi, Hc_vec, Tw, Hw, Fam, Fam_sorted, Y_sorted, CR
         line=dict(color=myColor['dark_blue'](1)),
         name='Exceedance Probability Curve'
     )
-    fig.add_trace(exceedance_curve, row=2, col=2)
-    fig.update_xaxes(title_text='Force [MN]', row=2, col=2)
-    fig.update_yaxes(title_text='Exceedance probability [MN^{-1}]', type='log', row=2, col=2)
+    fig.add_trace(exceedance_curve, row=2, col=1)
+    fig.update_xaxes(title_text='Force [MN]', row=2, col=1)
+    fig.update_yaxes(title_text='Exceedance probability [MN^{-1}]', type='log', row=2, col=1)
 
     # Subplot 5: Probability Plot for Fam
     (osm, osr), (slope, intercept, r) = stats.probplot(Fam, dist=stats.genextreme, sparams=(shape, loc, scale))
@@ -379,10 +404,10 @@ def consolidated_layer_plot(R, Hi, Hc_vec, Tw, Hw, Fam, Fam_sorted, Y_sorted, CR
         line=dict(color=myColor['dark_red'](1)),
         name='Fit'
     )
-    fig.add_trace(probplot_Fam, row=3, col=1)
-    fig.add_trace(probplot_Fam_line, row=3, col=1)
-    fig.update_xaxes(title_text='Theoretical Quantiles', row=3, col=1)
-    fig.update_yaxes(title_text='Ordered Values', row=3, col=1)
+    fig.add_trace(probplot_Fam, row=2, col=2)
+    fig.add_trace(probplot_Fam_line, row=2, col=2)
+    fig.update_xaxes(title_text='Theoretical Quantiles', row=2, col=2)
+    fig.update_yaxes(title_text='Ordered Values', row=2, col=2)
 
     # Subplot 6: Probability Plot for CRam
     (osm, osr), (slope, intercept, r) = stats.probplot(CRam, dist='norm')
@@ -400,13 +425,13 @@ def consolidated_layer_plot(R, Hi, Hc_vec, Tw, Hw, Fam, Fam_sorted, Y_sorted, CR
         line=dict(color=myColor['dark_red'](1)),
         name='Fit'
     )
-    fig.add_trace(probplot_CRam, row=3, col=2)
-    fig.add_trace(probplot_CRam_line, row=3, col=2)
-    fig.update_xaxes(title_text='Theoretical Quantiles', row=3, col=2)
-    fig.update_yaxes(title_text='Ordered Values', row=3, col=2)
+    fig.add_trace(probplot_CRam, row=2, col=3)
+    fig.add_trace(probplot_CRam_line, row=2, col=3)
+    fig.update_xaxes(title_text='Theoretical Quantiles', row=2, col=3)
+    fig.update_yaxes(title_text='Ordered Values', row=2, col=3)
 
     # Update layout
-    fig.update_layout(height=1200, width=800, title_text="Consolidated Layer Plot")
+    fig.update_layout(height=600, width=1400, title_text="Consolidated Layer Plot")
     
     return fig
 

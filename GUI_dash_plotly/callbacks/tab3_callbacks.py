@@ -455,6 +455,6 @@ def register_tab3_callbacks(app):
 
             print('simulation of ridge loads')
             
-            
+            json_load_data=None
             return json_load_data, True, 'Successfully loaded the simulation data. You can now render the plot.'
         return None, False, ''

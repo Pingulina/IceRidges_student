@@ -10,10 +10,10 @@ import numpy as np
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 from import_module import import_module
-constants_original = import_module('constants_original', 'helper_functions')
+# constants_original = import_module('constants_original', 'helper_functions')
 constants = import_module('constants', 'helper_functions')
-extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_preparation')
-ridge_statistics = import_module('ridge_statistics', 'data_analysis')
+# extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_preparation')
+# ridge_statistics = import_module('ridge_statistics', 'data_analysis')
 ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
 weekly_analysis_plot_plotly = import_module('weekly_analysis_plot_plotly', 'plot_functions')
 weekly_analysis_plot_plotly_update = import_module('weekly_analysis_plot_plotly_update', 'plot_functions')
@@ -68,6 +68,7 @@ def register_tab3_callbacks(app):
         Output('json-data-store', 'data', allow_duplicate=True),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
+        Output('vizualization-progress-output', 'children', allow_duplicate=True),
         Input('load-json-data-button', 'n_clicks'),
         State('json-data-store', 'data'),
         State('season-plot-dropdown', 'value'),
@@ -77,7 +78,7 @@ def register_tab3_callbacks(app):
     def load_json_data(n_clicks, json_data, season, loc):
         if n_clicks > 0:
             if season is None or loc is None:
-                return {}, True, 'Please select a season and a location'
+                return {}, True, 'Please select a season and a location', ''
             year = season.split('-')[0]
             if not year in json_data:
                 json_data[year] = {}
@@ -111,8 +112,8 @@ def register_tab3_callbacks(app):
             json_data[year][loc]['draft_rc'] = deepcopy(np.array(data_tmp[loc]['draft']))
             # print('Ridge data loaded from raw data')
             # print(json_data)
-            return json_data, True, 'Successfully loaded the data. You can now continue with the next steps.'
-        return {}, False, ''
+            return json_data, True, 'Successfully loaded the data. You can now continue with the next steps.', 'Done'
+        return {}, False, '', ''
 
     # Callback to update the plot for ridge statistics
     @app.callback(
@@ -120,6 +121,7 @@ def register_tab3_callbacks(app):
         # Output('plot-json-ridges-store', 'data'),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
+        Output('vizualization-progress-output', 'children', allow_duplicate=True),
         Input('render-plot-button', 'n_clicks'),
         State('json-data-store', 'data'),
         State('season-plot-dropdown', 'value'),
@@ -129,17 +131,17 @@ def register_tab3_callbacks(app):
     def update_plot_ridges(n_clicks, json_data, season, loc):
         if n_clicks > 0:
             if not json_data:
-                return go.Figure(), True, 'No data loaded. Please load the data first'
+                return go.Figure(), True, 'No data loaded. Please load the data first', ''
             if season is None or loc is None:
-                return go.Figure(), True, 'Please select a season and a location'
+                return go.Figure(), True, 'Please select a season and a location', ''
             print('update_plot')
             print(season)
             year = season.split('-')[0]
             fig = ridge_statistics_plot_plotly.plot_per_location(json_data[year], year=year, loc=loc)
             fig_json = fig.to_json()
-            return fig, False, ''
+            return fig, False, '', 'Done'
             # return fig_json
-        return go.Figure(), False, ''
+        return go.Figure(), False, '', ''
         # return go.Figure().to_json()
 
 
@@ -148,6 +150,7 @@ def register_tab3_callbacks(app):
         Output('json-data-allRidges_allYears-store', 'data'),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
+        Output('vizualization-progress-output', 'children', allow_duplicate=True),
         Input('load-weekly-analysis-button', 'n_clicks'),
         State('season-plot-dropdown', 'value'),
         State('location-plot-dropdown', 'value'),
@@ -159,8 +162,8 @@ def register_tab3_callbacks(app):
             year = int(season.split('-')[0])
             # load the weekly analysis data
             dict_ridge_statistics_allYears = weekly_analysis_plot_plotly.weekly_analysis_load_data_all_years()
-            return dict_ridge_statistics_allYears, True, 'Successfully loaded the additional data. You can now render the plot.'
-        return None, False, ''
+            return dict_ridge_statistics_allYears, True, 'Successfully loaded the additional data. You can now render the plot.', 'Done'
+        return None, False, '', ''
 
     # Callback to render the weekly analysis plot (or update it after changing some values)
     @app.callback(
@@ -228,6 +231,7 @@ def register_tab3_callbacks(app):
         Output('plot-weekly-analysis', 'figure', allow_duplicate=True),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
+        Output('vizualization-progress-output', 'children', allow_duplicate=True),
         # Output('this-time-draft-tuple', 'data', allow_duplicate=True),
         Input('week-slider', 'value'),
         State('json-data-store', 'data'),
@@ -249,8 +253,8 @@ def register_tab3_callbacks(app):
             patch, display_confirm, message_confirm, this_time, this_draft = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, patch, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
             print((this_time, this_draft))
             print(f"patch: {patch}")
-            return patch, display_confirm, message_confirm #, (this_time, this_draft)
-        return go.Figure(), False, '' #, (0, 0)
+            return patch, display_confirm, message_confirm, 'Done' #, (this_time, this_draft)
+        return go.Figure(), False, '', '' #, (0, 0)
     
 
     ## Callbacks to correct the value of the current week
@@ -285,8 +289,8 @@ def register_tab3_callbacks(app):
                     'width': '100%',
                     'height': '100%',
                     'overflow': 'auto',
-                    'background-color': 'rgb(0,0,0)',
-                    'background-color': 'rgba(0,0,0,0.4)',
+                    # 'background-color': 'rgb(0,0,0)',
+                    # 'background-color': 'rgba(0,0,0,0.4)',
                     'padding-top': '60px'
                 }, this_time_draft[1], cancel_clicks #, save_clicks
             else:
@@ -299,8 +303,8 @@ def register_tab3_callbacks(app):
                     'width': '100%',
                     'height': '100%',
                     'overflow': 'auto',
-                    'background-color': 'rgb(0,0,0)',
-                    'background-color': 'rgba(0,0,0,0.4)',
+                    # 'background-color': 'rgb(0,0,0)',
+                    # 'background-color': 'rgba(0,0,0,0.4)',
                     'padding-top': '60px'
                 }, '', cancel_clicks, save_clicks
         cancel_clicks = 0
@@ -314,6 +318,7 @@ def register_tab3_callbacks(app):
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
         Output('json-data-store', 'data', allow_duplicate=True),
+        Output('vizualization-progress-output', 'children', allow_duplicate=True),
         # Output('save-button', 'n_clicks', allow_duplicate=True),        
         # Output('this-time-draft-tuple', 'data', allow_duplicate=True),
         Input('save-button', 'n_clicks'),
@@ -350,8 +355,8 @@ def register_tab3_callbacks(app):
                 print('update weekly analysis plot')
                 patch, display_confirm, message_confirm, this_time, this_draft = weekly_analysis_plot_plotly_update.weekly_analysis_update_plot(year, loc, week, patch, dict_ridge_statistics_allYears, json_data[year], dict_trace_indices)
                 print(f"this_time, this_draft: {(this_time, this_draft)}")
-                return patch, display_confirm, message_confirm, json_data #, (this_time, this_draft)
-        return go.Figure(), False, '', json_data #, (0, 0)
+                return patch, display_confirm, message_confirm, json_data, 'Done' #, (this_time, this_draft)
+        return go.Figure(), False, '', json_data, '' #, (0, 0)
 
     
 
@@ -379,6 +384,7 @@ def register_tab3_callbacks(app):
         Output('confirm', 'message', allow_duplicate=True),
         Output('json-data-store', 'data'),
         Output('json-trace-indices-store', 'data', allow_duplicate=True),
+        Output('vizualization-progress-output', 'children', allow_duplicate=True),
         Input('render-LI-analysis-button', 'n_clicks'),
         State('json-data-store', 'data'),
         State('json-data-allRidges_allYears-store', 'data'),
@@ -392,17 +398,17 @@ def register_tab3_callbacks(app):
     def plot_LI_analysis_plot(n_clicks, json_data, dict_ridge_statistics_allYears, season, loc, week, day, dict_trace_indices_all):
         if n_clicks > 0:
             if not json_data:
-                return go.Figure(), True, 'No data loaded. Please load the data first', json_data
+                return go.Figure(), True, 'No data loaded. Please load the data first', json_data, dict_trace_indices_all, ''
             if season is None or loc is None:
-                return go.Figure(), True, 'Please select a season and a location', json_data
+                return go.Figure(), True, 'Please select a season and a location', json_data, dict_trace_indices_all, ''
             year = season.split('-')[0]
             week = week -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
             day = day -1 # because the slider starts at 1 (to make it more user-friendly for people without programming/informatics background)
             print('plot LI analysis')
             fig, dict_trace_indices, this_time, this_draft, json_data[str(year)][loc] = level_ice_statistics_plotly.level_ice_statistics_initialize(year, loc, week, dict_ridge_statistics_allYears, json_data[str(year)][loc])
             dict_trace_indices_all['LI_analysis'] = dict_trace_indices
-            return fig, False, '', json_data, dict_trace_indices_all
-        return go.Figure(), False, '', json_data, dict_trace_indices_all
+            return fig, False, '', json_data, dict_trace_indices_all, 'Done'
+        return go.Figure(), False, '', json_data, dict_trace_indices_all, ''
     
 
 
@@ -410,6 +416,7 @@ def register_tab3_callbacks(app):
         Output('plot-LI-analysis', 'figure', allow_duplicate=True),
         Output('confirm', 'displayed', allow_duplicate=True),
         Output('confirm', 'message', allow_duplicate=True),
+        Output('vizualization-progress-output', 'children', allow_duplicate=True),
         # Output('this-time-draft-tuple', 'data', allow_duplicate=True),
         Input('week-slider-LI', 'value'),
         Input('day-slider-LI', 'value'),
@@ -431,8 +438,8 @@ def register_tab3_callbacks(app):
             year = season.split('-')[0]
             # Update the current week patch in the figure
             patch, display_confirm, message_confirm, this_time, this_draft = level_ice_statistics_plotly.level_ice_statistics_update(patch, dict_trace_indices, year, loc, week, day, dict_ridge_statistics_allYears, json_data[str(year)][loc])
-            return patch,display_confirm, message_confirm #, (this_time, this_draft)
-        return go.Figure(), False, '' #, (0, 0)
+            return patch,display_confirm, message_confirm, 'Done' #, (this_time, this_draft)
+        return go.Figure(), False, '', '' #, (0, 0)
 
 
     @app.callback(

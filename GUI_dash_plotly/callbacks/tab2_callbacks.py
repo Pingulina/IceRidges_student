@@ -1,19 +1,18 @@
-from dash import Output, Input, State, dcc, html
+from dash import Output, Input, State
 import json
 import os
 import sys
-import datetime
 import time
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 from import_module import import_module
-constants_original = import_module('constants_original', 'helper_functions')
+# constants_original = import_module('constants_original', 'helper_functions')
 constants = import_module('constants', 'helper_functions')
 extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_preparation')
 ridge_statistics = import_module('ridge_statistics', 'data_analysis')
-ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
+# ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
 helping_functions = import_module('helping_functions', 'GUI_dash_plotly')
 d2j = import_module('data2json', 'initialization_preparation')
 

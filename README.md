@@ -101,6 +101,8 @@ Data_Beaufort_Gyre_Exploration
 ```
 Make sure the folder name is equivalent with the actual season(s). Some of the mooring data are sampled over multiple years, so the folder name should reflect this (e.g. for the mooring data from 2018-2021, the folder name is `2018-2021`).
 
+If you only want to run the independent load simulation, you don't need to download the data files. The independent load simulation used already implemented distributions for the ridge and level ice occurance. You can find more information about the distributions in the [documentation](manual.pdf).
+
 ---
 **NOTE:**
 If you want to use your own data files, please make sure that they are in `.dat` format with columns `date` (int), `time` (int) and `draft` (float or double). Otherwise, you could use `.csv` files, but have to change the separation character in `data2json.py`.

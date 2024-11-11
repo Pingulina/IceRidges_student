@@ -74,7 +74,7 @@ If you named your environment differently, replace `IceRidges` with the actual n
 cd # with this, you navigate to your home directory
 cd Documents/IceRidges/IceRidges_student # navigate to the folder where the code is stored
 cd initialization_preparation # navigate to the initialization_preparation folder, we need to run a script from here
-python initialize_python.py` # run the script
+python initialize_python.py # run the script
 ```
 The script will guide you through the installation process. At some points, you have to confirm the installation by typing `y` and pressing `enter`.
 

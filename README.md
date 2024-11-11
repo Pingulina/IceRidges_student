@@ -74,7 +74,7 @@ If you named your environment differently, replace `IceRidges` with the actual n
 cd # with this, you navigate to your home directory
 cd Documents/IceRidges/IceRidges_student # navigate to the folder where the code is stored
 cd initialization_preparation # navigate to the initialization_preparation folder, we need to run a script from here
-python initialize_python.py` # run the script
+python initialize_python.py # run the script
 ```
 The script will guide you through the installation process. At some points, you have to confirm the installation by typing `y` and pressing `enter`.
 
@@ -100,6 +100,8 @@ Data_Beaufort_Gyre_Exploration
 |   ...
 ```
 Make sure the folder name is equivalent with the actual season(s). Some of the mooring data are sampled over multiple years, so the folder name should reflect this (e.g. for the mooring data from 2018-2021, the folder name is `2018-2021`).
+
+If you only want to run the independent load simulation, you don't need to download the data files. The independent load simulation used already implemented distributions for the ridge and level ice occurance. You can find more information about the distributions in the [documentation](manual.pdf).
 
 ---
 **NOTE:**

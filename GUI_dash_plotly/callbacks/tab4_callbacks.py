@@ -1,24 +1,21 @@
-from dash import Output, Input, State, Patch
+from dash import Output, Input, State
 import plotly.graph_objs as go
-import json
 import os
 import sys
-from copy import deepcopy
-import numpy as np
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 from import_module import import_module
-constants_original = import_module('constants_original', 'helper_functions')
+# constants_original = import_module('constants_original', 'helper_functions')
 constants = import_module('constants', 'helper_functions')
-extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_preparation')
-ridge_statistics = import_module('ridge_statistics', 'data_analysis')
-ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
-weekly_analysis_plot_plotly = import_module('weekly_analysis_plot_plotly', 'plot_functions')
-weekly_analysis_plot_plotly_update = import_module('weekly_analysis_plot_plotly_update', 'plot_functions')
-level_ice_statistics_plotly = import_module('level_ice_statistics_plotly', 'plot_functions')
-simulation_ridges_plotly = import_module('simulation_ridges_plotly', 'simulation_functions')
+# extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_preparation')
+# ridge_statistics = import_module('ridge_statistics', 'data_analysis')
+# ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
+# weekly_analysis_plot_plotly = import_module('weekly_analysis_plot_plotly', 'plot_functions')
+# weekly_analysis_plot_plotly_update = import_module('weekly_analysis_plot_plotly_update', 'plot_functions')
+# level_ice_statistics_plotly = import_module('level_ice_statistics_plotly', 'plot_functions')
+# simulation_ridges_plotly = import_module('simulation_ridges_plotly', 'simulation_functions')
 simulation_consolidated_layer = import_module('simulation_consolidated_layer', 'simulation_functions')
 
 def register_tab4_callbacks(app):

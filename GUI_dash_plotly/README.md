@@ -30,7 +30,7 @@ To open the GUI in your browser, open the link that is shown in the terminal.
 To stop the GUI, you have to kill the process in the terminal by pressing `ctrl` + `c`. There might be a better way in the future, but for now, you have to kill the process manually.
 
 ## Using the GUI
-The GUI consists of three tabs: `Settings`, `Simulation` and `Vizualization`.
+The GUI consists of four tabs: `Settings`, `Simulation`, `Vizualization` and `Load (independent)`.
 A general note: Some of the operations start slightly time-consuming calculations. Please be patient and wait for the calculations to finish. The GUI will inform you when the calculations are done, either by a message or by stopping the loading animation.
 Do **NOT** close or reload your browser window while the calculations are running. This will cause trouble and you have to restart the GUI and some of the results might be lost.
 ### Settings
@@ -53,4 +53,5 @@ More steps will be added in the future.
 ### Visualization
 In the third tab, you can visualize the results of the simulation. On the top of the tab, you have to chose the season and location from the dropdown menus you want to visualize. Then click on `Load JSON Data`. This will load the data from the simulation. You will get a message, when the data is loaded. Then you can chose the visualization you want to see. For some of the visualizations, you have to set additional parameters or load additional data. The GUI will guide you through the process.
 
-
+### Load (independent)
+The last tab can be used independently from the first three tabs. It is used to compute the load distribution on fixed structures by ice ridges. Instead of a full simulation of the ice ridges, the distributions described by [Ilija Samardzija](https://doi.org/10.1016/j.coldregions.2023.104021) are used. Enter the values for the diameter of the structure and the number of years to simulate. Then click on `Load simulations`. The results will be vizalized below. You can change the values and click on `Load simulations` again to see the results for different values.

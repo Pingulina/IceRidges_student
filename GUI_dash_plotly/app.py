@@ -1,15 +1,12 @@
 # this is the main file of the GUI
 # the GUI is realized as dash application using dash and plotly
 import dash
-from dash import dcc, html, Input, Output, State, dash_table, callback_context, dash_table
+from dash import dcc, html, Input, Output, State, dash_table, dash_table
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
-import plotly.io as pio
-import pandas as pd
 import os
 import sys
 import json
-from copy import deepcopy
 
 ### import_module.py is a helper function to import modules from different directories, it is located in the base directory
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -17,9 +14,9 @@ sys.path.append(parent_dir)
 from import_module import import_module
 constants_original = import_module('constants_original', 'helper_functions')
 constants = import_module('constants', 'helper_functions')
-extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_preparation')
-ridge_statistics = import_module('ridge_statistics', 'data_analysis')
-ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
+# extract_ridge_LI_data = import_module('extract_ridge_LI_data', 'initialization_preparation')
+# ridge_statistics = import_module('ridge_statistics', 'data_analysis')
+# ridge_statistics_plot_plotly = import_module('ridge_statistics_plot_plotly', 'plot_functions')
 myColor = import_module('myColor', 'helper_functions')
 
 
@@ -89,6 +86,16 @@ def render_content(tab, fig_json_ridges):
     }
     if tab == 'tab-1':
         return html.Div([
+            dcc.Markdown(
+                '''
+                ## Settings for the simulation
+
+                This tab is used to set the constants for the simulation and the years and locations to evaluate. 
+                Choose the year(s) and location(s) you want to work on an click the 'Add selected year and location(s)' button.
+                
+                The constants can be updated and the updated values are displayed in a table. 
+                After changing the values, click the 'Update Constants' button to save the changes.
+                '''),
             html.Div([
                 html.Label('Select Season:'),
                 dcc.Dropdown(
@@ -97,7 +104,7 @@ def render_content(tab, fig_json_ridges):
                     value=None,
                     placeholder="Select a year"
                 ),
-            ], style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top'}),
+            ], style={'width': '30%', 'display': 'inline-block'}), #, 'vertical-align': 'top'}),
             html.Div(
                 [
                     html.Label('Select Locations:'),
@@ -107,7 +114,7 @@ def render_content(tab, fig_json_ridges):
                         value=[],
                         labelStyle={'display': 'inline-block', 'margin-right': '10px'}
                     ),
-                ], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'top'}
+                ], style={'width': '50%', 'display': 'inline-block'} #, 'vertical-align': 'top'}
             ),
             html.Button('Add selected year and location(s)', id='add-button-yearLoc', n_clicks=0, className='button-default'),
             # html.Button('Reset selected year(s) and location(s)', id='reset-button-yearLoc', n_clicks=0, className='button-default'),
@@ -143,6 +150,15 @@ def render_content(tab, fig_json_ridges):
         ])
     elif tab == 'tab-2':
         return html.Div([
+            dcc.Markdown(
+                '''
+                ## Preparation and simulation of the ridges and level ice
+
+                This tab is used to prepare the data and run the simulations for the ridges and level ice.
+                First, chose the years and locations you want to work on in Tab 1.
+
+                #### This steps only have to be done once for each location and year. You don't have to repeat it, even after closing the app.
+                '''),
             html.Div([
                 html.P('Convert dat data to json data (might take up to 10 minutes or more per location and year):'),
                 html.Button('Convert dat to json', id='convert-dat-to-json-button', n_clicks=0, className='button-default')
@@ -157,10 +173,10 @@ def render_content(tab, fig_json_ridges):
                 html.Button('Find ridges', id='run-ridge_statistics-button', n_clicks=0, className='button-default'),
                 html.Button('Show computed ridge data', id='show-ridge-data-button', n_clicks=0, className='button-default')
             ]),
-            html.Div([
-                html.P('Weekly visual analysis and correction:'),
-                html.Button('button text', id='generate-report-button', n_clicks=0, className='button-default')
-            ]),
+            # html.Div([
+            #     html.P('Weekly visual analysis and correction:'),
+            #     html.Button('button text', id='generate-report-button', n_clicks=0, className='button-default')
+            # ]),
             html.Div(id='ridge_statistics-output'),
             dcc.Loading(
                 id="loading-simulation",
@@ -176,6 +192,12 @@ def render_content(tab, fig_json_ridges):
         #     fig_ridges = go.Figure()
         # print(f"fig_ridges: {fig_ridges}")
         return html.Div([
+            html.Div(id='loading-overlay'), # Overlay div
+            dcc.Loading(
+                id="loading-vizualization",
+                type="default",
+                children=html.Div(id='vizualization-progress-output')
+            ),
             # Dropdowns for the season and location
             dcc.Markdown('''
                 ## Location and Season Selection
@@ -318,6 +340,11 @@ def render_content(tab, fig_json_ridges):
             ]),
             html.Button('Compute loads', id='compute-loads-button', n_clicks=0, className='button-default'),
             dcc.Graph(id='plot-loads'),
+            # dcc.Loading(
+            #     id="loading-vizualization",
+            #     type="default",
+            #     children=html.Div(id='vizualization-progress-output')
+            # ),
         ])
     elif tab == 'tab-4':
         return html.Div([
